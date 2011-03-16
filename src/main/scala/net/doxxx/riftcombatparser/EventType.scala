@@ -1,0 +1,25 @@
+package net.doxxx.riftcombatparser
+
+object EventType extends Enumeration {
+  val BeginCasting = Value(1)
+  val Interrupted = Value(2)
+  val DirectDamage = Value(3)
+  val DamageOverTime = Value(4)
+  val Heal = Value(5)
+  val BuffGain = Value(6)
+  val BuffFade = Value(7)
+  val DebuffGain = Value(8)
+  val DebuffFade = Value(9)
+  val Miss = Value(10)
+  val Slain = Value(11)
+  val Died = Value(12)
+  val EnvDamage = Value(14)
+  val Dodge = Value(15)
+  val Parry = Value(16)
+  val Resist = Value(19)
+  val CritDamage = Value(23)
+  val FavorGain = Value(24)
+  val Immune = Value(26)
+  val PowerGain = Value(27)
+  val CritHeal = Value(28)
+}
