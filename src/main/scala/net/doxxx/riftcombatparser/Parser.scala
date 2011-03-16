@@ -15,12 +15,7 @@ class Parser(source: Source) {
 
   def parseLine(line: String): Option[Event] = {
     CombatToggleRE.findPrefixMatchOf(line) match {
-      case Some(m) => Some(CombatToggleEvent(parseTime(m.group("time")),
-                                        m.group("toggle") match {
-                                          case "Begin" => true
-                                          case "End" => false
-                                          case _ => throw new IllegalArgumentException("Unrecognized CombatToggle event: " + line)
-                                        }))
+      case Some(m) => Some(CombatToggleEvent(parseTime(m.group("time")), parseCombatToggle(m.group("toggle"))))
       case None => LineRE.findPrefixMatchOf(line) match {
         case Some(m) => Some(parseActorEvent(m.group("time"), m.group("data"), m.group("text")))
         case None => throw new IllegalArgumentException("Unrecognized combat log line: " + line)
@@ -33,6 +28,14 @@ class Parser(source: Source) {
     parts(0).toInt * 60 * 60 + parts(1).toInt * 60 + parts(2).toInt
   }
 
+  def parseCombatToggle(toggle: String): Boolean = {
+    toggle match {
+      case "Begin" => true
+      case "End" => false
+      case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
+    }
+  }
+
   def parseActorEvent(time: String, data: String, text: String): ActorEvent = {
     DataRE.findPrefixMatchOf(data) match {
       case Some(m) => ActorEvent(parseTime(time), m.group("actor"), m.group("target"), m.group("spell"), text)
@@ -42,7 +45,10 @@ class Parser(source: Source) {
 }
 
 sealed abstract class Event(time: Long)
+
 case class CombatToggleEvent(time: Long, state: Boolean) extends Event(time)
+
 case class ActorEvent(time: Long, actor: String, target: String, spell: String, text: String) extends Event(time)
+
 //case class Heal(time: Long, actor: String, target: String, spell: String, amount: Int) extends ActorEvent(time, actor, target, spell)
 //case class Damage(time: Long, actor: String, target: String, spell: String, amount: Int) extends ActorEvent(time, actor, target, spell)
