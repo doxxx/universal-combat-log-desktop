@@ -14,6 +14,11 @@ class DamageSummaryModel(events: List[Event]) extends AbstractTableModel {
   private val data = EventProcessor.damageSummary(events)
   private val sortedNames = (TreeSet.empty[String] ++ data.keySet).toArray
 
+  override def getColumnName(column: Int) = column match {
+    case 0 => "Name"
+    case 1 => "Total Damage"
+  }
+
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
     columnIndex match {
       case 0 => sortedNames(rowIndex)
