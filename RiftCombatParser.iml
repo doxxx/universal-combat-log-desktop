@@ -18,6 +18,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/resources" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/scala" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/lib_managed" />
       <excludeFolder url="file://$MODULE_DIR$/project/boot" />
       <excludeFolder url="file://$MODULE_DIR$/project/build/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
