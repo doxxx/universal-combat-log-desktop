@@ -10,7 +10,7 @@ object Main {
     }
   }
 
-  def filter(events: List[Event]) {
+  def mapEventTypes(events: List[Event]) {
     var m = TreeMap[EventType.Value, String]()
     for (event <- events) {
       event match {
@@ -23,9 +23,9 @@ object Main {
     }
   }
 
-  def damageSummary(events: List[Event]) {
-    for ((name, dps) <- EventProcessor.damageSummary(events)) {
-      println("%s\t%d".format(name, dps))
+  def summary(events: List[Event]) {
+    for ((name, summary) <- EventProcessor.summary(events)) {
+      println("%s\t%d".format(name, summary))
     }
   }
 
@@ -38,7 +38,7 @@ object Main {
   def parse(filename: String) {
     val events = new Parser(Source.fromFile(filename)).parse()
 //    print(events)
-//    filter(events)
-    damageSummary(events)
+//    mapEventTypes(events)
+    summary(events)
   }
 }
