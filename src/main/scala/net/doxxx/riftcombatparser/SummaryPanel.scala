@@ -19,7 +19,7 @@ class SummaryPanel(events: List[Event]) extends ScrollPane {
 
 class DamageSummaryModel(events: List[Event]) extends AbstractTableModel {
   private val data = EventProcessor.damageSummary(events)
-  private val sortedNames = (TreeSet.empty[String] ++ data.keySet).toArray
+  private val names = data.keySet.toArray
 
   override def getColumnName(column: Int) = column match {
     case 0 => "Name"
@@ -28,8 +28,8 @@ class DamageSummaryModel(events: List[Event]) extends AbstractTableModel {
 
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
     columnIndex match {
-      case 0 => sortedNames(rowIndex)
-      case 1 => data(sortedNames(rowIndex)).asInstanceOf[AnyRef]
+      case 0 => names(rowIndex)
+      case 1 => data(names(rowIndex)).asInstanceOf[AnyRef]
       case _ => null
     }
   }
