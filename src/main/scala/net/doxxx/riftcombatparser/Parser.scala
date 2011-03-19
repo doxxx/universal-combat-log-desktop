@@ -6,9 +6,9 @@ import util.matching.Regex
 class Parser(source: Source) {
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
-    new Regex("\\( ([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?) \\)",
+    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
               "eventType", "actor", "target", "amount", "spellId", "spell")
-  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): (\\(.+?\\)) (.+)", "time", "data", "text")
+  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
 
   def parse(): List[Event] = {
     source.getLines().map(parseLine).toList.flatten
