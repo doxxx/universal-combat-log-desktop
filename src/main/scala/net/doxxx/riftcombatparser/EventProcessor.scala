@@ -34,14 +34,14 @@ object EventProcessor {
 
   def summary(events: List[Event]) = {
     val results = new HashMap[String, Summary]
-    events foreach {
-      case e: ActorEvent => e.eventType match {
-        case DamageOverTime => addDamage(results, e.actor, e.target, e.amount)
-        case DirectDamage => addDamage(results, e.actor, e.target, e.amount)
-        case EnvDamage => addDamage(results, e.actor, e.target, e.amount)
-        case CritDamage => addDamage(results, e.actor, e.target, e.amount)
-        case Heal => addHealing(results, e.actor, e.target, e.amount)
-        case CritHeal => addHealing(results, e.actor, e.target, e.amount)
+    for (e <- events) e match {
+      case ae: ActorEvent => ae.eventType match {
+        case DamageOverTime => addDamage(results, ae.actor, ae.target, ae.amount)
+        case DirectDamage => addDamage(results, ae.actor, ae.target, ae.amount)
+        case EnvDamage => addDamage(results, ae.actor, ae.target, ae.amount)
+        case CritDamage => addDamage(results, ae.actor, ae.target, ae.amount)
+        case Heal => addHealing(results, ae.actor, ae.target, ae.amount)
+        case CritHeal => addHealing(results, ae.actor, ae.target, ae.amount)
         case _ =>
       }
       case _ =>
