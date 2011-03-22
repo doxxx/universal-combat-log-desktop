@@ -79,9 +79,14 @@ object GUIMain extends SimpleSwingApplication {
   def top = new MainFrame {
     title = "Rift Combat Parser"
 
-    val summaryPanel = new SummaryPanel(parseLogFile(logFile))
+    var events = parseLogFile(logFile)
+    val summaryPanel = new SummaryPanel(events)
+    val actorList = new ActorList(EventProcessor.actors(events).toList)
 
-    contents = summaryPanel
+    contents = new BorderPanel {
+      layout(summaryPanel) = BorderPanel.Position.Center
+      layout(actorList) = BorderPanel.Position.East
+    }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
 
@@ -98,11 +103,15 @@ object GUIMain extends SimpleSwingApplication {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         createFileWatchActor()
-        summaryPanel.updateEvents(parseLogFile(logFile))
+        events = parseLogFile(logFile)
+        summaryPanel.updateEvents(events)
+        actorList.update(EventProcessor.actors(events).toList)
       }
       case CombatLogFileChanged() => {
         println("Reloading combat log file")
-        summaryPanel.updateEvents(parseLogFile(logFile))
+        events = parseLogFile(logFile)
+        summaryPanel.updateEvents(events)
+        actorList.update(EventProcessor.actors(events).toList)
       }
     }
   }

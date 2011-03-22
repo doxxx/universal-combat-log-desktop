@@ -1,7 +1,7 @@
 package net.doxxx.riftcombatparser
 
-import collection.mutable.HashMap
 import EventType._
+import collection.mutable.{HashSet, HashMap}
 
 object EventProcessor {
   def isDamageEvent(eventType: EventType.Value): Boolean = {
@@ -32,6 +32,14 @@ object EventProcessor {
     results.toMap
   }
 
+  def actors(events: List[Event]) = {
+    val names = new HashSet[String]
+    for (e <- events) e match {
+      case ae: ActorEvent => names += ae.actor
+      case _ =>
+    }
+    names.toSet
+  }
 }
 
 case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0) {
