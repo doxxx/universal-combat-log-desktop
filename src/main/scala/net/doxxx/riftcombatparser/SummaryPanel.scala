@@ -8,8 +8,10 @@ import java.util.Comparator
 import javax.swing.{SortOrder, RowSorter}
 
 class SummaryPanel(events: List[Event]) extends ScrollPane {
+  val summaryModel = new DamageSummaryModel(events)
+
   contents = new Table {
-    model = new DamageSummaryModel(events)
+    model = summaryModel
     val rowSorter = new TableRowSorter(model)
     rowSorter.setComparator(1, new IntComparator)
     rowSorter.setComparator(2, new IntComparator)
@@ -18,11 +20,15 @@ class SummaryPanel(events: List[Event]) extends ScrollPane {
     rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
   }
+
+  def updateEvents(events: List[Event]) {
+    summaryModel.update(events)
+  }
 }
 
 class DamageSummaryModel(events: List[Event]) extends AbstractTableModel {
-  private val data = EventProcessor.summary(events)
-  private val names = data.keySet.toArray
+  private var data = EventProcessor.summary(events)
+  private var names = data.keySet.toArray
 
   override def getColumnName(column: Int) = column match {
     case 0 => "Name"
@@ -46,6 +52,12 @@ class DamageSummaryModel(events: List[Event]) extends AbstractTableModel {
   def getColumnCount = 5
 
   def getRowCount = data.size
+
+  def update(events: List[Event]) {
+    data = EventProcessor.summary(events)
+    names = data.keySet.toArray
+    fireTableDataChanged()
+  }
 }
 
 class IntComparator extends Comparator[Int] {
