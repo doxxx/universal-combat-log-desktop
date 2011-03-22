@@ -58,17 +58,17 @@ object GUIMain extends SimpleSwingApplication {
         val lastModified = f.lastModified
         try {
           Thread.sleep(5000)
+          val modified = f.lastModified
+          if (modified > lastModified) {
+            Swing.onEDT {
+              fileWatcherPublisher.publish(CombatLogFileChanged())
+            }
+          }
+          createFileWatchActor()
         }
         catch {
-          case e: InterruptedException => return
+          case e: InterruptedException => // nothing
         }
-        val modified = f.lastModified
-        if (modified > lastModified) {
-          Swing.onEDT {
-            fileWatcherPublisher.publish(CombatLogFileChanged())
-          }
-        }
-        createFileWatchActor()
       }
       case None =>
     }
