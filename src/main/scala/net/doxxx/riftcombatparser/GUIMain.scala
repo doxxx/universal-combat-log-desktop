@@ -56,7 +56,6 @@ object GUIMain extends SimpleSwingApplication {
     logFile match {
       case Some(f) => actor {
         val lastModified = f.lastModified
-        printf("file watch actor: lastModified=%d\n", lastModified)
         try {
           Thread.sleep(5000)
         }
@@ -64,10 +63,8 @@ object GUIMain extends SimpleSwingApplication {
           case e: InterruptedException => return
         }
         val modified = f.lastModified
-        printf("file watch actor: modified=%d\n", modified)
         if (modified > lastModified) {
           Swing.onEDT {
-            printf("Swing EDT: publishing CombatLogFileChanged\n")
             fileWatcherPublisher.publish(CombatLogFileChanged())
           }
         }
@@ -103,7 +100,10 @@ object GUIMain extends SimpleSwingApplication {
         createFileWatchActor()
         summaryPanel.updateEvents(parseLogFile(logFile))
       }
-      case CombatLogFileChanged() => summaryPanel.updateEvents(parseLogFile(logFile))
+      case CombatLogFileChanged() => {
+        println("Reloading combat log file")
+        summaryPanel.updateEvents(parseLogFile(logFile))
+      }
     }
   }
 }
