@@ -92,6 +92,8 @@ object GUIMain extends SimpleSwingApplication {
     val actorList = new ActorList
 
     contents = new BorderPanel {
+      layoutManager.setHgap(5)
+      layoutManager.setVgap(5)
       layout(summaryPanel) = BorderPanel.Position.Center
       layout(actorList) = BorderPanel.Position.East
     }
