@@ -10,11 +10,11 @@ class SummaryPanel extends ScrollPane {
   val table = new Table {
     model = summaryModel
     val rowSorter = new TableRowSorter(model)
-    rowSorter.setComparator(1, new IntComparator)
-    rowSorter.setComparator(2, new IntComparator)
-    rowSorter.setComparator(3, new IntComparator)
-    rowSorter.setComparator(4, new IntComparator)
-    rowSorter.setComparator(5, new IntComparator)
+    rowSorter.setComparator(1, IntComparator)
+    rowSorter.setComparator(2, IntComparator)
+    rowSorter.setComparator(3, IntComparator)
+    rowSorter.setComparator(4, IntComparator)
+    rowSorter.setComparator(5, IntComparator)
     rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
   }
