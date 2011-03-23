@@ -17,6 +17,12 @@ object EventProcessor {
         results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
         results(ae.target) = results(ae.target).addHealingIn(ae.amount)
       }
+      case ae: ActorEvent if (ae.eventType == Died) => {
+        results(ae.actor) = results(ae.actor).addDeath()
+      }
+      case ae: ActorEvent if (ae.eventType == Slain) => {
+        results(ae.target) = results(ae.target).addDeath()
+      }
       case _ =>
     }
     results.toMap
@@ -37,9 +43,10 @@ object EventProcessor {
   }
 }
 
-case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0) {
+case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0, deaths: Int = 0) {
   def addDamageIn(amount: Int) = copy(damageIn = damageIn + amount)
   def addDamageOut(amount: Int) = copy(damageOut = damageOut + amount)
   def addHealingIn(amount: Int) = copy(healingIn = healingIn + amount)
   def addHealingOut(amount: Int) = copy(healingOut = healingOut + amount)
+  def addDeath() = copy(deaths = deaths + 1)
 }

@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import javax.swing.table.AbstractTableModel
 
 class DamageSummaryModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out")
+  private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out", "Deaths")
 
   private var summary: Map[String, Summary] = Map.empty
   private var filteredSummary: Option[Map[String, Summary]] = None
@@ -21,6 +21,7 @@ class DamageSummaryModel extends AbstractTableModel {
       case 2 => data(name).damageOut.asInstanceOf[AnyRef]
       case 3 => data(name).healingIn.asInstanceOf[AnyRef]
       case 4 => data(name).healingOut.asInstanceOf[AnyRef]
+      case 5 => data(name).deaths.asInstanceOf[AnyRef]
       case _ => null
     }
   }
