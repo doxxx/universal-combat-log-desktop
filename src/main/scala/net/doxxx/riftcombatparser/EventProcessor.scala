@@ -28,7 +28,7 @@ object EventProcessor {
       case ae: ActorEvent => names += ae.actor
       case _ =>
     }
-    names.toSet
+    names.toList.sorted
   }
 }
 

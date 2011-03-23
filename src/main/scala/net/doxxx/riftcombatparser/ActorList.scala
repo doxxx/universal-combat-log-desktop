@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import swing.{ListView, ScrollPane}
 import swing.event.{Event, ListSelectionChanged}
 
-class ActorList(names: List[String]) extends ScrollPane {
+class ActorList extends ScrollPane {
   val listView = new ListView[String]
   contents = listView
 
@@ -17,10 +17,8 @@ class ActorList(names: List[String]) extends ScrollPane {
     }
   }
 
-  update(names)
-
   def update(names: List[String]) {
-    listView.listData = names.sorted
+    listView.listData = names
   }
 }
 

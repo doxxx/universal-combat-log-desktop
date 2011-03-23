@@ -54,10 +54,6 @@ object GUIMain extends SimpleSwingApplication {
     }
   }
 
-  def createSummaryPanel() = {
-    new SummaryPanel(parseLogFile())
-  }
-
   def createFileLoaderActor() {
     actor {
       printf("%s: Loading combat log file\n",
@@ -92,8 +88,8 @@ object GUIMain extends SimpleSwingApplication {
   def top = new MainFrame {
     title = "Rift Combat Parser"
 
-    val summaryPanel = new SummaryPanel(Nil)
-    val actorList = new ActorList(Nil)
+    val summaryPanel = new SummaryPanel
+    val actorList = new ActorList
 
     contents = new BorderPanel {
       layout(summaryPanel) = BorderPanel.Position.Center
@@ -119,8 +115,8 @@ object GUIMain extends SimpleSwingApplication {
         createFileWatchActor()
       }
       case UpdateWithEvents(events) => {
-        summaryPanel.updateEvents(events)
-        actorList.update(EventProcessor.actors(events).toList)
+        summaryPanel.updateEvents(EventProcessor.summary(events))
+        actorList.update(EventProcessor.actors(events))
       }
       case SelectedActorsChanged(actors) => {
         summaryPanel.applyActorFilter(actors)

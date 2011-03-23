@@ -2,13 +2,12 @@ package net.doxxx.riftcombatparser
 
 import swing._
 import collection.JavaConversions._
-import collection.immutable.TreeSet
 import javax.swing.table.{TableRowSorter, AbstractTableModel}
 import java.util.Comparator
 import javax.swing.{SortOrder, RowSorter}
 
-class SummaryPanel(private var events: List[LogEvent]) extends ScrollPane {
-  val summaryModel = new DamageSummaryModel(events)
+class SummaryPanel extends ScrollPane {
+  val summaryModel = new DamageSummaryModel
 
   contents = new Table {
     model = summaryModel
@@ -21,9 +20,8 @@ class SummaryPanel(private var events: List[LogEvent]) extends ScrollPane {
     peer.setRowSorter(rowSorter)
   }
 
-  def updateEvents(events: List[LogEvent]) {
-    this.events = events
-    summaryModel.update(events)
+  def updateEvents(summary: Map[String, Summary]) {
+    summaryModel.update(summary)
   }
 
   def applyActorFilter(actors: List[String]) {
@@ -31,44 +29,44 @@ class SummaryPanel(private var events: List[LogEvent]) extends ScrollPane {
   }
 }
 
-class DamageSummaryModel(private var events: List[LogEvent]) extends AbstractTableModel {
-  private var data = EventProcessor.summary(events)
-  private var names = data.keySet.toArray
+class DamageSummaryModel extends AbstractTableModel {
+  private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out")
 
-  override def getColumnName(column: Int) = column match {
-    case 0 => "Name"
-    case 1 => "Damage In"
-    case 2 => "Damage Out"
-    case 3 => "Healing In"
-    case 4 => "Healing Out"
-  }
+  private var summary: Map[String, Summary] = Map.empty
+  private var filteredSummary: Option[Map[String, Summary]] = None
+
+  def data = filteredSummary getOrElse summary
+
+  override def getColumnName(column: Int) = ColumnNames(column)
 
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
+    val names = data.keySet.toArray
+    val name = names(rowIndex)
     columnIndex match {
-      case 0 => names(rowIndex)
-      case 1 => data(names(rowIndex)).damageIn.asInstanceOf[AnyRef]
-      case 2 => data(names(rowIndex)).damageOut.asInstanceOf[AnyRef]
-      case 3 => data(names(rowIndex)).healingIn.asInstanceOf[AnyRef]
-      case 4 => data(names(rowIndex)).healingOut.asInstanceOf[AnyRef]
+      case 0 => name
+      case 1 => data(name).damageIn.asInstanceOf[AnyRef]
+      case 2 => data(name).damageOut.asInstanceOf[AnyRef]
+      case 3 => data(name).healingIn.asInstanceOf[AnyRef]
+      case 4 => data(name).healingOut.asInstanceOf[AnyRef]
       case _ => null
     }
   }
 
-  def getColumnCount = 5
+  def getColumnCount = ColumnNames.size
 
   def getRowCount = data.size
 
-  def update(events: List[LogEvent]) {
-    this.events = events
-    data = EventProcessor.summary(events)
-    names = data.keySet.toArray
+  def update(summary: Map[String, Summary]) {
+    this.summary = summary
     fireTableDataChanged()
   }
 
   def applyActorFilter(actors: List[String]) {
-    val summary = EventProcessor.summary(events)
-    data = summary filter { case (actor, sum) => actors.contains(actor) }
-    names = data.keySet.toArray
+    filteredSummary =
+      if (actors.isEmpty)
+        None
+      else
+        Some(summary filter { case (actor, sum) => actors.contains(actor) })
     fireTableDataChanged()
   }
 }
