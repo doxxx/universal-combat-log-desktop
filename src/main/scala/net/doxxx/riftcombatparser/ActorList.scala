@@ -6,7 +6,10 @@ import event._
 class ActorList extends BorderPanel {
   layoutManager.setHgap(5)
   layoutManager.setVgap(5)
-  
+
+  val top5Button = new Button {
+    text = "Top 5"
+  }
   val resetButton = new Button {
     text = "Reset"
   }
@@ -15,6 +18,8 @@ class ActorList extends BorderPanel {
       text = "Actor Filter"
     }
     contents += Swing.HGlue
+    contents += top5Button
+    contents += Swing.HStrut(5)
     contents += resetButton
   }
   val listView = new ListView[String]
@@ -25,10 +30,14 @@ class ActorList extends BorderPanel {
   layout(header) = BorderPanel.Position.North
   layout(scrollPane) = BorderPanel.Position.Center
 
+  listenTo(top5Button)
   listenTo(resetButton)
   listenTo(listView.selection)
 
   reactions += {
+    case ButtonClicked(`top5Button`) => {
+      listView.selectIndices(0, 1, 2, 3, 4)
+    }
     case ButtonClicked(`resetButton`) => {
       listView.selectIndices()
     }
