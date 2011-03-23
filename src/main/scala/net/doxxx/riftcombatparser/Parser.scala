@@ -10,11 +10,11 @@ class Parser(source: Source) {
               "eventType", "actor", "target", "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
 
-  def parse(): List[Event] = {
+  def parse(): List[LogEvent] = {
     source.getLines().map(parseLine).toList.flatten
   }
 
-  def parseLine(line: String): Option[Event] = {
+  def parseLine(line: String): Option[LogEvent] = {
     CombatToggleRE.findPrefixMatchOf(line) match {
       case Some(m) => Some(CombatToggleEvent(parseTime(m.group("time")), parseCombatToggle(m.group("toggle"))))
       case None => LineRE.findPrefixMatchOf(line) match {
@@ -47,9 +47,3 @@ class Parser(source: Source) {
   }
 }
 
-sealed abstract class Event(time: Long)
-
-case class CombatToggleEvent(time: Long, state: Boolean) extends Event(time)
-
-case class ActorEvent(time: Long, eventType: EventType.Value, actor: String, target: String, spell: String,
-                      spellId: Long, amount: Int, text: String) extends Event(time)

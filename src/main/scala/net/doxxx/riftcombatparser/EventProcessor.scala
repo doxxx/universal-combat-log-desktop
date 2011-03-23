@@ -4,16 +4,16 @@ import EventType._
 import collection.mutable.{HashSet, HashMap}
 
 object EventProcessor {
-  def summary(events: List[Event]) = {
+  def summary(events: List[LogEvent]) = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
     for (e <- events) e match {
-      case ae: ActorEvent if (EventType.DamageTypes.contains(ae.eventType)) => {
+      case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
         results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
         results(ae.target) = results(ae.target).addDamageIn(ae.amount)
       }
-      case ae: ActorEvent if (EventType.HealTypes.contains(ae.eventType)) => {
+      case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
         results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
         results(ae.target) = results(ae.target).addHealingIn(ae.amount)
       }
@@ -22,7 +22,7 @@ object EventProcessor {
     results.toMap
   }
 
-  def actors(events: List[Event]) = {
+  def actors(events: List[LogEvent]) = {
     val names = new HashSet[String]
     for (e <- events) e match {
       case ae: ActorEvent => names += ae.actor

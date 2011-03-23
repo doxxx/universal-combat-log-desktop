@@ -11,7 +11,7 @@ object MapEventTypes {
     }
   }
 
-  def mapEventTypes(events: List[Event]) {
+  def mapEventTypes(events: List[LogEvent]) {
     var m = TreeMap[EventType.Value, String]()
     for (event <- events) {
       event match {
