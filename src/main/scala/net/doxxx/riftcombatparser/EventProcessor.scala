@@ -4,7 +4,7 @@ import EventType._
 import collection.mutable.{HashSet, HashMap}
 
 object EventProcessor {
-  def summary(events: List[LogEvent]) = {
+  def summary(events: List[LogEvent]): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
@@ -22,13 +22,18 @@ object EventProcessor {
     results.toMap
   }
 
-  def actors(events: List[LogEvent]) = {
-    val names = new HashSet[String]
+  def actors(events: List[LogEvent]): List[String] = {
+    val activity = new HashMap[String, Int] {
+      override def default(key: String) = 0
+    }
     for (e <- events) e match {
-      case ae: ActorEvent => names += ae.actor
+      case ae: ActorEvent => activity(ae.actor) = activity(ae.actor) + 1
       case _ =>
     }
-    names.toList.sorted
+    def cmp(a1:Pair[String,Int], a2:Pair[String,Int]) = {
+      a1._2 > a2._2
+    }
+    for ((k,v) <- activity.toList.sortWith(cmp)) yield k
   }
 }
 
