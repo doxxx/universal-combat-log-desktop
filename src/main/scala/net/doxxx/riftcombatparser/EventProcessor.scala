@@ -4,28 +4,18 @@ import EventType._
 import collection.mutable.{HashSet, HashMap}
 
 object EventProcessor {
-  def isDamageEvent(eventType: EventType.Value): Boolean = {
-    eventType == DirectDamage || eventType == DamageOverTime || eventType == DamageOverTime
-  }
-
-  def isHealEvent(eventType: EventType.Value): Boolean = {
-    eventType == Heal || eventType == CritHeal
-  }
-
   def summary(events: List[Event]) = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
     for (e <- events) e match {
-      case ae: ActorEvent if (isDamageEvent(ae.eventType)) => {
+      case ae: ActorEvent if (EventType.DamageTypes.contains(ae.eventType)) => {
         results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
         results(ae.target) = results(ae.target).addDamageIn(ae.amount)
-
       }
-      case ae: ActorEvent if (isHealEvent(ae.eventType)) => {
+      case ae: ActorEvent if (EventType.HealTypes.contains(ae.eventType)) => {
         results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
         results(ae.target) = results(ae.target).addHealingIn(ae.amount)
-
       }
       case _ =>
     }
