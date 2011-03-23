@@ -1,18 +1,34 @@
 package net.doxxx.riftcombatparser
 
 import scala.swing._
-import scala.swing.event.{Event => SEevent, ButtonClicked}
+import scala.swing.event.{Event, ButtonClicked}
 import io.Source
 import java.util.prefs.Preferences
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.io.File
 import scala.actors.Actor._
+import java.util.Calendar
+import java.text.DateFormat
 
 object GUIMain extends SimpleSwingApplication {
+
+  case class UpdateWithEvents(events: List[LogEvent]) extends Event
+
   val LogFileKey = "logFile"
+  val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
 
   val prefs = Preferences.userNodeForPackage(getClass)
+
+  var logFile = {
+    val path = prefs.get(LogFileKey, null)
+    if (path == null)
+      chooseCombatLogFile(None)
+    else
+      Some(new File(path))
+  }
+
+  val logFileEventPublisher = new Publisher {}
 
   def chooseCombatLogFile(default: Option[File]): Option[File] = {
     val chooser = new JFileChooser
@@ -31,15 +47,7 @@ object GUIMain extends SimpleSwingApplication {
     }
   }
 
-  var logFile = {
-    val path = prefs.get(LogFileKey, null)
-    if (path == null) {
-      chooseCombatLogFile(None)
-    }
-    else Some(new File(path))
-  }
-
-  def parseLogFile(logFile: Option[File]) = {
+  def parseLogFile() = {
     logFile match {
       case Some(path) => new Parser(Source.fromFile(path)).parse()
       case _ => Nil
@@ -47,10 +55,19 @@ object GUIMain extends SimpleSwingApplication {
   }
 
   def createSummaryPanel() = {
-    new SummaryPanel(parseLogFile(logFile))
+    new SummaryPanel(parseLogFile())
   }
 
-  val fileWatcherPublisher = new Publisher {}
+  def createFileLoaderActor() {
+    actor {
+      printf("%s: Loading combat log file\n",
+        LoggingDateFormat.format(Calendar.getInstance.getTime))
+      val events = parseLogFile()
+      Swing.onEDT {
+        logFileEventPublisher.publish(UpdateWithEvents(events))
+      }
+    }
+  }
 
   def createFileWatchActor() {
     logFile match {
@@ -60,9 +77,7 @@ object GUIMain extends SimpleSwingApplication {
           Thread.sleep(5000)
           val modified = f.lastModified
           if (modified > lastModified) {
-            Swing.onEDT {
-              fileWatcherPublisher.publish(CombatLogFileChanged())
-            }
+            createFileLoaderActor()
           }
           createFileWatchActor()
         }
@@ -74,14 +89,11 @@ object GUIMain extends SimpleSwingApplication {
     }
   }
 
-  createFileWatchActor()
-
   def top = new MainFrame {
     title = "Rift Combat Parser"
 
-    var events = parseLogFile(logFile)
-    val summaryPanel = new SummaryPanel(events)
-    val actorList = new ActorList(EventProcessor.actors(events).toList)
+    val summaryPanel = new SummaryPanel(Nil)
+    val actorList = new ActorList(Nil)
 
     contents = new BorderPanel {
       layout(summaryPanel) = BorderPanel.Position.Center
@@ -97,24 +109,22 @@ object GUIMain extends SimpleSwingApplication {
     }
 
     listenTo(MI_ChooseCombatLogFile)
-    listenTo(fileWatcherPublisher)
+    listenTo(logFileEventPublisher)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
+        createFileLoaderActor()
         createFileWatchActor()
-        events = parseLogFile(logFile)
-        summaryPanel.updateEvents(events)
-        actorList.update(EventProcessor.actors(events).toList)
       }
-      case CombatLogFileChanged() => {
-        println("Reloading combat log file")
-        events = parseLogFile(logFile)
+      case UpdateWithEvents(events) => {
         summaryPanel.updateEvents(events)
         actorList.update(EventProcessor.actors(events).toList)
       }
     }
+
+    createFileLoaderActor()
+    createFileWatchActor()
   }
 }
 
-case class CombatLogFileChanged() extends SEevent
