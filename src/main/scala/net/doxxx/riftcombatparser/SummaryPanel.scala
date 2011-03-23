@@ -15,6 +15,7 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setComparator(2, new IntComparator)
     rowSorter.setComparator(3, new IntComparator)
     rowSorter.setComparator(4, new IntComparator)
+    rowSorter.setComparator(5, new IntComparator)
     rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
   }
