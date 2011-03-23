@@ -7,8 +7,7 @@ import javax.swing.{SortOrder, RowSorter}
 
 class SummaryPanel extends ScrollPane {
   val summaryModel = new DamageSummaryModel
-
-  contents = new Table {
+  val table = new Table {
     model = summaryModel
     val rowSorter = new TableRowSorter(model)
     rowSorter.setComparator(1, new IntComparator)
@@ -19,6 +18,8 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
   }
+
+  contents = table
 
   def updateEvents(summary: Map[String, Summary]) {
     summaryModel.update(summary)
