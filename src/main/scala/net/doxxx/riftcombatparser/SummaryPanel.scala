@@ -7,7 +7,7 @@ import javax.swing.table.{TableRowSorter, AbstractTableModel}
 import java.util.Comparator
 import javax.swing.{SortOrder, RowSorter}
 
-class SummaryPanel(events: List[LogEvent]) extends ScrollPane {
+class SummaryPanel(private var events: List[LogEvent]) extends ScrollPane {
   val summaryModel = new DamageSummaryModel(events)
 
   contents = new Table {
@@ -22,11 +22,16 @@ class SummaryPanel(events: List[LogEvent]) extends ScrollPane {
   }
 
   def updateEvents(events: List[LogEvent]) {
+    this.events = events
     summaryModel.update(events)
+  }
+
+  def applyActorFilter(actors: List[String]) {
+    summaryModel.applyActorFilter(actors)
   }
 }
 
-class DamageSummaryModel(events: List[LogEvent]) extends AbstractTableModel {
+class DamageSummaryModel(private var events: List[LogEvent]) extends AbstractTableModel {
   private var data = EventProcessor.summary(events)
   private var names = data.keySet.toArray
 
@@ -54,7 +59,15 @@ class DamageSummaryModel(events: List[LogEvent]) extends AbstractTableModel {
   def getRowCount = data.size
 
   def update(events: List[LogEvent]) {
+    this.events = events
     data = EventProcessor.summary(events)
+    names = data.keySet.toArray
+    fireTableDataChanged()
+  }
+
+  def applyActorFilter(actors: List[String]) {
+    val summary = EventProcessor.summary(events)
+    data = summary filter { case (actor, sum) => actors.contains(actor) }
     names = data.keySet.toArray
     fireTableDataChanged()
   }

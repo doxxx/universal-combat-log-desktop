@@ -110,6 +110,7 @@ object GUIMain extends SimpleSwingApplication {
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(logFileEventPublisher)
+    listenTo(actorList)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -120,6 +121,9 @@ object GUIMain extends SimpleSwingApplication {
       case UpdateWithEvents(events) => {
         summaryPanel.updateEvents(events)
         actorList.update(EventProcessor.actors(events).toList)
+      }
+      case SelectedActorsChanged(actors) => {
+        summaryPanel.applyActorFilter(actors)
       }
     }
 
