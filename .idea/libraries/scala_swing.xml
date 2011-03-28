@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="scala-swing">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/scala_2.9.0.RC1/compile/scala-swing_2.9.0.RC1-1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib_managed/scala_2.9.0.RC1/compile/scala-swing_2.9.0.RC1-1.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/scala_2.9.0.RC1/compile/scala-swing_2.9.0.RC1-1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
