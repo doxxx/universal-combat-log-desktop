@@ -4,17 +4,13 @@ import io.Source
 import util.matching.Regex
 
 class Parser(source: Source) {
-  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
-  private val DataRE =
-    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-              "eventType", "actor", "target", "amount", "spellId", "spell")
-  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
+  import Parser._
 
   def parse(): List[LogEvent] = {
     source.getLines().map(parseLine).toList.flatten
   }
 
-  def parseLine(line: String): Option[LogEvent] = {
+  private def parseLine(line: String): Option[LogEvent] = {
     line match {
       case CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
       case LineRE(time, data, text) => parseActorEvent(time, data, text)
@@ -25,18 +21,18 @@ class Parser(source: Source) {
     }
   }
 
-  def parseTime(s: String): Long = {
+  private def parseTime(s: String): Long = {
     val parts = s.split(':')
     parts(0).toInt * 60 * 60 + parts(1).toInt * 60 + parts(2).toInt
   }
 
-  def parseCombatToggle(toggle: String): Boolean = toggle match {
+  private def parseCombatToggle(toggle: String): Boolean = toggle match {
     case "Begin" => true
     case "End" => false
     case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
   }
 
-  def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
+  private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
       case DataRE(eventType, actor, target, amount, spellId, spell) => Some(ActorEvent(parseTime(time),
         EventType(eventType.toInt), actor, target, spell, spellId.toLong, amount.toInt, text))
@@ -48,3 +44,10 @@ class Parser(source: Source) {
   }
 }
 
+object Parser {
+  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
+  private val DataRE =
+    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
+              "eventType", "actor", "target", "amount", "spellId", "spell")
+  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
+}
