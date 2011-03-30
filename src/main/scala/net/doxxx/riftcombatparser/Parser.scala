@@ -15,11 +15,12 @@ class Parser(source: Source) {
   }
 
   def parseLine(line: String): Option[LogEvent] = {
-    CombatToggleRE.findPrefixMatchOf(line) match {
-      case Some(m) => Some(CombatToggleEvent(parseTime(m.group("time")), parseCombatToggle(m.group("toggle"))))
-      case None => LineRE.findPrefixMatchOf(line) match {
-        case Some(m) => Some(parseActorEvent(m.group("time"), m.group("data"), m.group("text")))
-        case None => throw new IllegalArgumentException("Unrecognized combat log line: " + line)
+    line match {
+      case CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
+      case LineRE(time, data, text) => parseActorEvent(time, data, text)
+      case _ => {
+        println("Unrecognized combat log line: " + line)
+        None
       }
     }
   }
@@ -29,20 +30,20 @@ class Parser(source: Source) {
     parts(0).toInt * 60 * 60 + parts(1).toInt * 60 + parts(2).toInt
   }
 
-  def parseCombatToggle(toggle: String): Boolean = {
-    toggle match {
-      case "Begin" => true
-      case "End" => false
-      case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
-    }
+  def parseCombatToggle(toggle: String): Boolean = toggle match {
+    case "Begin" => true
+    case "End" => false
+    case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
   }
 
-  def parseActorEvent(time: String, data: String, text: String): ActorEvent = {
-    DataRE.findPrefixMatchOf(data) match {
-      case Some(m) => ActorEvent(parseTime(time), EventType(m.group("eventType").toInt), m.group("actor"),
-                                 m.group("target"), m.group("spell"), m.group("spellId").toLong,
-                                 m.group("amount").toInt, text)
-      case None => throw new IllegalArgumentException("Unrecognized data string: " + data)
+  def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
+    data match {
+      case DataRE(eventType, actor, target, amount, spellId, spell) => Some(ActorEvent(parseTime(time),
+        EventType(eventType.toInt), actor, target, spell, spellId.toLong, amount.toInt, text))
+      case _ => {
+        println("Unrecognized data string: " + data)
+        None
+      }
     }
   }
 }
