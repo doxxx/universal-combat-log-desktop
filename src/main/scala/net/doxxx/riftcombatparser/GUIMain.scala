@@ -6,10 +6,10 @@ import io.Source
 import java.util.prefs.Preferences
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
-import java.io.File
 import scala.actors.Actor._
 import java.util.Calendar
 import java.text.DateFormat
+import java.io.{FileReader, File}
 
 object GUIMain extends SimpleSwingApplication {
 
@@ -47,21 +47,16 @@ object GUIMain extends SimpleSwingApplication {
     }
   }
 
-  def parseLogFile() = {
-    logFile match {
-      case Some(path) => new Parser(Source.fromFile(path)).parse()
-      case _ => Nil
-    }
-  }
-
   def createFileLoaderActor() {
-    actor {
-      printf("%s: Loading combat log file\n",
-        LoggingDateFormat.format(Calendar.getInstance.getTime))
-      val events = parseLogFile()
-      Swing.onEDT {
-        logFileEventPublisher.publish(UpdateWithEvents(events))
+    logFile match {
+      case Some(f) => actor {
+        log("Loading events from %s", f.toString)
+        val events = new CombatLogParser(Source.fromFile(f)).parse()
+        Swing.onEDT {
+          logFileEventPublisher.publish(UpdateWithEvents(events))
+        }
       }
+      case None =>
     }
   }
 
@@ -99,14 +94,17 @@ object GUIMain extends SimpleSwingApplication {
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
+    val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
 
     menuBar = new MenuBar {
       contents += new Menu("Rift Combat Parser") {
         contents += MI_ChooseCombatLogFile
+        contents += MI_LoadActorsFromRaidXML
       }
     }
 
     listenTo(MI_ChooseCombatLogFile)
+    listenTo(MI_LoadActorsFromRaidXML)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
 
@@ -115,6 +113,21 @@ object GUIMain extends SimpleSwingApplication {
         logFile = chooseCombatLogFile(logFile)
         createFileLoaderActor()
         createFileWatchActor()
+      }
+      case ButtonClicked(MI_LoadActorsFromRaidXML) => {
+        logFile match {
+          case Some(f) => {
+            val raidXMLFile = new File(f.getParentFile, "raid.xml")
+            if (raidXMLFile.exists) {
+              val raidInfo = new RaidInfoParser(new FileReader(raidXMLFile)).parse()
+              log("Loading actors from %s", raidXMLFile.toString)
+              actorList.selectActors(raidInfo.members.map(_.name).toSet)
+            } else {
+              println("No raid.xml to load")
+            }
+          }
+          case None => println("No combat log file to locate raid.xml")
+        }
       }
       case UpdateWithEvents(events) => {
         summaryPanel.updateEvents(EventProcessor.summary(events))
@@ -127,6 +140,15 @@ object GUIMain extends SimpleSwingApplication {
 
     createFileLoaderActor()
     createFileWatchActor()
+  }
+
+  def log(msg: String, args: Any*) {
+    val a = formattedDate :: args.toList
+    printf("%s: " + msg + "\n", a: _*)
+  }
+
+  def formattedDate = {
+    LoggingDateFormat.format(Calendar.getInstance.getTime)
   }
 }
 

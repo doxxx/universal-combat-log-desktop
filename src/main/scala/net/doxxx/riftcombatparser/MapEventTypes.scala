@@ -6,7 +6,7 @@ import collection.immutable.TreeMap
 object MapEventTypes {
   def main(args: Array[String]) {
     for (arg <- args) {
-      val events = new Parser(Source.fromFile(arg)).parse()
+      val events = new CombatLogParser(Source.fromFile(arg)).parse()
       mapEventTypes(events)
     }
   }

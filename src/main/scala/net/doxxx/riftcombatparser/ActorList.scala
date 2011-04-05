@@ -51,6 +51,15 @@ class ActorList extends BorderPanel {
   def update(names: List[String]) {
     listView.listData = names
   }
+
+  def selectActors(names: Set[String]) {
+    val indices = listView.listData.zipWithIndex.filter {
+      case (name, index) => names.contains(name)
+    } map {
+      case (name, index) => index
+    }
+    listView.selectIndices(indices: _*)
+  }
 }
 
 case class SelectedActorsChanged(actors: List[String]) extends Event

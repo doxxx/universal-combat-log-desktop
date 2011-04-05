@@ -3,8 +3,8 @@ package net.doxxx.riftcombatparser
 import io.Source
 import util.matching.Regex
 
-class Parser(source: Source) {
-  import Parser._
+class CombatLogParser(source: Source) {
+  import CombatLogParser._
 
   def parse(): List[LogEvent] = {
     source.getLines().map(parseLine).toList.flatten
@@ -44,7 +44,7 @@ class Parser(source: Source) {
   }
 }
 
-object Parser {
+object CombatLogParser {
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
     new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
