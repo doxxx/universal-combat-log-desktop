@@ -51,7 +51,7 @@ object GUIMain extends SimpleSwingApplication {
     logFile match {
       case Some(f) => actor {
         log("Loading events from %s", f.toString)
-        val events = new CombatLogParser(Source.fromFile(f)).parse()
+        val events = new CombatLogParser(Source.fromFile(f)).events
         Swing.onEDT {
           logFileEventPublisher.publish(UpdateWithEvents(events))
         }

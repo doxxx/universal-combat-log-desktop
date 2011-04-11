@@ -6,8 +6,13 @@ import util.matching.Regex
 class CombatLogParser(source: Source) {
   import CombatLogParser._
 
-  def parse(): List[LogEvent] = {
-    source.getLines().map(parseLine).toList.flatten
+  lazy val events = {
+    try {
+      source.getLines().map(parseLine).toList.flatten
+    }
+    finally {
+      source.close()
+    }
   }
 
   private def parseLine(line: String): Option[LogEvent] = {
