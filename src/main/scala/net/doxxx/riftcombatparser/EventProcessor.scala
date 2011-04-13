@@ -1,7 +1,8 @@
 package net.doxxx.riftcombatparser
 
 import EventType._
-import collection.mutable.{HashSet, HashMap}
+import collection.mutable.HashMap
+import collection.immutable.List._
 
 object EventProcessor {
   def summary(events: List[LogEvent]): Map[String, Summary] = {
@@ -40,6 +41,50 @@ object EventProcessor {
       a1._2 > a2._2
     }
     for ((k,v) <- activity.toList.sortWith(cmp)) yield k
+  }
+
+  def stripPreCombat(events: List[LogEvent]): List[LogEvent] = {
+    events match {
+      case Nil => Nil
+      case _ => {
+        val (start, rest) = events span {
+          case CombatToggleEvent(time, state) => false
+          case _ => true
+        }
+        rest match {
+          case Nil => Nil
+          case CombatToggleEvent(time, state) :: _ => {
+            if (state) {
+              rest
+            }
+            else {
+              CombatToggleEvent(start.head.time, true) :: start ::: rest
+            }
+          }
+          case _ => throw new IllegalStateException
+        }
+      }
+    }
+  }
+
+  def splitFights(events: List[LogEvent]): List[List[LogEvent]] = {
+    events match {
+      case Nil => Nil
+      case CombatToggleEvent(_, true) :: tail => {
+        val (fight, rest) = tail span {
+          case CombatToggleEvent(_, false) => false
+          case _ => true
+        }
+        fight :: (rest match {
+          case Nil => Nil
+          case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
+          case _ => throw new IllegalStateException
+        })
+      }
+      case _ => {
+        splitFights(stripPreCombat(events))
+      }
+    }
   }
 }
 

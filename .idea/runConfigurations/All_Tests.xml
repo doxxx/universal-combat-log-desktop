@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All Tests" type="ScalaTestRunConfiguration" factoryName="ScalaTest">
+    <module name="RiftCombatParser" />
+    <setting name="path" value="" />
+    <setting name="package" value="net.doxxx.riftcombatparser" />
+    <setting name="vmparams" value="" />
+    <setting name="params" value="" />
+    <setting name="version" value="true" />
+    <setting name="workingDirectory" value="$PROJECT_DIR$" />
+    <RunnerSettings RunnerId="Run" />
+    <ConfigurationWrapper RunnerId="Run" />
+    <method>
+      <option name="Make" enabled="false" />
+      <option name="SBT.BeforeRunTask" enabled="true" action="test-compile" />
+    </method>
+  </configuration>
+</component>
