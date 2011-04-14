@@ -49,7 +49,9 @@ class ActorList extends BorderPanel {
   }
 
   def update(names: List[String]) {
+    val oldActors: Seq[String] = listView.selection.items
     listView.listData = names
+    selectActors(oldActors.toSet)
   }
 
   def selectActors(names: Set[String]) {
