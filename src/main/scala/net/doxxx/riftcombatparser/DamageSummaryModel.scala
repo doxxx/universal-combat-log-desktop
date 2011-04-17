@@ -35,7 +35,7 @@ class DamageSummaryModel extends AbstractTableModel {
     fireTableDataChanged()
   }
 
-  def applyActorFilter(actors: List[String]) {
+  def applyActorFilter(actors: Set[String]) {
     filteredSummary =
       if (actors.isEmpty)
         None

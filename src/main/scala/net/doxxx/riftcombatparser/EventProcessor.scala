@@ -67,7 +67,7 @@ object EventProcessor {
     }
   }
 
-  def splitFights(events: List[LogEvent]): List[List[LogEvent]] = {
+  def splitFights(events: List[LogEvent]): List[Fight] = {
     events match {
       case Nil => Nil
       case CombatToggleEvent(_, true) :: tail => {
@@ -75,7 +75,7 @@ object EventProcessor {
           case CombatToggleEvent(_, false) => false
           case _ => true
         }
-        fight :: (rest match {
+        Fight(fight) :: (rest match {
           case Nil => Nil
           case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
           case _ => throw new IllegalStateException
@@ -94,4 +94,10 @@ case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, he
   def addHealingIn(amount: Int) = copy(healingIn = healingIn + amount)
   def addHealingOut(amount: Int) = copy(healingOut = healingOut + amount)
   def addDeath() = copy(deaths = deaths + 1)
+}
+
+case class Fight(events: List[LogEvent]) {
+  val startTime = events.head.time
+  val endTime = events.last.time
+  override def toString = "@%d (%ds)".format(startTime, endTime-startTime)
 }

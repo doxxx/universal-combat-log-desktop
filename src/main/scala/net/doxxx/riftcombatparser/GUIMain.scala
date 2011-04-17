@@ -85,12 +85,14 @@ object GUIMain extends SimpleSwingApplication {
 
     val summaryPanel = new SummaryPanel
     val actorList = new ActorList
+    val fightList = new FightList
 
     contents = new BorderPanel {
       layoutManager.setHgap(5)
       layoutManager.setVgap(5)
       layout(summaryPanel) = BorderPanel.Position.Center
       layout(actorList) = BorderPanel.Position.East
+      layout(fightList) = BorderPanel.Position.West
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
@@ -107,6 +109,7 @@ object GUIMain extends SimpleSwingApplication {
     listenTo(MI_LoadActorsFromRaidXML)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
+    listenTo(fightList)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -132,9 +135,15 @@ object GUIMain extends SimpleSwingApplication {
       case UpdateWithEvents(events) => {
         summaryPanel.updateEvents(EventProcessor.summary(events))
         actorList.update(EventProcessor.actors(events))
+        fightList.update(EventProcessor.splitFights(events))
       }
       case SelectedActorsChanged(actors) => {
         summaryPanel.applyActorFilter(actors)
+      }
+      case SelectedFightsChanged(fights) => {
+        val events = (for (f <- fights) yield f.events).flatten
+        summaryPanel.updateEvents(EventProcessor.summary(events))
+        summaryPanel.applyActorFilter(actorList.selectedActors)
       }
     }
 

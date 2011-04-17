@@ -25,7 +25,7 @@ class SummaryPanel extends ScrollPane {
     summaryModel.update(summary)
   }
 
-  def applyActorFilter(actors: List[String]) {
+  def applyActorFilter(actors: Set[String]) {
     summaryModel.applyActorFilter(actors)
   }
 }
