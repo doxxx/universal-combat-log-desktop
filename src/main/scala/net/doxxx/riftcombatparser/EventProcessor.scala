@@ -86,6 +86,20 @@ object EventProcessor {
       }
     }
   }
+
+  private val dayTime = 24*60*60
+  def normalizeTimes(events: List[LogEvent]): List[LogEvent] = {
+    val startTime = events.head.time
+    for (e <- events) yield {
+      val relTime = e.time - startTime
+      if (relTime < 0) {
+        e.copy(relTime + dayTime)
+      }
+      else {
+        e.copy(relTime)
+      }
+    }
+  }
 }
 
 case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0, deaths: Int = 0) {

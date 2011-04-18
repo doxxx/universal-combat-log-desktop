@@ -61,6 +61,26 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(Fight(middleFight), Fight(middleFight2)))
       }
     }
+    "normalizing times" should {
+      val events = List(
+        CombatToggleEvent(86300, true),
+        ActorEvent(86350, DirectDamage, "middleActor2", "middleTarget2", "middleSpell2", 102, 123, "text"),
+        ActorEvent(50, DirectDamage, "actor1", "target1", "spell1", 1, 123, "text"),
+        CombatToggleEvent(100, false)
+      )
+      val normalized = EventProcessor.normalizeTimes(events)
+      "start with time zero" in {
+        normalized.head.time should equal (0)
+      }
+      "handle midnight rollovers" in {
+        normalized should equal (List(
+          CombatToggleEvent(0, true),
+          ActorEvent(50, DirectDamage, "middleActor2", "middleTarget2", "middleSpell2", 102, 123, "text"),
+          ActorEvent(150, DirectDamage, "actor1", "target1", "spell1", 1, 123, "text"),
+          CombatToggleEvent(200, false)
+        ))
+      }
+    }
   }
 
 }
