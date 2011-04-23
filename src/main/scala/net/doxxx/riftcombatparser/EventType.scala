@@ -23,12 +23,13 @@ object EventType extends Enumeration {
   val Unknown20 = Value(20)
   val Unknown21 = Value(21)
   val Unknown22 = Value(22)
-  val Unknown23 = Value(23)
+  val CritDamage = Value(23)
   val FavorGain = Value(24)
   val Immune = Value(26)
   val PowerGain = Value(27)
   val CritHeal = Value(28)
 
-  val DamageTypes = Set(DirectDamage, DamageOverTime, EnvDamage, Unknown23)
+  val DamageTypes = Set(DirectDamage, DamageOverTime, EnvDamage, CritDamage)
   val HealTypes = Set(Heal, CritHeal)
+  val MissTypes = Set(Miss, Dodge, Parry, Resist)
 }

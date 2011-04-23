@@ -100,6 +100,49 @@ object EventProcessor {
       }
     }
   }
+
+  def spellBreakdown(events: List[LogEvent]): Map[String, SpellBreakdown] = {
+    val results = new HashMap[String, SpellBreakdown] {
+      override def default(key: String) = SpellBreakdown()
+    }
+    for (e <- events) e match {
+      case ae: ActorEvent => {
+        if (DamageTypes.contains(ae.eventType)) {
+          if (ae.eventType == CritDamage) {
+            results(ae.spell) = results(ae.spell).addCrit()
+            results(ae.spell) = results(ae.spell).addDamage(ae.amount)
+          }
+          else if (MissTypes.contains(ae.eventType)) {
+            results(ae.spell) = results(ae.spell).addMiss()
+          }
+          else {
+            results(ae.spell) = results(ae.spell).addDamage(ae.amount)
+            results(ae.spell) = results(ae.spell).addHit()
+          }
+        }
+        else if (HealTypes.contains(ae.eventType)) {
+          results(ae.spell) = results(ae.actor).addHealing(ae.amount)
+          if (ae.eventType == CritHeal) {
+            results(ae.spell) = results(ae.spell).addCrit()
+          }
+          else {
+            results(ae.spell) = results(ae.spell).addHit()
+          }
+        }
+      }
+      case _ =>
+    }
+    results.toMap
+  }
+
+  def filterByActors(events: List[LogEvent], actors: Set[String]) = {
+      if (actors.isEmpty)
+        events
+      else
+        events filter {
+          case ActorEvent(_, _, actor, target, _, _, _, _) => actors.contains(actor) || actors.contains(target)
+        }
+  }
 }
 
 case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0, deaths: Int = 0) {
@@ -114,4 +157,12 @@ case class Fight(events: List[LogEvent]) {
   val startTime = events.head.time
   val endTime = events.last.time
   override def toString = "@%d (%ds)".format(startTime, endTime-startTime)
+}
+
+case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0) {
+  def addDamage(amount: Int) = copy(damage = damage + amount)
+  def addHealing(amount: Int) = copy(healing = healing + amount)
+  def addHit() = copy(hits = hits + 1)
+  def addMiss() = copy(misses = misses + 1)
+  def addCrit() = copy(crits = crits + 1)
 }
