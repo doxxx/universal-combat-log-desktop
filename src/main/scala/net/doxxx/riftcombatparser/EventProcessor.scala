@@ -141,6 +141,7 @@ object EventProcessor {
       else
         events filter {
           case ActorEvent(_, _, actor, target, _, _, _, _) => actors.contains(actor) || actors.contains(target)
+          case _ => true
         }
   }
 }
@@ -153,10 +154,10 @@ case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, he
   def addDeath() = copy(deaths = deaths + 1)
 }
 
-case class Fight(events: List[LogEvent]) {
+case class Fight(events: List[LogEvent], title: Option[String] = None) {
   val startTime = events.head.time
   val endTime = events.last.time
-  override def toString = "@%d (%ds)".format(startTime, endTime-startTime)
+  override def toString = title getOrElse ("@%d (%ds)" format (startTime, endTime-startTime))
 }
 
 case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0) {

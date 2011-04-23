@@ -5,6 +5,7 @@ import javax.swing.table.AbstractTableModel
 class DamageSummaryModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out", "Deaths")
 
+  private var events: List[LogEvent] = Nil
   private var summary: Map[String, Summary] = Map.empty
   private var filteredSummary: Option[Map[String, Summary]] = None
 
@@ -30,8 +31,8 @@ class DamageSummaryModel extends AbstractTableModel {
 
   def getRowCount = data.size
 
-  def update(summary: Map[String, Summary]) {
-    this.summary = summary
+  def update(events: List[LogEvent]) {
+    summary = EventProcessor.summary(events)
     fireTableDataChanged()
   }
 

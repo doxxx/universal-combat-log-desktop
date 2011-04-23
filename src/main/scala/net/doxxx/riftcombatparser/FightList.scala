@@ -30,9 +30,10 @@ class FightList extends BorderPanel {
     }
   }
 
-  def update(fights: List[Fight]) {
+  def update(events: List[LogEvent]) {
     val oldFights: Seq[Fight] = listView.selection.items
-    listView.listData = fights
+    val everything = Fight(events, Some("Everything"))
+    listView.listData = everything :: EventProcessor.splitFights(events)
     selectFights(oldFights.toSet)
   }
 
@@ -47,4 +48,3 @@ class FightList extends BorderPanel {
 }
 
 case class SelectedFightsChanged(fights: List[Fight]) extends Event
-

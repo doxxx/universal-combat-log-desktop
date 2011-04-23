@@ -133,17 +133,15 @@ object GUIMain extends SimpleSwingApplication {
         }
       }
       case UpdateWithEvents(events) => {
-        summaryPanel.updateEvents(EventProcessor.summary(events))
-        actorList.update(EventProcessor.actors(events))
-        fightList.update(EventProcessor.splitFights(events))
+        fightList.update(events)
       }
       case SelectedActorsChanged(actors) => {
         summaryPanel.applyActorFilter(actors)
       }
       case SelectedFightsChanged(fights) => {
         val events = (for (f <- fights) yield f.events).flatten
-        summaryPanel.updateEvents(EventProcessor.summary(events))
-        summaryPanel.applyActorFilter(actorList.selectedActors)
+        summaryPanel.update(events)
+        actorList.update(events)
       }
     }
 

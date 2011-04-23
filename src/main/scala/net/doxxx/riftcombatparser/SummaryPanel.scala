@@ -21,8 +21,8 @@ class SummaryPanel extends ScrollPane {
 
   contents = table
 
-  def updateEvents(summary: Map[String, Summary]) {
-    summaryModel.update(summary)
+  def update(events: List[LogEvent]) {
+    summaryModel.update(events)
   }
 
   def applyActorFilter(actors: Set[String]) {
