@@ -10,11 +10,11 @@ class DamageSummaryModel extends AbstractTableModel {
   private var filteredSummary: Option[Map[String, Summary]] = None
 
   def data = filteredSummary getOrElse summary
+  def names = data.keySet.toArray
 
   override def getColumnName(column: Int) = ColumnNames(column)
 
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
-    val names = data.keySet.toArray
     val name = names(rowIndex)
     columnIndex match {
       case 0 => name

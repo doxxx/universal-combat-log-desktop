@@ -45,6 +45,8 @@ class FightList extends BorderPanel {
     }
     listView.selectIndices(indices: _*)
   }
+
+  def selectedFights: List[Fight] = listView.selection.items.toList
 }
 
 case class SelectedFightsChanged(fights: List[Fight]) extends Event

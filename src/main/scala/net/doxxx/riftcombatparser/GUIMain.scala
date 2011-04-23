@@ -97,16 +97,19 @@ object GUIMain extends SimpleSwingApplication {
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
+    val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
 
     menuBar = new MenuBar {
       contents += new Menu("Rift Combat Parser") {
         contents += MI_ChooseCombatLogFile
         contents += MI_LoadActorsFromRaidXML
+        contents += MI_SpellBreakdown
       }
     }
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(MI_LoadActorsFromRaidXML)
+    listenTo(MI_SpellBreakdown)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
@@ -131,6 +134,13 @@ object GUIMain extends SimpleSwingApplication {
           }
           case None => println("No combat log file to locate raid.xml")
         }
+      }
+      case ButtonClicked(MI_SpellBreakdown) => {
+        val events = (for (f <- fightList.selectedFights) yield f.events).flatten
+        val dialog = new SpellBreakdownDialog(this)
+        val selectedActor = summaryPanel.selectedActor
+        dialog.update(EventProcessor.filterByActors(events, Set(selectedActor)))
+        dialog.visible = true
       }
       case UpdateWithEvents(events) => {
         fightList.update(events)

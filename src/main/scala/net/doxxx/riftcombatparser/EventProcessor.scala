@@ -121,7 +121,7 @@ object EventProcessor {
           }
         }
         else if (HealTypes.contains(ae.eventType)) {
-          results(ae.spell) = results(ae.actor).addHealing(ae.amount)
+          results(ae.spell) = results(ae.spell).addHealing(ae.amount)
           if (ae.eventType == CritHeal) {
             results(ae.spell) = results(ae.spell).addCrit()
           }
@@ -140,7 +140,7 @@ object EventProcessor {
         events
       else
         events filter {
-          case ActorEvent(_, _, actor, target, _, _, _, _) => actors.contains(actor) || actors.contains(target)
+          case ActorEvent(_, _, actor, _, _, _, _, _) => actors.contains(actor)
           case _ => true
         }
   }

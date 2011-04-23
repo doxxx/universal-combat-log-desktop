@@ -17,6 +17,7 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setComparator(5, IntComparator)
     rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
+    selection.intervalMode = Table.IntervalMode.Single
   }
 
   contents = table
@@ -27,5 +28,9 @@ class SummaryPanel extends ScrollPane {
 
   def applyActorFilter(actors: Set[String]) {
     summaryModel.applyActorFilter(actors)
+  }
+
+  def selectedActor: String = {
+    summaryModel.names(table.viewToModelRow(table.selection.rows.anchorIndex))
   }
 }
