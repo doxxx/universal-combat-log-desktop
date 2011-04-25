@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import javax.swing.table.AbstractTableModel
 
 class SpellBreakdownModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage", "Healing", "Hits", "Misses", "Crits")
+  private val ColumnNames = Array("Name", "Damage", "Healing", "Count", "Miss %", "Crit %")
 
   private var breakdown: Map[String, SpellBreakdown] = Map.empty
 
@@ -14,15 +14,18 @@ class SpellBreakdownModel extends AbstractTableModel {
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
     val names = data.keySet.toArray
     val name = names(rowIndex)
-    columnIndex match {
+    val spellData = data(name)
+    val count = spellData.hits + spellData.misses + spellData.crits
+    val value = columnIndex match {
       case 0 => name
-      case 1 => data(name).damage.asInstanceOf[AnyRef]
-      case 2 => data(name).healing.asInstanceOf[AnyRef]
-      case 3 => data(name).hits.asInstanceOf[AnyRef]
-      case 4 => data(name).misses.asInstanceOf[AnyRef]
-      case 5 => data(name).crits.asInstanceOf[AnyRef]
+      case 1 => spellData.damage
+      case 2 => spellData.healing
+      case 3 => count
+      case 4 => percent(spellData.misses, count)
+      case 5 => percent(spellData.crits, count)
       case _ => null
     }
+    value.asInstanceOf[AnyRef]
   }
 
   def getColumnCount = ColumnNames.size
@@ -34,8 +37,8 @@ class SpellBreakdownModel extends AbstractTableModel {
     fireTableDataChanged()
   }
 
+  def percent(num: Int, denom: Int): Double = {
+    (num:Double) / denom * 100
+  }
+
 }
-
-
-
-
