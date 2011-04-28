@@ -2,6 +2,7 @@ package net.doxxx.riftcombatparser
 
 import swing._
 import collection.JavaConversions._
+import event.{Event, TableRowsSelected}
 import javax.swing.table.TableRowSorter
 import javax.swing.{SortOrder, RowSorter}
 
@@ -22,6 +23,18 @@ class SummaryPanel extends ScrollPane {
 
   contents = table
 
+  listenTo(table.selection)
+
+  reactions += {
+    case TableRowsSelected(source, range, adjusting) => {
+      if (!adjusting)
+        selectedActor match {
+          case Some(actor) => publish(SelectedActorChanged(actor))
+          case None =>
+        }
+    }
+  }
+
   def update(events: List[LogEvent]) {
     summaryModel.update(events)
   }
@@ -30,7 +43,15 @@ class SummaryPanel extends ScrollPane {
     summaryModel.applyActorFilter(actors)
   }
 
-  def selectedActor: String = {
-    summaryModel.names(table.viewToModelRow(table.selection.rows.anchorIndex))
+  def selectedActor: Option[String] = {
+    val row = table.selection.rows.anchorIndex
+    if (row >= 0) {
+      Some(summaryModel.names(table.viewToModelRow(row)))
+    }
+    else {
+      None
+    }
   }
 }
+
+case class SelectedActorChanged(actor: String) extends Event

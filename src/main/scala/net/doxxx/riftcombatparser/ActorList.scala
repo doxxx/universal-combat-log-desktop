@@ -43,7 +43,7 @@ class ActorList extends BorderPanel {
     }
     case ListSelectionChanged(`listView`, range, isChanging) => {
       if (!isChanging) {
-        publish(SelectedActorsChanged(listView.selection.items.toSet))
+        publish(ActorFilterChanged(listView.selection.items.toSet))
       }
     }
   }
@@ -66,4 +66,4 @@ class ActorList extends BorderPanel {
   def selectedActors: Set[String] = listView.selection.items.toSet
 }
 
-case class SelectedActorsChanged(actors: Set[String]) extends Event
+case class ActorFilterChanged(actors: Set[String]) extends Event

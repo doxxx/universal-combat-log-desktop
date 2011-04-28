@@ -87,6 +87,8 @@ object GUIMain extends SimpleSwingApplication {
     val actorList = new ActorList
     val fightList = new FightList
 
+    val spellBreakdownDialog = new SpellBreakdownDialog(this)
+
     contents = new BorderPanel {
       layoutManager.setHgap(5)
       layoutManager.setVgap(5)
@@ -113,6 +115,7 @@ object GUIMain extends SimpleSwingApplication {
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
+    listenTo(summaryPanel)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -136,22 +139,31 @@ object GUIMain extends SimpleSwingApplication {
         }
       }
       case ButtonClicked(MI_SpellBreakdown) => {
-        val events = (for (f <- fightList.selectedFights) yield f.events).flatten
-        val dialog = new SpellBreakdownDialog(this)
-        val selectedActor = summaryPanel.selectedActor
-        dialog.update(EventProcessor.filterByActors(events, Set(selectedActor)))
-        dialog.visible = true
+        summaryPanel.selectedActor match {
+          case Some(actor) => {
+            val events = (for (f <- fightList.selectedFights) yield f.events).flatten
+            spellBreakdownDialog.update(EventProcessor.filterByActors(events, summaryPanel.selectedActor.toSet))
+            spellBreakdownDialog.visible = true
+          }
+          case None =>
+        }
       }
       case UpdateWithEvents(events) => {
         fightList.update(events)
       }
-      case SelectedActorsChanged(actors) => {
+      case ActorFilterChanged(actors) => {
         summaryPanel.applyActorFilter(actors)
       }
       case SelectedFightsChanged(fights) => {
         val events = (for (f <- fights) yield f.events).flatten
         summaryPanel.update(events)
         actorList.update(events)
+      }
+      case SelectedActorChanged(actor) => {
+        if (spellBreakdownDialog.visible) {
+          val events = (for (f <- fightList.selectedFights) yield f.events).flatten
+          spellBreakdownDialog.update(EventProcessor.filterByActors(events, Set(actor)))
+        }
       }
     }
 
