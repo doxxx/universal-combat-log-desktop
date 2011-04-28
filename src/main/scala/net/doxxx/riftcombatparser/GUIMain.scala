@@ -156,8 +156,13 @@ object GUIMain extends SimpleSwingApplication {
       }
       case SelectedFightsChanged(fights) => {
         val events = (for (f <- fights) yield f.events).flatten
+        val oldActor = summaryPanel.selectedActor
         summaryPanel.update(events)
         actorList.update(events)
+        oldActor match {
+          case Some(actor) => summaryPanel.selectActor(actor)
+          case None =>
+        }
       }
       case SelectedActorChanged(actor) => {
         if (spellBreakdownDialog.visible) {

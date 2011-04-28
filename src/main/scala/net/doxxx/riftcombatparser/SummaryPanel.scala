@@ -52,6 +52,13 @@ class SummaryPanel extends ScrollPane {
       None
     }
   }
+
+  def selectActor(actor: String) {
+    val i = summaryModel.names.indexOf(actor)
+    if (i >= 0) {
+      table.selection.rows += table.modelToViewRow(i)
+    }
+  }
 }
 
 case class SelectedActorChanged(actor: String) extends Event
