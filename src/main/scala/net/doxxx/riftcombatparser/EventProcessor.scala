@@ -1,8 +1,9 @@
 package net.doxxx.riftcombatparser
 
 import EventType._
-import collection.mutable.HashMap
 import collection.immutable.List._
+import annotation.tailrec
+import collection.mutable.{ListBuffer, HashMap}
 
 object EventProcessor {
   def summary(events: List[LogEvent]): Map[String, Summary] = {
@@ -70,12 +71,13 @@ object EventProcessor {
   def splitFights(events: List[LogEvent]): List[Fight] = {
     events match {
       case Nil => Nil
-      case CombatToggleEvent(_, true) :: tail => {
+      case (start @ CombatToggleEvent(_, true)) :: tail => {
         val (fight, rest) = tail span {
           case CombatToggleEvent(_, false) => false
           case _ => true
         }
-        Fight(fight) :: (rest match {
+        // fight might be empty, so prepend the combat start event so it can calc start/end time
+        Fight(start :: fight) :: (rest match {
           case Nil => Nil
           case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
           case _ => throw new IllegalStateException
