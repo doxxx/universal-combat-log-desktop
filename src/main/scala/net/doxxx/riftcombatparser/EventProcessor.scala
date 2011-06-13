@@ -10,22 +10,24 @@ object EventProcessor {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
-    for (e <- events) e match {
-      case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-        results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
-        results(ae.target) = results(ae.target).addDamageIn(ae.amount)
+    Utils.timeit("summary") { () =>
+      for (e <- events) e match {
+        case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
+          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
+          results(ae.target) = results(ae.target).addDamageIn(ae.amount)
+        }
+        case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
+          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
+          results(ae.target) = results(ae.target).addHealingIn(ae.amount)
+        }
+        case ae: ActorEvent if (ae.eventType == Died) => {
+          results(ae.actor) = results(ae.actor).addDeath()
+        }
+        case ae: ActorEvent if (ae.eventType == Slain) => {
+          results(ae.target) = results(ae.target).addDeath()
+        }
+        case _ =>
       }
-      case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
-        results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
-        results(ae.target) = results(ae.target).addHealingIn(ae.amount)
-      }
-      case ae: ActorEvent if (ae.eventType == Died) => {
-        results(ae.actor) = results(ae.actor).addDeath()
-      }
-      case ae: ActorEvent if (ae.eventType == Slain) => {
-        results(ae.target) = results(ae.target).addDeath()
-      }
-      case _ =>
     }
     results.toMap
   }
