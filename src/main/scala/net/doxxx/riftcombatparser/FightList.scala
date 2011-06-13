@@ -7,10 +7,16 @@ class FightList extends BorderPanel {
   layoutManager.setHgap(5)
   layoutManager.setVgap(5)
 
+  val allButton = new Button {
+    text = "All"
+  }
+
   val header = new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
       text = "Fights"
     }
+    contents += Swing.HGlue
+    contents += allButton
   }
   val listView = new ListView[Fight]
   val scrollPane = new ScrollPane {
@@ -20,11 +26,16 @@ class FightList extends BorderPanel {
   layout(header) = BorderPanel.Position.North
   layout(scrollPane) = BorderPanel.Position.Center
 
+  listenTo(allButton)
   listenTo(listView.selection)
 
   var updating = false
 
   reactions += {
+    case ButtonClicked(`allButton`) => {
+      listView.peer.getSelectionModel.clearSelection()
+      listView.peer.getSelectionModel.addSelectionInterval(0, listView.listData.size-1)
+    }
     case ListSelectionChanged(`listView`, range, isChanging) => {
       if (!isChanging && !updating) {
         publish(SelectedFightsChanged(listView.selection.items.toList))
@@ -36,8 +47,7 @@ class FightList extends BorderPanel {
     updating = true
     val oldFightNames = listView.selection.items.map{ _.toString }.toSet
     val fights = EventProcessor.splitFights(events)
-    val everything = Fights(fights, Some("Everything"))
-    listView.listData = everything :: fights
+    listView.listData = fights
     selectFightsByName(oldFightNames)
     updating = false
     publish(SelectedFightsChanged(listView.selection.items.toList))
