@@ -9,7 +9,7 @@ class CombatLogParser(source: Source) {
   lazy val events = {
     try {
       Utils.timeit("logparse") { () =>
-        source.getLines().map(parseLine).toList.flatten
+        source.getLines().toList.par.map(parseLine).toList.flatten
       }
     }
     finally {
