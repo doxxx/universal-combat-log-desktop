@@ -149,7 +149,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case ButtonClicked(MI_SpellBreakdown) => {
         summaryPanel.selectedActor match {
           case Some(actor) => {
-            val combined = Fight.join(fightList.selectedFights)
+            val combined = Fights(fightList.selectedFights)
             spellBreakdownDialog.update(actor, EventProcessor.filterByActors(combined.events, Set(actor)))
             spellBreakdownDialog.visible = true
           }
@@ -174,7 +174,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case SelectedFightsChanged(fights) => {
         val oldActor = summaryPanel.selectedActor
-        val combined = Fight.join(fights)
+        val combined = Fights(fights)
         summaryPanel.update(combined)
         actorList.update(combined)
         oldActor match {

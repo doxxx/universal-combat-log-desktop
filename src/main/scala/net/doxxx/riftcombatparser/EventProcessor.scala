@@ -73,7 +73,7 @@ object EventProcessor {
     }
   }
 
-  def splitFights(events: List[LogEvent]): List[Fight] = {
+  def splitFights(events: List[LogEvent]): List[SingleFight] = {
     events match {
       case Nil => Nil
       case (start @ CombatToggleEvent(_, true)) :: tail => {
@@ -82,7 +82,7 @@ object EventProcessor {
           case _ => true
         }
         // fight might be empty, so prepend the combat start event so it can calc start/end time
-        Fight(start :: fight) :: (rest match {
+        SingleFight(start :: fight) :: (rest match {
           case Nil => Nil
           case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
           case _ => throw new IllegalStateException
@@ -167,17 +167,25 @@ case class Summary(damageIn: Int = 0, dpsIn: Int = 0,
     hpsIn = healingIn / duration, hpsOut = healingOut / duration)
 }
 
-case object Fight {
-  def join(fights: Seq[Fight]): Fight = {
-    Fight((for (f <- fights) yield f.events).flatten.toList)
-  }
+abstract class Fight {
+  val events:List[LogEvent]
+  val title:Option[String]
+  val startTime:Long
+  val endTime:Long
+  val duration:Int
+  override def toString = title getOrElse ("@%d (%ds)" format (startTime, duration))
 }
-
-case class Fight(events: List[LogEvent], title: Option[String] = None) {
+case class SingleFight(events: List[LogEvent], title: Option[String] = None) extends Fight {
   val startTime = if (events.isEmpty) 0 else events.head.time
   val endTime = if (events.isEmpty) 0 else events.last.time
   val duration: Int = (endTime - startTime).toInt
-  override def toString = title getOrElse ("@%d (%ds)" format (startTime, duration))
+}
+
+case class Fights(fights: List[Fight], title: Option[String] = None) extends Fight {
+  lazy val events = fights.map(_.events).flatten
+  lazy val startTime = fights.head.startTime
+  lazy val endTime = fights.last.endTime
+  lazy val duration = fights.map(_.duration).foldLeft(0)(_+_)
 }
 
 case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0) {

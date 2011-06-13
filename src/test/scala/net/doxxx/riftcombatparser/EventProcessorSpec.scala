@@ -19,7 +19,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         )
         val events = start ::: middleFightBracketed
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(Fight(middleFight)))
+        fights should equal (List(SingleFight(middleFight)))
       }
 
       "treat events + CombatEnd at beginning as a fight" in {
@@ -28,7 +28,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         )
         val events = start ::: List(CombatToggleEvent(1, false)) ::: middleFightBracketed
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(Fight(start), Fight(middleFight)))
+        fights should equal (List(SingleFight(start), SingleFight(middleFight)))
       }
 
       "ignore CombatEnd + events at end" in {
@@ -37,7 +37,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         )
         val events = middleFightBracketed ::: end
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(Fight(middleFight)))
+        fights should equal (List(SingleFight(middleFight)))
       }
 
       "treat CombatStart + events at end as a fight" in {
@@ -46,7 +46,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         )
         val events = middleFightBracketed ::: List(CombatToggleEvent(199, true)) ::: end
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(Fight(middleFight), Fight(end)))
+        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
       }
 
       "discard events in between fights" in {
@@ -58,7 +58,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
           ActorEvent(120, DirectDamage, "discardActor", "discartTarget", "discardSpell", 999, 123, "text")
         ) ::: middleFightBracketed2
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(Fight(middleFight), Fight(middleFight2)))
+        fights should equal (List(SingleFight(middleFight), SingleFight(middleFight2)))
       }
     }
     "normalizing times" should {
