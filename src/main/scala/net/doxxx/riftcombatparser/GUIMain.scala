@@ -10,8 +10,10 @@ import scala.actors.Actor._
 import java.util.Calendar
 import java.text.DateFormat
 import java.io.{FileReader, File}
+import java.awt.Toolkit
+import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSelection}
 
-object GUIMain extends SimpleSwingApplication {
+object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   case class UpdateWithEvents(events: List[LogEvent]) extends Event
 
@@ -100,18 +102,21 @@ object GUIMain extends SimpleSwingApplication {
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
     val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
+    val MI_CopySummary = new MenuItem("Copy Summary")
 
     menuBar = new MenuBar {
       contents += new Menu("Rift Combat Parser") {
         contents += MI_ChooseCombatLogFile
         contents += MI_LoadActorsFromRaidXML
         contents += MI_SpellBreakdown
+        contents += MI_CopySummary
       }
     }
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(MI_LoadActorsFromRaidXML)
     listenTo(MI_SpellBreakdown)
+    listenTo(MI_CopySummary)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
@@ -148,6 +153,11 @@ object GUIMain extends SimpleSwingApplication {
           case None =>
         }
       }
+      case ButtonClicked(MI_CopySummary) => {
+        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+        val data = new StringSelection(summaryPanel.toString)
+        clipboard.setContents(data, GUIMain)
+      }
       case UpdateWithEvents(events) => {
         fightList.update(events)
       }
@@ -183,6 +193,10 @@ object GUIMain extends SimpleSwingApplication {
 
   def formattedDate = {
     LoggingDateFormat.format(Calendar.getInstance.getTime)
+  }
+
+  def lostOwnership(clipboard: Clipboard, contents: Transferable) {
+    // do nothing
   }
 }
 

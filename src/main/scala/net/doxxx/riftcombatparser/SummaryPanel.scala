@@ -20,7 +20,7 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setComparator(7, IntComparator)
     rowSorter.setComparator(8, IntComparator)
     rowSorter.setComparator(9, IntComparator)
-    rowSorter.setSortKeys(List(new RowSorter.SortKey(3, SortOrder.DESCENDING)))
+    rowSorter.setSortKeys(List(new RowSorter.SortKey(4, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
     selection.intervalMode = Table.IntervalMode.Single
   }
@@ -63,6 +63,8 @@ class SummaryPanel extends ScrollPane {
       table.selection.rows += table.modelToViewRow(i)
     }
   }
+
+  override def toString() = summaryModel.toString
 }
 
 case class SelectedActorChanged(actor: String) extends Event

@@ -1,6 +1,7 @@
 package net.doxxx.riftcombatparser
 
 import javax.swing.table.AbstractTableModel
+import collection.SortedMap
 
 class SummaryModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Deaths")
@@ -47,6 +48,13 @@ class SummaryModel extends AbstractTableModel {
       else
         Some(summary filter { case (actor, sum) => actors.contains(actor) })
     fireTableDataChanged()
+  }
+
+  override def toString = {
+    val dps = ((data.map {case (name, summary) => name -> summary.dpsOut}).toList.sortBy {case (name, value) => value}).reverse.take(10).filter { case (name, value) => value > 0 }
+    val hps = ((data.map {case (name, summary) => name -> summary.hpsOut}).toList.sortBy {case (name, value) => value}).reverse.take(10).filter { case (name, value) => value > 0 }
+    (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString("DPS: ", ", ", "") + " ## " +
+      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString("HPS: ", ", ", "")
   }
 }
 
