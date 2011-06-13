@@ -7,7 +7,7 @@ import javax.swing.table.TableRowSorter
 import javax.swing.{SortOrder, RowSorter}
 
 class SummaryPanel extends ScrollPane {
-  val summaryModel = new DamageSummaryModel
+  val summaryModel = new SummaryModel
   val table = new Table {
     model = summaryModel
     val rowSorter = new TableRowSorter(model)

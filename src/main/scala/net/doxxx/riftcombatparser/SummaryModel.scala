@@ -2,7 +2,7 @@ package net.doxxx.riftcombatparser
 
 import javax.swing.table.AbstractTableModel
 
-class DamageSummaryModel extends AbstractTableModel {
+class SummaryModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out", "Deaths")
 
   private var events: List[LogEvent] = Nil
