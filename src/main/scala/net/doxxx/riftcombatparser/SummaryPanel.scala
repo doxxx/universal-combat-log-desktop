@@ -64,7 +64,8 @@ class SummaryPanel extends ScrollPane {
     }
   }
 
-  override def toString() = summaryModel.toString
+  def dpsSummaryForClipboard = summaryModel.dpsSummaryForClipboard
+  def hpsSummaryForClipboard = summaryModel.hpsSummaryForClipboard
 }
 
 case class SelectedActorChanged(actor: String) extends Event

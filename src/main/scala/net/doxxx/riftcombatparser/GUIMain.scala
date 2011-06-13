@@ -102,21 +102,24 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
     val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
-    val MI_CopySummary = new MenuItem("Copy Summary")
+    val MI_CopyDPSSummary = new MenuItem("Copy DPS Summary")
+    val MI_CopyHPSSummary = new MenuItem("Copy HPS Summary")
 
     menuBar = new MenuBar {
       contents += new Menu("Rift Combat Parser") {
         contents += MI_ChooseCombatLogFile
         contents += MI_LoadActorsFromRaidXML
         contents += MI_SpellBreakdown
-        contents += MI_CopySummary
+        contents += MI_CopyDPSSummary
+        contents += MI_CopyHPSSummary
       }
     }
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(MI_LoadActorsFromRaidXML)
     listenTo(MI_SpellBreakdown)
-    listenTo(MI_CopySummary)
+    listenTo(MI_CopyDPSSummary)
+    listenTo(MI_CopyHPSSummary)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
@@ -153,9 +156,14 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           case None =>
         }
       }
-      case ButtonClicked(MI_CopySummary) => {
+      case ButtonClicked(MI_CopyDPSSummary) => {
         val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(summaryPanel.toString)
+        val data = new StringSelection(summaryPanel.dpsSummaryForClipboard)
+        clipboard.setContents(data, GUIMain)
+      }
+      case ButtonClicked(MI_CopyHPSSummary) => {
+        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+        val data = new StringSelection(summaryPanel.hpsSummaryForClipboard)
         clipboard.setContents(data, GUIMain)
       }
       case UpdateWithEvents(events) => {

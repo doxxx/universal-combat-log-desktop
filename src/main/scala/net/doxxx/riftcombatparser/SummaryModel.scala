@@ -50,11 +50,27 @@ class SummaryModel extends AbstractTableModel {
     fireTableDataChanged()
   }
 
-  override def toString = {
-    val dps = ((data.map {case (name, summary) => name -> summary.dpsOut}).toList.sortBy {case (name, value) => value}).reverse.take(10).filter { case (name, value) => value > 0 }
-    val hps = ((data.map {case (name, summary) => name -> summary.hpsOut}).toList.sortBy {case (name, value) => value}).reverse.take(10).filter { case (name, value) => value > 0 }
-    (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString("DPS: ", ", ", "") + " ## " +
-      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString("HPS: ", ", ", "")
+  def dpsSummary = data.map {case (name, summary) => name -> summary.dpsOut}
+  def dpsSorted = dpsSummary.toList.sortBy {case (name, value) => value}.reverse
+  def hpsSummary = data.map {case (name, summary) => name -> summary.hpsOut}
+  def hpsSorted = hpsSummary.toList.sortBy {case (name, value) => value}.reverse
+  def raidDPS = dpsSummary.map{case (name, value) => value}.sum
+  def raidHPS = hpsSummary.map{case (name, value) => value}.sum
+
+  def dpsSummaryForClipboard:String = {
+    val dps = dpsSorted.take(10).filter { case (name, value) => value > 0 }
+    "DPS: Raid:%d - %s".format(
+      raidDPS,
+      (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+    )
+  }
+
+  def hpsSummaryForClipboard:String = {
+    val hps = hpsSorted.take(10).filter { case (name, value) => value > 0 }
+    "HPS: Raid:%d - %s".format(
+      raidHPS,
+      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+    )
   }
 }
 
