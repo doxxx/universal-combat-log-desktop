@@ -22,19 +22,24 @@ class FightList extends BorderPanel {
 
   listenTo(listView.selection)
 
+  var updating = false
+
   reactions += {
     case ListSelectionChanged(`listView`, range, isChanging) => {
-      if (!isChanging) {
+      if (!isChanging && !updating) {
         publish(SelectedFightsChanged(listView.selection.items.toList))
       }
     }
   }
 
   def update(events: List[LogEvent]) {
+    updating = true
     val oldFights: Seq[String] = listView.selection.items map { _.toString }
     val everything = Fight(events, Some("Everything"))
     listView.listData = everything :: EventProcessor.splitFights(events)
     selectFights(oldFights.toSet)
+    updating = false
+    publish(SelectedFightsChanged(listView.selection.items.toList))
   }
 
   def selectFights(fightNames: Set[String]) {

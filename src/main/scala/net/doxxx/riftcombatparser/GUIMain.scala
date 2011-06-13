@@ -141,8 +141,8 @@ object GUIMain extends SimpleSwingApplication {
       case ButtonClicked(MI_SpellBreakdown) => {
         summaryPanel.selectedActor match {
           case Some(actor) => {
-            val events = (for (f <- fightList.selectedFights) yield f.events).flatten
-            spellBreakdownDialog.update(actor, EventProcessor.filterByActors(events, Set(actor)))
+            val combined = Fight.join(fightList.selectedFights)
+            spellBreakdownDialog.update(actor, EventProcessor.filterByActors(combined.events, Set(actor)))
             spellBreakdownDialog.visible = true
           }
           case None =>
@@ -155,10 +155,10 @@ object GUIMain extends SimpleSwingApplication {
         summaryPanel.applyActorFilter(actors)
       }
       case SelectedFightsChanged(fights) => {
-        val events = (for (f <- fights) yield f.events).flatten
         val oldActor = summaryPanel.selectedActor
-        summaryPanel.update(events)
-        actorList.update(events)
+        val combined = Fight.join(fights)
+        summaryPanel.update(combined)
+        actorList.update(combined)
         oldActor match {
           case Some(actor) => summaryPanel.selectActor(actor)
           case None =>

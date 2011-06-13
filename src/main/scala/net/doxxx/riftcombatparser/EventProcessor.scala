@@ -6,12 +6,12 @@ import annotation.tailrec
 import collection.mutable.{ListBuffer, HashMap}
 
 object EventProcessor {
-  def summary(events: List[LogEvent]): Map[String, Summary] = {
+  def summary(fight: Fight): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
     Utils.timeit("summary") { () =>
-      for (e <- events) e match {
+      for (e <- fight.events) e match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
           results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
           results(ae.target) = results(ae.target).addDamageIn(ae.amount)
@@ -27,6 +27,9 @@ object EventProcessor {
           results(ae.target) = results(ae.target).addDeath()
         }
         case _ =>
+      }
+      for (actor <- results.keys) {
+        results(actor) = results(actor).calculatePerSecond(fight.duration)
       }
     }
     results.toMap
@@ -150,18 +153,31 @@ object EventProcessor {
   }
 }
 
-case class Summary(damageIn: Int = 0, damageOut: Int = 0, healingIn: Int = 0, healingOut: Int = 0, deaths: Int = 0) {
+case class Summary(damageIn: Int = 0, dpsIn: Int = 0,
+                   damageOut: Int = 0, dpsOut: Int = 0,
+                   healingIn: Int = 0, hpsIn: Int = 0,
+                   healingOut: Int = 0, hpsOut: Int = 0,
+                   deaths: Int = 0) {
   def addDamageIn(amount: Int) = copy(damageIn = damageIn + amount)
   def addDamageOut(amount: Int) = copy(damageOut = damageOut + amount)
   def addHealingIn(amount: Int) = copy(healingIn = healingIn + amount)
   def addHealingOut(amount: Int) = copy(healingOut = healingOut + amount)
   def addDeath() = copy(deaths = deaths + 1)
+  def calculatePerSecond(duration: Int) = copy(dpsIn = damageIn / duration, dpsOut = damageOut / duration,
+    hpsIn = healingIn / duration, hpsOut = healingOut / duration)
+}
+
+case object Fight {
+  def join(fights: Seq[Fight]): Fight = {
+    Fight((for (f <- fights) yield f.events).flatten.toList)
+  }
 }
 
 case class Fight(events: List[LogEvent], title: Option[String] = None) {
-  val startTime = events.head.time
-  val endTime = events.last.time
-  override def toString = title getOrElse ("@%d (%ds)" format (startTime, endTime-startTime))
+  val startTime = if (events.isEmpty) 0 else events.head.time
+  val endTime = if (events.isEmpty) 0 else events.last.time
+  val duration: Int = (endTime - startTime).toInt
+  override def toString = title getOrElse ("@%d (%ds)" format (startTime, duration))
 }
 
 case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0) {

@@ -16,7 +16,11 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setComparator(3, IntComparator)
     rowSorter.setComparator(4, IntComparator)
     rowSorter.setComparator(5, IntComparator)
-    rowSorter.setSortKeys(List(new RowSorter.SortKey(2, SortOrder.DESCENDING)))
+    rowSorter.setComparator(6, IntComparator)
+    rowSorter.setComparator(7, IntComparator)
+    rowSorter.setComparator(8, IntComparator)
+    rowSorter.setComparator(9, IntComparator)
+    rowSorter.setSortKeys(List(new RowSorter.SortKey(3, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
     selection.intervalMode = Table.IntervalMode.Single
   }
@@ -35,8 +39,8 @@ class SummaryPanel extends ScrollPane {
     }
   }
 
-  def update(events: List[LogEvent]) {
-    summaryModel.update(events)
+  def update(fight: Fight) {
+    summaryModel.update(fight)
   }
 
   def applyActorFilter(actors: Set[String]) {

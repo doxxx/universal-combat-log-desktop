@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import javax.swing.table.AbstractTableModel
 
 class SummaryModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage In", "Damage Out", "Healing In", "Healing Out", "Deaths")
+  private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Deaths")
 
   private var events: List[LogEvent] = Nil
   private var summary: Map[String, Summary] = Map.empty
@@ -19,10 +19,14 @@ class SummaryModel extends AbstractTableModel {
     columnIndex match {
       case 0 => name
       case 1 => data(name).damageIn.asInstanceOf[AnyRef]
-      case 2 => data(name).damageOut.asInstanceOf[AnyRef]
-      case 3 => data(name).healingIn.asInstanceOf[AnyRef]
-      case 4 => data(name).healingOut.asInstanceOf[AnyRef]
-      case 5 => data(name).deaths.asInstanceOf[AnyRef]
+      case 2 => data(name).dpsIn.asInstanceOf[AnyRef]
+      case 3 => data(name).damageOut.asInstanceOf[AnyRef]
+      case 4 => data(name).dpsOut.asInstanceOf[AnyRef]
+      case 5 => data(name).healingIn.asInstanceOf[AnyRef]
+      case 6 => data(name).hpsIn.asInstanceOf[AnyRef]
+      case 7 => data(name).healingOut.asInstanceOf[AnyRef]
+      case 8 => data(name).hpsOut.asInstanceOf[AnyRef]
+      case 9 => data(name).deaths.asInstanceOf[AnyRef]
       case _ => null
     }
   }
@@ -31,8 +35,8 @@ class SummaryModel extends AbstractTableModel {
 
   def getRowCount = data.size
 
-  def update(events: List[LogEvent]) {
-    summary = EventProcessor.summary(events)
+  def update(fight: Fight) {
+    summary = EventProcessor.summary(fight)
     fireTableDataChanged()
   }
 

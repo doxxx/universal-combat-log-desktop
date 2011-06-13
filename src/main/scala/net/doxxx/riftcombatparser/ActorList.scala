@@ -48,9 +48,9 @@ class ActorList extends BorderPanel {
     }
   }
 
-  def update(events: List[LogEvent]) {
+  def update(fight: Fight) {
     val oldActors: Set[String] = listView.selection.items.toSet
-    listView.listData = EventProcessor.actors(events)
+    listView.listData = EventProcessor.actors(fight.events)
     selectActors(oldActors.toSet)
   }
 
