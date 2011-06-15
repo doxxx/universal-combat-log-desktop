@@ -53,7 +53,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     logFile match {
       case Some(f) => actor {
         log("Loading events from %s", f.toString)
-        val events = EventProcessor.normalizeTimes(new CombatLogParser(Source.fromFile(f)).events)
+        val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
         Swing.onEDT {
           logFileEventPublisher.publish(UpdateWithEvents(events))
         }

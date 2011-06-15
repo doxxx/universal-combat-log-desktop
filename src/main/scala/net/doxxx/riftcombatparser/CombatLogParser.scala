@@ -3,10 +3,15 @@ package net.doxxx.riftcombatparser
 import io.Source
 import util.matching.Regex
 
-class CombatLogParser(source: Source) {
-  import CombatLogParser._
+object CombatLogParser {
+  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
+  private val DataRE =
+    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
+              "eventType", "actor", "target", "amount", "spellId", "spell")
+  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
+  private val OverhealRE = new Regex("\\(([0-9]+) overheal\\)", "amount")
 
-  lazy val events = {
+  def parse(source: Source): List[LogEvent] = {
     try {
       Utils.timeit("logparse") { () =>
         source.getLines().toList.par.map(parseLine).toList.flatten
@@ -14,6 +19,13 @@ class CombatLogParser(source: Source) {
     }
     finally {
       source.close()
+    }
+  }
+
+  def extractOverheal(text: String): Int = {
+    OverhealRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("amount").toInt
+      case None => 0
     }
   }
 
@@ -49,12 +61,4 @@ class CombatLogParser(source: Source) {
       }
     }
   }
-}
-
-object CombatLogParser {
-  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
-  private val DataRE =
-    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-              "eventType", "actor", "target", "amount", "spellId", "spell")
-  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
 }

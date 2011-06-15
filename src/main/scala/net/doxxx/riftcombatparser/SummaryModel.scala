@@ -4,7 +4,7 @@ import javax.swing.table.AbstractTableModel
 import collection.SortedMap
 
 class SummaryModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Deaths")
+  private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Overhealing", "Deaths")
 
   private var events: List[LogEvent] = Nil
   private var summary: Map[String, Summary] = Map.empty
@@ -27,7 +27,8 @@ class SummaryModel extends AbstractTableModel {
       case 6 => data(name).hpsIn.asInstanceOf[AnyRef]
       case 7 => data(name).healingOut.asInstanceOf[AnyRef]
       case 8 => data(name).hpsOut.asInstanceOf[AnyRef]
-      case 9 => data(name).deaths.asInstanceOf[AnyRef]
+      case 9 => data(name).overhealing.asInstanceOf[AnyRef]
+      case 10 => data(name).deaths.asInstanceOf[AnyRef]
       case _ => null
     }
   }

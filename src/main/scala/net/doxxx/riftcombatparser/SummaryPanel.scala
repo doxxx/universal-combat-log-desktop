@@ -20,6 +20,7 @@ class SummaryPanel extends ScrollPane {
     rowSorter.setComparator(7, IntComparator)
     rowSorter.setComparator(8, IntComparator)
     rowSorter.setComparator(9, IntComparator)
+    rowSorter.setComparator(10, IntComparator)
     rowSorter.setSortKeys(List(new RowSorter.SortKey(4, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
     selection.intervalMode = Table.IntervalMode.Single
