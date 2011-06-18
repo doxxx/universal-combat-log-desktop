@@ -2,10 +2,15 @@ package net.doxxx.riftcombatparser
 
 import swing._
 import swing.TabbedPane.Page
+import net.doxxx.riftcombatparser.SummaryColumns._
 
 class SummaryPanels extends TabbedPane {
 
-  val panels = Seq(new OverviewSummaryPanel, new DamageSummaryPanel, new HealingSummaryPanel)
+  val panels = Seq(
+    new SummaryPanel("Overview", Seq(Name, DPSOut, HPSOut, Deaths), DPSOut),
+    new SummaryPanel("Damage", Seq(Name, DPSOut, DamageOut, DPSIn, DamageIn), DPSOut),
+    new SummaryPanel("Healing", Seq(Name, HPSOut, HealingOut, HPSIn, HealingIn, Overhealing), HPSOut)
+  )
 
   panels foreach { p =>
     pages += new Page(p.title, p)
