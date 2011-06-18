@@ -183,12 +183,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
         fullSummary = EventProcessor.summary(combined)
-        summaryPanel.update(fullSummary)
         actorList.update(EventProcessor.actorsSortedByActivity(combined.events))
       }
       case ActorFilterChanged(actors) => {
         filteredSummary = Some(EventProcessor.filterSummaryByActors(fullSummary, actors))
-        summaryPanel.update(summary)
+        summaryPanels.update(summary)
       }
       case SelectedActorChanged(actor) => {
         if (spellBreakdownDialog.visible) {

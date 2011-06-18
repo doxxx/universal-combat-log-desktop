@@ -5,7 +5,7 @@ import swing.TabbedPane.Page
 
 class SummaryPanels extends TabbedPane {
 
-  val panels = Seq(new OverviewSummaryPanel)
+  val panels = Seq(new OverviewSummaryPanel, new DamageSummaryPanel, new HealingSummaryPanel)
 
   panels foreach { p =>
     pages += new Page(p.title, p)
@@ -19,5 +19,7 @@ class SummaryPanels extends TabbedPane {
   }
 
   def current: SummaryPanel = panels(selection.page.index)
-
+  def update(summary: Map[String, Summary]) {
+    panels foreach { _.update(summary) }
+  }
 }
