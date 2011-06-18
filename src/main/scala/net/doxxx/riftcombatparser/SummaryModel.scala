@@ -1,37 +1,71 @@
 package net.doxxx.riftcombatparser
 
-import javax.swing.table.AbstractTableModel
+import collection.JavaConversions._
+import javax.swing.table.{TableRowSorter, AbstractTableModel}
+import javax.swing.{SortOrder, RowSorter}
 
-class SummaryModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Overhealing", "Deaths")
+object SummaryColumns extends Enumeration {
+  type Column = Value
+  val Name, DamageIn, DPSIn, DamageOut, DPSOut, HealingIn, HPSIn, HealingOut, HPSOut, Overhealing, Deaths = Value
+  val ColumnNames = Map(
+    Name -> "Name",
+    DamageIn -> "Damage In",
+    DPSIn -> "DPS In",
+    DamageOut -> "Damage Out",
+    DPSOut -> "DPS Out",
+    HealingIn -> "Healing In",
+    HPSIn -> "HPS In",
+    HealingOut -> "Healing Out",
+    HPSOut -> "HPS Out",
+    Overhealing -> "Overhealing",
+    Deaths -> "Deaths"
+  )
+}
+
+class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableModel {
+  import SummaryColumns._
 
   private var summary: Map[String, Summary] = Map.empty
   private var filteredSummary: Option[Map[String, Summary]] = None
+  private def data = filteredSummary getOrElse summary
 
-  def data = filteredSummary getOrElse summary
   def names = data.keySet.toArray
 
-  override def getColumnName(column: Int) = ColumnNames(column)
+  def indexOfColumn(column: Column): Int = columns.indexOf(column)
+
+  def rowSorter(default: Column): TableRowSorter[SummaryModel] = {
+    val rowSorter = new TableRowSorter(this)
+    for (i <- Range(0, columns.size)) {
+      columns(i) match {
+        case Name => // do nothing
+        case _ => rowSorter.setComparator(i, IntComparator)
+      }
+    }
+    rowSorter.setSortKeys(List(new RowSorter.SortKey(indexOfColumn(default), SortOrder.DESCENDING)))
+    rowSorter
+  }
+
+  override def getColumnName(column: Int) = ColumnNames(columns(column))
 
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
     val name = names(rowIndex)
-    columnIndex match {
-      case 0 => name
-      case 1 => data(name).damageIn.asInstanceOf[AnyRef]
-      case 2 => data(name).dpsIn.asInstanceOf[AnyRef]
-      case 3 => data(name).damageOut.asInstanceOf[AnyRef]
-      case 4 => data(name).dpsOut.asInstanceOf[AnyRef]
-      case 5 => data(name).healingIn.asInstanceOf[AnyRef]
-      case 6 => data(name).hpsIn.asInstanceOf[AnyRef]
-      case 7 => data(name).healingOut.asInstanceOf[AnyRef]
-      case 8 => data(name).hpsOut.asInstanceOf[AnyRef]
-      case 9 => data(name).overhealing.asInstanceOf[AnyRef]
-      case 10 => data(name).deaths.asInstanceOf[AnyRef]
+    columns(columnIndex) match {
+      case Name => name
+      case DamageIn => data(name).damageIn.asInstanceOf[AnyRef]
+      case DPSIn => data(name).dpsIn.asInstanceOf[AnyRef]
+      case DamageOut => data(name).damageOut.asInstanceOf[AnyRef]
+      case DPSOut => data(name).dpsOut.asInstanceOf[AnyRef]
+      case HealingIn => data(name).healingIn.asInstanceOf[AnyRef]
+      case HPSIn => data(name).hpsIn.asInstanceOf[AnyRef]
+      case HealingOut => data(name).healingOut.asInstanceOf[AnyRef]
+      case HPSOut => data(name).hpsOut.asInstanceOf[AnyRef]
+      case Overhealing => data(name).overhealing.asInstanceOf[AnyRef]
+      case Deaths => data(name).deaths.asInstanceOf[AnyRef]
       case _ => null
     }
   }
 
-  def getColumnCount = ColumnNames.size
+  def getColumnCount = columns.size
 
   def getRowCount = data.size
 
