@@ -45,17 +45,17 @@ class FightList extends BorderPanel {
 
   def update(events: List[LogEvent]) {
     updating = true
-    val oldFightNames = listView.selection.items.map{ _.toString }.toSet
+    val oldFights = listView.selection.items.map{ _.startTime }.toSet
     val fights = EventProcessor.splitFights(events)
     listView.listData = fights
-    selectFightsByName(oldFightNames)
+    selectFightsByStartTime(oldFights)
     updating = false
     publish(SelectedFightsChanged(listView.selection.items.toList))
   }
 
-  def selectFightsByName(fightNames: Set[String]) {
+  def selectFightsByStartTime(fightNames: Set[Long]) {
     val indices = listView.listData.zipWithIndex.filter {
-      case (fight, index) => fightNames.contains(fight.toString)
+      case (fight, index) => fightNames.contains(fight.startTime)
     } map {
       case (fight, index) => index
     }
