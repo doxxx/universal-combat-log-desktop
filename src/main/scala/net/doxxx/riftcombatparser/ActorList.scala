@@ -34,6 +34,8 @@ class ActorList extends BorderPanel {
   listenTo(resetButton)
   listenTo(listView.selection)
 
+  var updating = false
+
   reactions += {
     case ButtonClicked(`top5Button`) => {
       listView.selectIndices(0, 1, 2, 3, 4)
@@ -42,16 +44,19 @@ class ActorList extends BorderPanel {
       listView.selectIndices()
     }
     case ListSelectionChanged(`listView`, range, isChanging) => {
-      if (!isChanging) {
+      if (!isChanging && !updating) {
         publish(ActorFilterChanged(listView.selection.items.toSet))
       }
     }
   }
 
-  def update(fight: Fight) {
+  def update(actors: Seq[String]) {
+    updating = true
     val oldActors: Set[String] = listView.selection.items.toSet
-    listView.listData = EventProcessor.actors(fight.events)
+    listView.listData = actors
     selectActors(oldActors.toSet)
+    updating = false
+    publish(ActorFilterChanged(listView.selection.items.toSet))
   }
 
   def selectActors(names: Set[String]) {

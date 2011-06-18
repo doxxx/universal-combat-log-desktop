@@ -90,16 +90,22 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   def top = new MainFrame {
     title = "Rift Combat Parser"
 
-    val summaryPanel = new SummaryPanel
+    val summaryPanels = new SummaryPanels
     val actorList = new ActorList
     val fightList = new FightList
+
+    var fullSummary: Map[String, Summary] = Map.empty
+    var filteredSummary: Option[Map[String, Summary]] = None
+    def summary = filteredSummary getOrElse fullSummary
+
+    def summaryPanel = summaryPanels.current
 
     val spellBreakdownDialog = new SpellBreakdownDialog(this)
 
     contents = new BorderPanel {
       layoutManager.setHgap(5)
       layoutManager.setVgap(5)
-      layout(summaryPanel) = BorderPanel.Position.Center
+      layout(summaryPanels) = BorderPanel.Position.Center
       layout(actorList) = BorderPanel.Position.East
       layout(fightList) = BorderPanel.Position.West
     }
@@ -128,7 +134,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
-    listenTo(summaryPanel)
+    listenTo(summaryPanels)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -163,29 +169,26 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_CopyDPSSummary) => {
         val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(summaryPanel.dpsSummaryForClipboard)
+        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(summary))
         clipboard.setContents(data, GUIMain)
       }
       case ButtonClicked(MI_CopyHPSSummary) => {
         val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(summaryPanel.hpsSummaryForClipboard)
+        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(summary))
         clipboard.setContents(data, GUIMain)
       }
       case UpdateWithEvents(events) => {
         fightList.update(events)
       }
-      case ActorFilterChanged(actors) => {
-        summaryPanel.applyActorFilter(actors)
-      }
       case SelectedFightsChanged(fights) => {
-        val oldActor = summaryPanel.selectedActor
         val combined = Fights(fights)
-        summaryPanel.update(combined)
-        actorList.update(combined)
-        oldActor match {
-          case Some(actor) => summaryPanel.selectActor(actor)
-          case None =>
-        }
+        fullSummary = EventProcessor.summary(combined)
+        summaryPanel.update(fullSummary)
+        actorList.update(EventProcessor.actorsSortedByActivity(combined.events))
+      }
+      case ActorFilterChanged(actors) => {
+        filteredSummary = Some(EventProcessor.filterSummaryByActors(fullSummary, actors))
+        summaryPanel.update(summary)
       }
       case SelectedActorChanged(actor) => {
         if (spellBreakdownDialog.visible) {

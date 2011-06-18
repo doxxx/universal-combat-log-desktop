@@ -25,9 +25,7 @@ object SummaryColumns extends Enumeration {
 class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableModel {
   import SummaryColumns._
 
-  private var summary: Map[String, Summary] = Map.empty
-  private var filteredSummary: Option[Map[String, Summary]] = None
-  private def data = filteredSummary getOrElse summary
+  private var data: Map[String, Summary] = Map.empty
 
   def names = data.keySet.toArray
 
@@ -69,42 +67,11 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
 
   def getRowCount = data.size
 
-  def update(fight: Fight) {
-    summary = EventProcessor.summary(fight)
+  def update(summary: Map[String, Summary]) {
+    data = summary
     fireTableDataChanged()
   }
 
-  def applyActorFilter(actors: Set[String]) {
-    filteredSummary =
-      if (actors.isEmpty)
-        None
-      else
-        Some(summary filter { case (actor, sum) => actors.contains(actor) })
-    fireTableDataChanged()
-  }
-
-  def dpsSummary = data.map {case (name, summary) => name -> summary.dpsOut}
-  def dpsSorted = dpsSummary.toList.sortBy {case (name, value) => value}.reverse
-  def hpsSummary = data.map {case (name, summary) => name -> summary.hpsOut}
-  def hpsSorted = hpsSummary.toList.sortBy {case (name, value) => value}.reverse
-  def raidDPS = dpsSummary.map{case (name, value) => value}.sum
-  def raidHPS = hpsSummary.map{case (name, value) => value}.sum
-
-  def dpsSummaryForClipboard:String = {
-    val dps = dpsSorted.take(10).filter { case (name, value) => value > 0 }
-    "DPS: Raid:%d - %s".format(
-      raidDPS,
-      (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
-    )
-  }
-
-  def hpsSummaryForClipboard:String = {
-    val hps = hpsSorted.take(10).filter { case (name, value) => value > 0 }
-    "HPS: Raid:%d - %s".format(
-      raidHPS,
-      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
-    )
-  }
 }
 
 

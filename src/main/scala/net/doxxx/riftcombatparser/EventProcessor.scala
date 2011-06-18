@@ -2,8 +2,7 @@ package net.doxxx.riftcombatparser
 
 import EventType._
 import collection.immutable.List._
-import annotation.tailrec
-import collection.mutable.{ListBuffer, HashMap}
+import collection.mutable.HashMap
 
 object EventProcessor {
   def summary(fight: Fight): Map[String, Summary] = {
@@ -36,7 +35,7 @@ object EventProcessor {
     results.toMap
   }
 
-  def actors(events: List[LogEvent]): List[String] = {
+  def actorsSortedByActivity(events: List[LogEvent]): List[String] = {
     val activity = new HashMap[String, Int] {
       override def default(key: String) = 0
     }
@@ -151,6 +150,41 @@ object EventProcessor {
           case ActorEvent(_, _, actor, _, _, _, _, _) => actors.contains(actor)
           case _ => true
         }
+  }
+
+  def dpsSummary(data: Map[String, Summary]) = data.map {case (name, summary) => name -> summary.dpsOut}
+
+  def dpsSorted(data: Map[String, Summary]) = dpsSummary(data).toList.sortBy {case (name, value) => value}.reverse
+
+  def hpsSummary(data: Map[String, Summary]) = data.map {case (name, summary) => name -> summary.hpsOut}
+
+  def hpsSorted(data: Map[String, Summary]) = hpsSummary(data).toList.sortBy {case (name, value) => value}.reverse
+
+  def raidDPS(data: Map[String, Summary]) = dpsSummary(data).map {case (name, value) => value}.sum
+
+  def raidHPS(data: Map[String, Summary]) = hpsSummary(data).map {case (name, value) => value}.sum
+
+  def dpsSummaryForClipboard(data: Map[String, Summary]): String = {
+    val dps = dpsSorted(data).take(10).filter {case (name, value) => value > 0}
+    "DPS: Raid:%d - %s".format(
+      raidDPS(data),
+      (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+    )
+  }
+
+  def hpsSummaryForClipboard(data: Map[String, Summary]): String = {
+    val hps = hpsSorted(data).take(10).filter {case (name, value) => value > 0}
+    "HPS: Raid:%d - %s".format(
+      raidHPS(data),
+      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+    )
+  }
+
+  def filterSummaryByActors(summary: Map[String, Summary], actors: Set[String]): Map[String, Summary] = {
+    if (actors.isEmpty)
+      summary
+    else
+      summary filter { case (actor, sum) => actors.contains(actor) }
   }
 }
 
