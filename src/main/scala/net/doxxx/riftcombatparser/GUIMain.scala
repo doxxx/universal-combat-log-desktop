@@ -9,9 +9,9 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
 import java.util.Calendar
 import java.text.DateFormat
-import java.io.{FileReader, File}
 import java.awt.Toolkit
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSelection}
+import java.io.{IOException, FileReader, File}
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
@@ -53,9 +53,14 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     logFile match {
       case Some(f) => actor {
         log("Loading events from %s", f.toString)
-        val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
-        Swing.onEDT {
-          logFileEventPublisher.publish(UpdateWithEvents(events))
+        try {
+          val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
+          Swing.onEDT {
+            logFileEventPublisher.publish(UpdateWithEvents(events))
+          }
+        }
+        catch {
+          case e: IOException => log("Couldn't load combat log file: " + e.toString)
         }
       }
       case None =>
