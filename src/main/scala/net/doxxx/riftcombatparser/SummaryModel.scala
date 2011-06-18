@@ -1,12 +1,10 @@
 package net.doxxx.riftcombatparser
 
 import javax.swing.table.AbstractTableModel
-import collection.SortedMap
 
 class SummaryModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Damage In", "DPS In", "Damage Out", "DPS Out", "Healing In", "HPS In", "Healing Out", "HPS Out", "Overhealing", "Deaths")
 
-  private var events: List[LogEvent] = Nil
   private var summary: Map[String, Summary] = Map.empty
   private var filteredSummary: Option[Map[String, Summary]] = None
 
