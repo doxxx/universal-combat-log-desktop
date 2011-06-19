@@ -137,6 +137,10 @@ object EventProcessor {
         }
         else if (HealTypes.contains(ae.eventType)) {
           results(ae.spell) = results(ae.spell).addHealing(ae.amount)
+          if (includeOverhealing) {
+            val overheal = CombatLogParser.extractOverheal(ae.text)
+            results(ae.spell) = results(ae.spell).addHealing(overheal)
+          }
           if (ae.eventType == CritHeal) {
             results(ae.spell) = results(ae.spell).addCrit()
           }
