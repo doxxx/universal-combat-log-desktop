@@ -116,6 +116,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_CopyDPSSummary = new MenuItem("Copy DPS Summary")
     val MI_CopyHPSSummary = new MenuItem("Copy HPS Summary")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
+    val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
 
     menuBar = new MenuBar {
       contents += new Menu("Rift Combat Parser") {
@@ -125,6 +126,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         contents += MI_CopyDPSSummary
         contents += MI_CopyHPSSummary
         contents += MI_IncludeOverhealing
+        contents += MI_UseActorCombatTime
       }
     }
 
@@ -134,6 +136,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(MI_CopyDPSSummary)
     listenTo(MI_CopyHPSSummary)
     listenTo(MI_IncludeOverhealing)
+    listenTo(MI_UseActorCombatTime)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
@@ -182,6 +185,10 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_IncludeOverhealing) => {
         EventProcessor.includeOverhealing = MI_IncludeOverhealing.selected
+        fightList.fireSelectedFightsChanged()
+      }
+      case ButtonClicked(MI_UseActorCombatTime) => {
+        EventProcessor.useActorCombatTime = MI_UseActorCombatTime.selected
         fightList.fireSelectedFightsChanged()
       }
       case UpdateWithEvents(events) => {

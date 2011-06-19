@@ -6,6 +6,7 @@ import collection.mutable.HashMap
 
 object EventProcessor {
   var includeOverhealing = false
+  var useActorCombatTime = false
 
   def summary(fight: Fight): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {
@@ -14,11 +15,11 @@ object EventProcessor {
     Utils.timeit("summary") { () =>
       for (e <- fight.events) e match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount)
+          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount).updateTimes(ae.time)
           results(ae.target) = results(ae.target).addDamageIn(ae.amount)
         }
         case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
+          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount).updateTimes(ae.time)
           results(ae.target) = results(ae.target).addHealingIn(ae.amount)
           val overheal = CombatLogParser.extractOverheal(ae.text)
           results(ae.target) = results(ae.target).addOverhealing(overheal)
@@ -195,20 +196,28 @@ object EventProcessor {
   }
 }
 
-case class Summary(damageIn: Int = 0, dpsIn: Int = 0,
+case class Summary(start: Long = Long.MaxValue, end: Long = 0, damageIn: Int = 0, dpsIn: Int = 0,
                    damageOut: Int = 0, dpsOut: Int = 0,
                    healingIn: Int = 0, hpsIn: Int = 0,
                    healingOut: Int = 0, hpsOut: Int = 0,
                    overhealing: Int = 0,
                    deaths: Int = 0) {
+  def updateTimes(time: Long) = copy(scala.math.min(start, time), scala.math.max(end, time))
   def addDamageIn(amount: Int) = copy(damageIn = damageIn + amount)
   def addDamageOut(amount: Int) = copy(damageOut = damageOut + amount)
   def addHealingIn(amount: Int) = copy(healingIn = healingIn + amount)
   def addHealingOut(amount: Int) = copy(healingOut = healingOut + amount)
   def addOverhealing(amount: Int) = copy(overhealing = overhealing + amount)
   def addDeath() = copy(deaths = deaths + 1)
-  def calculatePerSecond(duration: Int) = copy(dpsIn = damageIn / duration, dpsOut = damageOut / duration,
-    hpsIn = healingIn / duration, hpsOut = healingOut / duration)
+  def calculatePerSecond(fightDuration: Int) = {
+    val d = if (EventProcessor.useActorCombatTime) duration else fightDuration
+    if (d > 0)
+      copy(dpsIn = damageIn / d, dpsOut = damageOut / d,
+        hpsIn = healingIn / d, hpsOut = healingOut / d)
+    else
+      this
+  }
+  def duration = (end - start).toInt
 }
 
 abstract class Fight {
