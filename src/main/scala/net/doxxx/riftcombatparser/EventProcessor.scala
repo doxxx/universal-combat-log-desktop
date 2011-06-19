@@ -5,6 +5,8 @@ import collection.immutable.List._
 import collection.mutable.HashMap
 
 object EventProcessor {
+  var includeOverhealing = false
+
   def summary(fight: Fight): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
@@ -18,7 +20,12 @@ object EventProcessor {
         case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
           results(ae.actor) = results(ae.actor).addHealingOut(ae.amount)
           results(ae.target) = results(ae.target).addHealingIn(ae.amount)
-          results(ae.target) = results(ae.target).addOverhealing(CombatLogParser.extractOverheal(ae.text))
+          val overheal = CombatLogParser.extractOverheal(ae.text)
+          results(ae.target) = results(ae.target).addOverhealing(overheal)
+          if (includeOverhealing) {
+            results(ae.actor) = results(ae.actor).addHealingOut(overheal)
+            results(ae.target) = results(ae.target).addHealingIn(overheal)
+          }
         }
         case ae: ActorEvent if (ae.eventType == Died) => {
           results(ae.actor) = results(ae.actor).addDeath()

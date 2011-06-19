@@ -38,7 +38,7 @@ class FightList extends BorderPanel {
     }
     case ListSelectionChanged(`listView`, range, isChanging) => {
       if (!isChanging && !updating) {
-        publish(SelectedFightsChanged(listView.selection.items.toList))
+        fireSelectedFightsChanged()
       }
     }
   }
@@ -50,7 +50,7 @@ class FightList extends BorderPanel {
     listView.listData = fights
     selectFightsByStartTime(oldFights)
     updating = false
-    publish(SelectedFightsChanged(listView.selection.items.toList))
+    fireSelectedFightsChanged()
   }
 
   def selectFightsByStartTime(fightNames: Set[Long]) {
@@ -63,6 +63,11 @@ class FightList extends BorderPanel {
   }
 
   def selectedFights: List[Fight] = listView.selection.items.toList
+
+  def fireSelectedFightsChanged() {
+    publish(SelectedFightsChanged(listView.selection.items.toList))
+  }
+
 }
 
 case class SelectedFightsChanged(fights: List[Fight]) extends Event
