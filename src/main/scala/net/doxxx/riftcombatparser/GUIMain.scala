@@ -110,6 +110,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     def summaryPanel = summaryPanels.current
 
+    val spellBreakdownButton = new Button("Spell Breakdown")
+    spellBreakdownButton.enabled = false
+
     val spellBreakdownDialog = new SpellBreakdownDialog(this)
 
     contents = new BoxPanel(Orientation.Vertical) {
@@ -118,7 +121,17 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         contents += Swing.HStrut(5)
         contents += fightList
         contents += Swing.HStrut(5)
-        contents += summaryPanels
+        contents += new BoxPanel(Orientation.Vertical) {
+          contents += new BoxPanel(Orientation.Horizontal) {
+            contents += new Label {
+              text = "Summary"
+            }
+            contents += Swing.HGlue
+            contents += spellBreakdownButton
+          }
+          contents += Swing.VStrut(5)
+          contents += summaryPanels
+        }
         contents += Swing.HStrut(5)
         contents += actorList
         contents += Swing.HStrut(5)
@@ -165,6 +178,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(actorList)
     listenTo(fightList)
     listenTo(summaryPanels)
+    listenTo(spellBreakdownButton)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -218,6 +232,16 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         EventProcessor.useActorCombatTime = MI_UseActorCombatTime.selected
         fightList.fireSelectedFightsChanged()
       }
+      case ButtonClicked(`spellBreakdownButton`) => {
+        summaryPanel.selectedActor match {
+          case Some(actor) => {
+            val combined = Fights(fightList.selectedFights)
+            spellBreakdownDialog.update(actor, EventProcessor.filterByActors(combined.events, Set(actor)))
+            spellBreakdownDialog.visible = true
+          }
+          case None =>
+        }
+      }
       case UpdateWithEvents(events) => {
         fightList.update(events)
       }
@@ -235,6 +259,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           val events = (for (f <- fightList.selectedFights) yield f.events).flatten
           spellBreakdownDialog.update(actor, EventProcessor.filterByActors(events, Set(actor)))
         }
+        spellBreakdownButton.enabled = true
       }
     }
 
