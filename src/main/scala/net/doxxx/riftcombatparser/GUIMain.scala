@@ -102,12 +102,18 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     val spellBreakdownDialog = new SpellBreakdownDialog(this)
 
-    contents = new BorderPanel {
-      layoutManager.setHgap(5)
-      layoutManager.setVgap(5)
-      layout(summaryPanels) = BorderPanel.Position.Center
-      layout(actorList) = BorderPanel.Position.East
-      layout(fightList) = BorderPanel.Position.West
+    contents = new BoxPanel(Orientation.Vertical) {
+      contents += Swing.VStrut(5)
+      contents += new BoxPanel(Orientation.Horizontal) {
+        contents += Swing.HStrut(5)
+        contents += fightList
+        contents += Swing.HStrut(5)
+        contents += summaryPanels
+        contents += Swing.HStrut(5)
+        contents += actorList
+        contents += Swing.HStrut(5)
+      }
+      contents += Swing.VStrut(5)
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
