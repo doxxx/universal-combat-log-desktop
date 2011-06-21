@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import javax.swing.table.AbstractTableModel
 
 class SpellBreakdownModel extends AbstractTableModel {
-  private val ColumnNames = Array("Name", "Damage", "Healing", "Count", "Miss %", "Crit %")
+  private val ColumnNames = Array("Name", "Damage", "Healing", "Count", "Miss %", "Crit %", "% Total")
 
   private var breakdown: Map[String, SpellBreakdown] = Map.empty
 
@@ -23,6 +23,7 @@ class SpellBreakdownModel extends AbstractTableModel {
       case 3 => count
       case 4 => percent(spellData.misses, count)
       case 5 => percent(spellData.crits, count)
+      case 6 => spellData.percent
       case _ => null
     }
     value.asInstanceOf[AnyRef]

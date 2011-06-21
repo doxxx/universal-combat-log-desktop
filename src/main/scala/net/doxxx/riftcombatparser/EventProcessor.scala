@@ -120,6 +120,8 @@ object EventProcessor {
     val results = new HashMap[String, SpellBreakdown] {
       override def default(key: String) = SpellBreakdown()
     }
+    var totalDamage: Int = 0
+    var totalHealing: Int = 0
     for (e <- events) e match {
       case ae: ActorEvent => {
         if (DamageTypes.contains(ae.eventType)) {
@@ -134,6 +136,7 @@ object EventProcessor {
             results(ae.spell) = results(ae.spell).addDamage(ae.amount)
             results(ae.spell) = results(ae.spell).addHit()
           }
+          totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
           results(ae.spell) = results(ae.spell).addHealing(ae.amount)
@@ -147,9 +150,18 @@ object EventProcessor {
           else {
             results(ae.spell) = results(ae.spell).addHit()
           }
+          totalHealing += ae.amount
         }
       }
       case _ =>
+    }
+    for (spell <- results.keys) {
+      if (results(spell).damage > 0) {
+        results(spell) = results(spell).setPercentOfTotalDamage(totalDamage)
+      }
+      else if (results(spell).healing > 0) {
+        results(spell) = results(spell).setPercentOfTotalHealing(totalHealing)
+      }
     }
     results.toMap
   }
@@ -245,10 +257,13 @@ case class Fights(fights: List[Fight], title: Option[String] = None) extends Fig
   lazy val duration = fights.map(_.duration).foldLeft(0)(_+_)
 }
 
-case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0) {
+case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, percent: Int = 0) {
   def addDamage(amount: Int) = copy(damage = damage + amount)
   def addHealing(amount: Int) = copy(healing = healing + amount)
   def addHit() = copy(hits = hits + 1)
   def addMiss() = copy(misses = misses + 1)
   def addCrit() = copy(crits = crits + 1)
+  def setPercentOfTotalDamage(total: Int) = copy(percent = (scala.math.round(damage.toDouble / total.toDouble * 100.0)).toInt)
+  def setPercentOfTotalHealing(total: Int) =
+    copy(percent = (scala.math.round(healing.toDouble / total.toDouble * 100.0)).toInt)
 }
