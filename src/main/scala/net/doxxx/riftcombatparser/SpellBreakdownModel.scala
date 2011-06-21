@@ -38,8 +38,8 @@ class SpellBreakdownModel extends AbstractTableModel {
     fireTableDataChanged()
   }
 
-  def percent(num: Int, denom: Int): Double = {
-    (num:Double) / denom * 100
+  def percent(num: Int, denom: Int): Int = {
+    scala.math.round(num.toDouble / denom.toDouble * 100.0).toInt
   }
 
 }
