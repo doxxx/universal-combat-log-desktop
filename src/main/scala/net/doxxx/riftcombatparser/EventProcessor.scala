@@ -157,10 +157,10 @@ object EventProcessor {
     }
     for (spell <- results.keys) {
       if (results(spell).damage > 0) {
-        results(spell) = results(spell).setPercentOfTotalDamage(totalDamage)
+        results(spell) = results(spell).setPercentOfTotal(totalDamage)
       }
       else if (results(spell).healing > 0) {
-        results(spell) = results(spell).setPercentOfTotalHealing(totalHealing)
+        results(spell) = results(spell).setPercentOfTotal(totalHealing)
       }
     }
     results.toMap
@@ -263,7 +263,6 @@ case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, miss
   def addHit() = copy(hits = hits + 1)
   def addMiss() = copy(misses = misses + 1)
   def addCrit() = copy(crits = crits + 1)
-  def setPercentOfTotalDamage(total: Int) = copy(percent = (scala.math.round(damage.toDouble / total.toDouble * 100.0)).toInt)
-  def setPercentOfTotalHealing(total: Int) =
-    copy(percent = (scala.math.round(healing.toDouble / total.toDouble * 100.0)).toInt)
+  def setPercentOfTotal(total: Int) =
+    copy(percent = scala.math.round(scala.math.max(damage, healing).toDouble / total.toDouble * 100.0).toInt)
 }
