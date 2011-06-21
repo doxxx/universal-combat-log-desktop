@@ -7,11 +7,11 @@ import java.util.prefs.Preferences
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
-import java.util.Calendar
-import java.text.DateFormat
 import java.awt.Toolkit
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSelection}
 import java.io.{IOException, FileReader, File}
+import java.util.{Date, Calendar}
+import java.text.{SimpleDateFormat, DateFormat}
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
@@ -46,6 +46,16 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         Some(new File(chooser.getSelectedFile.getPath))
       }
       case _ => default
+    }
+  }
+
+  def rolloverCombatLogFile() {
+    if (logFile.isDefined) {
+      val f = logFile.get
+      if (f.exists) {
+        val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date())
+        f.renameTo(new File(f.getParentFile, f.getName + '.' + date))
+      }
     }
   }
 
@@ -118,6 +128,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
+    val MI_NewSession = new MenuItem("New Session")
     val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
     val MI_CopyDPSSummary = new MenuItem("Copy DPS Summary")
     val MI_CopyHPSSummary = new MenuItem("Copy HPS Summary")
@@ -128,6 +139,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       contents += new Menu("File") {
         contents += MI_ChooseCombatLogFile
         contents += MI_LoadActorsFromRaidXML
+        contents += MI_NewSession
         contents += MI_SpellBreakdown
         contents += MI_CopyDPSSummary
         contents += MI_CopyHPSSummary
@@ -140,6 +152,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(MI_LoadActorsFromRaidXML)
+    listenTo(MI_NewSession)
     listenTo(MI_SpellBreakdown)
     listenTo(MI_CopyDPSSummary)
     listenTo(MI_CopyHPSSummary)
@@ -170,6 +183,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           }
           case None => println("No combat log file to locate raid.xml")
         }
+      }
+      case ButtonClicked(MI_NewSession) => {
+        rolloverCombatLogFile()
       }
       case ButtonClicked(MI_SpellBreakdown) => {
         summaryPanel.selectedActor match {
