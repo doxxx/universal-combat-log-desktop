@@ -6,7 +6,7 @@ import collection.mutable.HashMap
 
 object EventProcessor {
   var includeOverhealing = false
-  var useActorCombatTime = false
+  var useActorCombatTime = true
 
   def summary(fight: Fight): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {

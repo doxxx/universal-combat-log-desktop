@@ -135,6 +135,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
 
+    MI_IncludeOverhealing.selected = EventProcessor.includeOverhealing
+    MI_UseActorCombatTime.selected = EventProcessor.useActorCombatTime
+
     menuBar = new MenuBar {
       contents += new Menu("File") {
         contents += MI_ChooseCombatLogFile
