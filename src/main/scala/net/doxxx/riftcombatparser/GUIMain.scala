@@ -125,12 +125,14 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
 
     menuBar = new MenuBar {
-      contents += new Menu("Rift Combat Parser") {
+      contents += new Menu("File") {
         contents += MI_ChooseCombatLogFile
         contents += MI_LoadActorsFromRaidXML
         contents += MI_SpellBreakdown
         contents += MI_CopyDPSSummary
         contents += MI_CopyHPSSummary
+      }
+      contents += new Menu("Options") {
         contents += MI_IncludeOverhealing
         contents += MI_UseActorCombatTime
       }
