@@ -6,8 +6,9 @@ import util.matching.Regex
 object CombatLogParser {
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
-    new Regex("([0-9]+) , T=.+ , T=.+ , T=.+ , T=.+ , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-              "eventType", "actor", "target", "amount", "spellId", "spell")
+    new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
+              "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actor", "target", "amount",
+              "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
   private val OverhealRE = new Regex("\\(([0-9]+) overheal\\)", "amount")
 
@@ -53,12 +54,44 @@ object CombatLogParser {
 
   private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
-      case DataRE(eventType, actor, target, amount, spellId, spell) => Some(ActorEvent(parseTime(time),
-        EventType(eventType.toInt), actor, target, spell, spellId.toLong, amount.toInt, text))
+      case DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actor, target, amount, spellId, spell) =>
+        Some(ActorEvent(parseTime(time), parseEntityInfo(actorInfo), parseEntityInfo(targetInfo),
+          parseEntityInfo(actorOwnerInfo), parseEntityInfo(targetOwnerInfo), EventType(eventType.toInt), actor, target,
+          spell, spellId.toLong, amount.toInt, text))
       case _ => {
         println("Unrecognized data string: " + data)
         None
       }
     }
+  }
+
+  private def parseEntityInfo(s: String): EntityInfo = {
+    val parts = s.split('#')
+
+    // T=P
+    // T=N
+    val t = parts(0).charAt(2)
+
+    // R=C
+    // R=G
+    // R=O
+    // R=R
+    val r = parts(1).charAt(2)
+
+    // 227009568756889439
+    // 9223372041715776949 (when T=N, '9' is prepended to the ID)
+    val id = if (t == 'N') {
+      val (first, rest) = parts(2).splitAt(1)
+      if (first != "9") {
+        throw new RuntimeException("NPC ID does not start with 9: " + s)
+      }
+      else {
+        rest.toLong
+      }
+    }
+    else {
+      parts(2).toLong
+    }
+    EntityInfo(t, r, id)
   }
 }

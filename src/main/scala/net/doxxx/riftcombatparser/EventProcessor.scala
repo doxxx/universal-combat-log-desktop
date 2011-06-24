@@ -171,7 +171,7 @@ object EventProcessor {
         events
       else
         events filter {
-          case ActorEvent(_, _, actor, _, _, _, _, _) => actors.contains(actor)
+          case ae: ActorEvent => actors.contains(ae.actor)
           case _ => true
         }
   }
