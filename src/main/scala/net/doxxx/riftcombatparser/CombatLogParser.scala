@@ -71,12 +71,13 @@ object CombatLogParser {
 
     // T=P
     // T=N
+    // T=X
     val t = parts(0).charAt(2)
 
-    // R=C
-    // R=G
-    // R=O
-    // R=R
+    // R=C (character who collected combat log)
+    // R=G (same group as C)
+    // R=R (same raid as C)
+    // R=O (others)
     val r = parts(1).charAt(2)
 
     // 227009568756889439
@@ -97,7 +98,7 @@ object CombatLogParser {
     t match {
       case 'P' => PC(r, id)
       case 'N' => NPC(r, id)
-      case 'X' => Nobody(r, id)
+      case 'X' => Nobody
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }
   }

@@ -16,8 +16,8 @@ case class ActorEvent(override val time: Long, actorInfo: Entity, targetInfo: En
     actor, target, spell, spellId, amount, text)
 }
 
-sealed abstract class Entity(val r: Char, val id: Long)
+sealed abstract class Entity(val rel: Char, val id: Long)
 
-case class Nobody(override val r: Char, override val id: Long) extends Entity(r, id)
-case class NPC(override val r: Char, override val id: Long) extends Entity(r, id)
-case class PC(override val r: Char, override val id: Long) extends Entity(r, id)
+case object Nobody extends Entity('X', 0)
+case class NPC(override val rel: Char, override val id: Long) extends Entity(rel, id)
+case class PC(override val rel: Char, override val id: Long) extends Entity(rel, id)
