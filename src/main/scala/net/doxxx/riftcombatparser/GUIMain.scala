@@ -37,7 +37,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"))
     chooser.setCurrentDirectory(
       default match {
-        case Some(f) => f
+        case Some(f) => f.getParentFile
         case None => null
       })
     chooser.showDialog(null, "Choose Combat Log File") match {
