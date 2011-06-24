@@ -15,6 +15,7 @@ object CombatLogParser {
   def parse(source: Source): List[LogEvent] = {
     try {
       Utils.timeit("logparse") { () =>
+        //source.getLines().toList.map(parseLine).toList.flatten
         source.getLines().toList.par.map(parseLine).toList.flatten
       }
     }
@@ -55,8 +56,8 @@ object CombatLogParser {
   private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
       case DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actor, target, amount, spellId, spell) =>
-        Some(ActorEvent(parseTime(time), parseEntityInfo(actorInfo), parseEntityInfo(targetInfo),
-          parseEntityInfo(actorOwnerInfo), parseEntityInfo(targetOwnerInfo), EventType(eventType.toInt), actor, target,
+        Some(ActorEvent(parseTime(time), parseEntity(actorInfo), parseEntity(targetInfo),
+          parseEntity(actorOwnerInfo), parseEntity(targetOwnerInfo), EventType(eventType.toInt), actor, target,
           spell, spellId.toLong, amount.toInt, text))
       case _ => {
         println("Unrecognized data string: " + data)
@@ -65,7 +66,7 @@ object CombatLogParser {
     }
   }
 
-  private def parseEntityInfo(s: String): EntityInfo = {
+  private def parseEntity(s: String): Entity = {
     val parts = s.split('#')
 
     // T=P
@@ -92,6 +93,12 @@ object CombatLogParser {
     else {
       parts(2).toLong
     }
-    EntityInfo(t, r, id)
+
+    t match {
+      case 'P' => PC(r, id)
+      case 'N' => NPC(r, id)
+      case 'X' => Nobody(r, id)
+      case _ => throw new RuntimeException("Unrecognized entity type: " + s)
+    }
   }
 }
