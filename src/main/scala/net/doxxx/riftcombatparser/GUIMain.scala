@@ -203,6 +203,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
+        fightList.update(Nil)
       }
       case ButtonClicked(MI_SpellBreakdown) => {
         summaryPanel.selectedActor match {
