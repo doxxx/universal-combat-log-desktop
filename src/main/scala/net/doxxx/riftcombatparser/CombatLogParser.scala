@@ -2,21 +2,32 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import util.matching.Regex
+import collection.mutable.HashMap
+import java.lang.RuntimeException
 
 object CombatLogParser {
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
     new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-              "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actor", "target", "amount",
-              "spellId", "spell")
+              "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
+              "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
   private val OverhealRE = new Regex("\\(([0-9]+) overheal\\)", "amount")
+
+  sealed abstract class ActorID(val id: Long)
+  case object NullActorID extends ActorID(0)
+  case class NPC(override val id: Long) extends ActorID(id)
+  case class PC(override val id: Long) extends ActorID(id)
+
+  private val actors = new HashMap[ActorID, Actor] {
+    override def default(key: ActorID) = Nobody
+  }
 
   def parse(source: Source): List[LogEvent] = {
     try {
       Utils.timeit("logparse") { () =>
-        //source.getLines().toList.map(parseLine).toList.flatten
-        source.getLines().toList.par.map(parseLine).toList.flatten
+        source.getLines().toList.map(parseLine).toList.flatten
+        //source.getLines().toList.par.map(parseLine).toList.flatten
       }
     }
     finally {
@@ -55,9 +66,10 @@ object CombatLogParser {
 
   private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
-      case DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actor, target, amount, spellId, spell) =>
-        Some(ActorEvent(parseTime(time), parseEntity(actorInfo), parseEntity(targetInfo),
-          parseEntity(actorOwnerInfo), parseEntity(targetOwnerInfo), EventType(eventType.toInt), actor, target,
+      case DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
+        Some(ActorEvent(parseTime(time), EventType(eventType.toInt),
+          getActor(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
+          getActor(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
           spell, spellId.toLong, amount.toInt, text))
       case _ => {
         println("Unrecognized data string: " + data)
@@ -66,7 +78,7 @@ object CombatLogParser {
     }
   }
 
-  private def parseEntity(s: String): Entity = {
+  private def parseEntity(s: String): ActorID = {
     val parts = s.split('#')
 
     // T=P
@@ -78,7 +90,7 @@ object CombatLogParser {
     // R=G (same group as C)
     // R=R (same raid as C)
     // R=O (others)
-    val r = parts(1).charAt(2)
+    //val r = parts(1).charAt(2)
 
     // 227009568756889439
     // 9223372041715776949 (when T=N, '9' is prepended to the ID)
@@ -96,10 +108,62 @@ object CombatLogParser {
     }
 
     t match {
-      case 'P' => PC(r, id)
-      case 'N' => NPC(r, id)
-      case 'X' => Nobody
+      case 'P' => PC(id)
+      case 'N' => NPC(id)
+      case 'X' => NullActorID
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }
   }
+
+  private def getActor(actorID: ActorID, ownerID: ActorID, actorName: Option[String]): Actor = {
+    actors.get(actorID) match {
+      case Some(actor) => {
+        actorName match {
+          case Some(name) => {
+            if (actor.name != name) {
+              //println("Actor %s has changed name: %s -> %s".format(actorID, actor.name, name))
+              actor.name = name
+            }
+          }
+          case None => // nothing
+        }
+        ownerID match {
+          case NullActorID => // nothing
+          case _ => {
+            val owner = actors(ownerID)
+            actor match {
+              case p: PlayerPet =>
+                if (p.owner != owner)
+                  throw new RuntimeException("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
+              case _ => throw new RuntimeException("%s cannot be owned by %s".format(actor, owner))
+            }
+          }
+        }
+        actor
+      }
+      case None => {
+        actorID match {
+          case pc: PC => {
+            actors += actorID -> Player(actorName.getOrElse("$dummy$"))
+          }
+          case npc: NPC => {
+            val actor: Actor = ownerID match {
+              case NullActorID => NonPlayer(actorName.getOrElse("$dummy$"))
+              case _ => PlayerPet(actorName.getOrElse("$dummy$"), getPlayer(ownerID))
+            }
+            actors += actorID -> actor
+          }
+          case _ => // nothing
+        }
+        actors(actorID)
+      }
+    }
+  }
+
+ private def getPlayer(id: ActorID): Player = {
+   getActor(id, NullActorID, None) match {
+     case p: Player => p
+     case a => throw new RuntimeException("Actor %s is not player".format(a))
+   }
+ }
 }

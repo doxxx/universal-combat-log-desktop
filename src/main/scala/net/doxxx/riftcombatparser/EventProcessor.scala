@@ -8,31 +8,31 @@ object EventProcessor {
   var includeOverhealing = false
   var useActorCombatTime = true
 
-  def summary(fight: Fight): Map[String, Summary] = {
+ def summary(fight: Fight): Map[String, Summary] = {
     val results = new HashMap[String, Summary] {
       override def default(key: String) = Summary()
     }
     Utils.timeit("summary") { () =>
       for (e <- fight.events) e match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount).updateTimes(ae.time)
-          results(ae.target) = results(ae.target).addDamageIn(ae.amount)
+          results(ae.actor.name) = results(ae.actor.name).addDamageOut(ae.amount).updateTimes(ae.time)
+          results(ae.target.name) = results(ae.target.name).addDamageIn(ae.amount)
         }
         case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount).updateTimes(ae.time)
-          results(ae.target) = results(ae.target).addHealingIn(ae.amount)
+          results(ae.actor.name) = results(ae.actor.name).addHealingOut(ae.amount).updateTimes(ae.time)
+          results(ae.target.name) = results(ae.target.name).addHealingIn(ae.amount)
           val overheal = CombatLogParser.extractOverheal(ae.text)
-          results(ae.target) = results(ae.target).addOverhealing(overheal)
+          results(ae.target.name) = results(ae.target.name).addOverhealing(overheal)
           if (includeOverhealing) {
-            results(ae.actor) = results(ae.actor).addHealingOut(overheal)
-            results(ae.target) = results(ae.target).addHealingIn(overheal)
+            results(ae.actor.name) = results(ae.actor.name).addHealingOut(overheal)
+            results(ae.target.name) = results(ae.target.name).addHealingIn(overheal)
           }
         }
         case ae: ActorEvent if (ae.eventType == Died) => {
-          results(ae.actor) = results(ae.actor).addDeath()
+          results(ae.actor.name) = results(ae.actor.name).addDeath()
         }
         case ae: ActorEvent if (ae.eventType == Slain) => {
-          results(ae.target) = results(ae.target).addDeath()
+          results(ae.target.name) = results(ae.target.name).addDeath()
         }
         case _ =>
       }
@@ -48,7 +48,7 @@ object EventProcessor {
       override def default(key: String) = 0
     }
     for (e <- events) e match {
-      case ae: ActorEvent => activity(ae.actor) = activity(ae.actor) + 1
+      case ae: ActorEvent => activity(ae.actor.name) = activity(ae.actor.name) + 1
       case _ =>
     }
     def cmp(a1:Pair[String,Int], a2:Pair[String,Int]) = {
@@ -171,7 +171,7 @@ object EventProcessor {
         events
       else
         events filter {
-          case ae: ActorEvent => actors.contains(ae.actor)
+          case ae: ActorEvent => actors.contains(ae.actor.name)
           case _ => true
         }
   }
