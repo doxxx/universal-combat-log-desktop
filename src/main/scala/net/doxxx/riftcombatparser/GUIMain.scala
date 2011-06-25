@@ -147,9 +147,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_CopyHPSSummary = new MenuItem("Copy HPS Summary")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
+    val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
 
     MI_IncludeOverhealing.selected = EventProcessor.includeOverhealing
     MI_UseActorCombatTime.selected = EventProcessor.useActorCombatTime
+    MI_MergePetsIntoOwners.selected = EventProcessor.mergePetsIntoOwners
 
     menuBar = new MenuBar {
       contents += new Menu("File") {
@@ -163,6 +165,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       contents += new Menu("Options") {
         contents += MI_IncludeOverhealing
         contents += MI_UseActorCombatTime
+        contents += MI_MergePetsIntoOwners
       }
     }
 
@@ -174,6 +177,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(MI_CopyHPSSummary)
     listenTo(MI_IncludeOverhealing)
     listenTo(MI_UseActorCombatTime)
+    listenTo(MI_MergePetsIntoOwners)
     listenTo(logFileEventPublisher)
     listenTo(actorList)
     listenTo(fightList)
@@ -231,6 +235,10 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_UseActorCombatTime) => {
         EventProcessor.useActorCombatTime = MI_UseActorCombatTime.selected
+        fightList.fireSelectedFightsChanged()
+      }
+      case ButtonClicked(MI_MergePetsIntoOwners) => {
+        EventProcessor.mergePetsIntoOwners = MI_MergePetsIntoOwners.selected
         fightList.fireSelectedFightsChanged()
       }
       case ButtonClicked(`spellBreakdownButton`) => {

@@ -32,22 +32,22 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     if (oldActor.isDefined) selectActor(oldActor.get)
   }
 
-  def selectedActor: Option[String] = {
+  def selectedActor: Option[Actor] = {
     val row = table.selection.rows.anchorIndex
     if (row >= 0) {
-      Some(summaryModel.names(table.viewToModelRow(row)))
+      Some(summaryModel.actors(table.viewToModelRow(row)))
     }
     else {
       None
     }
   }
 
-  def selectActor(actor: String) {
-    val i = summaryModel.names.indexOf(actor)
+  def selectActor(actor: Actor) {
+    val i = summaryModel.actors.indexOf(actor)
     if (i >= 0) {
       table.selection.rows += table.modelToViewRow(i)
     }
   }
 }
 
-case class SelectedActorChanged(actor: String) extends Event
+case class SelectedActorChanged(actor: Actor) extends Event

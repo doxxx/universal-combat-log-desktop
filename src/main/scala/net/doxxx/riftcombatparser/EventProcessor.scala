@@ -7,6 +7,7 @@ import collection.mutable.HashMap
 object EventProcessor {
   var includeOverhealing = false
   var useActorCombatTime = true
+  var mergePetsIntoOwners = false
 
   def summary(fight: Fight): Map[Actor, Summary] = {
     val results = new HashMap[Actor, Summary] {
@@ -14,25 +15,30 @@ object EventProcessor {
     }
     Utils.timeit("summary") { () =>
       for (e <- fight.events) e match {
-        case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount).updateTimes(ae.time)
-          results(ae.target) = results(ae.target).addDamageIn(ae.amount)
-        }
-        case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
-          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount).updateTimes(ae.time)
-          results(ae.target) = results(ae.target).addHealingIn(ae.amount)
-          val overheal = CombatLogParser.extractOverheal(ae.text)
-          results(ae.target) = results(ae.target).addOverhealing(overheal)
-          if (includeOverhealing) {
-            results(ae.actor) = results(ae.actor).addHealingOut(overheal)
-            results(ae.target) = results(ae.target).addHealingIn(overheal)
+        case ae: ActorEvent => {
+          val actor = mergePetIntoOwner(ae.actor)
+          val target = mergePetIntoOwner(ae.target)
+
+          if (DamageTypes.contains(ae.eventType)) {
+            results(actor) = results(actor).addDamageOut(ae.amount).updateTimes(ae.time)
+            results(target) = results(target).addDamageIn(ae.amount)
           }
-        }
-        case ae: ActorEvent if (ae.eventType == Died) => {
-          results(ae.actor) = results(ae.actor).addDeath()
-        }
-        case ae: ActorEvent if (ae.eventType == Slain) => {
-          results(ae.target) = results(ae.target).addDeath()
+          else if (HealTypes.contains(ae.eventType)) {
+            results(actor) = results(actor).addHealingOut(ae.amount).updateTimes(ae.time)
+            results(target) = results(target).addHealingIn(ae.amount)
+            val overheal = CombatLogParser.extractOverheal(ae.text)
+            results(target) = results(target).addOverhealing(overheal)
+            if (includeOverhealing) {
+              results(actor) = results(actor).addHealingOut(overheal)
+              results(target) = results(target).addHealingIn(overheal)
+            }
+          }
+          else if (ae.eventType == Died) {
+            results(actor) = results(actor).addDeath()
+          }
+          else if (ae.eventType == Slain) {
+            results(target) = results(target).addDeath()
+          }
         }
         case _ =>
       }
@@ -43,15 +49,25 @@ object EventProcessor {
     results.toMap
   }
 
-  def actorsSortedByActivity(events: List[LogEvent]): List[String] = {
-    val activity = new HashMap[String, Int] {
-      override def default(key: String) = 0
+  def mergePetIntoOwner(actor: Actor): Actor = {
+    actor match {
+      case p: PlayerPet => if (mergePetsIntoOwners) p.owner else p
+      case a: Actor => a
+    }
+  }
+
+  def actorsSortedByActivity(events: List[LogEvent]): List[Actor] = {
+    val activity = new HashMap[Actor, Int] {
+      override def default(key: Actor) = 0
     }
     for (e <- events) e match {
-      case ae: ActorEvent => activity(ae.actor.name) = activity(ae.actor.name) + 1
+      case ae: ActorEvent => {
+        val actor = mergePetIntoOwner(ae.actor)
+        activity(actor) = activity(actor) + 1
+      }
       case _ =>
     }
-    def cmp(a1:Pair[String,Int], a2:Pair[String,Int]) = {
+    def cmp(a1:Pair[Actor,Int], a2:Pair[Actor,Int]) = {
       a1._2 > a2._2
     }
     for ((k,v) <- activity.toList.sortWith(cmp)) yield k
@@ -124,31 +140,35 @@ object EventProcessor {
     var totalHealing: Int = 0
     for (e <- events) e match {
       case ae: ActorEvent => {
+        val spell = ae.actor match {
+          case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
+          case _ => ae.spell
+        }
         if (DamageTypes.contains(ae.eventType)) {
           if (ae.eventType == CritDamage) {
-            results(ae.spell) = results(ae.spell).addCrit()
-            results(ae.spell) = results(ae.spell).addDamage(ae.amount)
+            results(spell) = results(spell).addCrit()
+            results(spell) = results(spell).addDamage(ae.amount)
           }
           else if (MissTypes.contains(ae.eventType)) {
-            results(ae.spell) = results(ae.spell).addMiss()
+            results(spell) = results(spell).addMiss()
           }
           else {
-            results(ae.spell) = results(ae.spell).addDamage(ae.amount)
-            results(ae.spell) = results(ae.spell).addHit()
+            results(spell) = results(spell).addDamage(ae.amount)
+            results(spell) = results(spell).addHit()
           }
           totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
-          results(ae.spell) = results(ae.spell).addHealing(ae.amount)
+          results(spell) = results(spell).addHealing(ae.amount)
           if (includeOverhealing) {
             val overheal = CombatLogParser.extractOverheal(ae.text)
-            results(ae.spell) = results(ae.spell).addHealing(overheal)
+            results(spell) = results(spell).addHealing(overheal)
           }
           if (ae.eventType == CritHeal) {
-            results(ae.spell) = results(ae.spell).addCrit()
+            results(spell) = results(spell).addCrit()
           }
           else {
-            results(ae.spell) = results(ae.spell).addHit()
+            results(spell) = results(spell).addHit()
           }
           totalHealing += ae.amount
         }
@@ -166,12 +186,12 @@ object EventProcessor {
     results.toMap
   }
 
-  def filterByActors(events: List[LogEvent], actors: Set[String]) = {
+  def filterByActors(events: List[LogEvent], actors: Set[Actor]) = {
       if (actors.isEmpty)
         events
       else
         events filter {
-          case ae: ActorEvent => actors.contains(ae.actor.name)
+          case ae: ActorEvent => actors.contains(mergePetIntoOwner(ae.actor))
           case _ => true
         }
   }

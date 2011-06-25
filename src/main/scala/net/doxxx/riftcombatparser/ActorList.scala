@@ -50,10 +50,10 @@ class ActorList extends BorderPanel {
     }
   }
 
-  def update(actors: Seq[String]) {
+  def update(actors: Seq[Actor]) {
     updating = true
     val oldActors: Set[String] = listView.selection.items.toSet
-    listView.listData = actors
+    listView.listData = actors.map(_.name)
     selectActors(oldActors.toSet)
     updating = false
     publish(ActorFilterChanged(listView.selection.items.toSet))
