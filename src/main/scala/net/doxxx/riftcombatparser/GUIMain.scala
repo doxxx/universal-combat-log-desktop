@@ -104,8 +104,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val actorList = new ActorList
     val fightList = new FightList
 
-    var fullSummary: Map[String, Summary] = Map.empty
-    var filteredSummary: Option[Map[String, Summary]] = None
+    var fullSummary: Map[Actor, Summary] = Map.empty
+    var filteredSummary: Option[Map[Actor, Summary]] = None
     def summary = filteredSummary getOrElse fullSummary
 
     def summaryPanel = summaryPanels.current

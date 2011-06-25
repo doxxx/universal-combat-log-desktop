@@ -25,14 +25,15 @@ object SummaryColumns extends Enumeration {
 class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableModel {
   import SummaryColumns._
 
-  private var data: Map[String, Summary] = Map.empty
+  private var data: Map[Actor, Summary] = Map.empty
 
-  def names = data.keySet.toArray
+  def actors = data.keySet.toArray
+  def names = actors.map(_.name)
 
   def indexOfColumn(column: Column): Int = columns.indexOf(column)
 
   def rowSorter(default: Column): TableRowSorter[SummaryModel] = {
-    val rowSorter = new TableRowSorter(this)
+    val rowSorter = new TableRowSorter[SummaryModel](this)
     for (i <- Range(0, columns.size)) {
       columns(i) match {
         case Name => // do nothing
@@ -46,19 +47,19 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
   override def getColumnName(column: Int) = ColumnNames(columns(column))
 
   def getValueAt(rowIndex: Int, columnIndex: Int): Object = {
-    val name = names(rowIndex)
+    val actor = actors(rowIndex)
     columns(columnIndex) match {
-      case Name => name
-      case DamageIn => data(name).damageIn.asInstanceOf[AnyRef]
-      case DPSIn => data(name).dpsIn.asInstanceOf[AnyRef]
-      case DamageOut => data(name).damageOut.asInstanceOf[AnyRef]
-      case DPSOut => data(name).dpsOut.asInstanceOf[AnyRef]
-      case HealingIn => data(name).healingIn.asInstanceOf[AnyRef]
-      case HPSIn => data(name).hpsIn.asInstanceOf[AnyRef]
-      case HealingOut => data(name).healingOut.asInstanceOf[AnyRef]
-      case HPSOut => data(name).hpsOut.asInstanceOf[AnyRef]
-      case Overhealing => data(name).overhealing.asInstanceOf[AnyRef]
-      case Deaths => data(name).deaths.asInstanceOf[AnyRef]
+      case Name => actor.name
+      case DamageIn => data(actor).damageIn.asInstanceOf[AnyRef]
+      case DPSIn => data(actor).dpsIn.asInstanceOf[AnyRef]
+      case DamageOut => data(actor).damageOut.asInstanceOf[AnyRef]
+      case DPSOut => data(actor).dpsOut.asInstanceOf[AnyRef]
+      case HealingIn => data(actor).healingIn.asInstanceOf[AnyRef]
+      case HPSIn => data(actor).hpsIn.asInstanceOf[AnyRef]
+      case HealingOut => data(actor).healingOut.asInstanceOf[AnyRef]
+      case HPSOut => data(actor).hpsOut.asInstanceOf[AnyRef]
+      case Overhealing => data(actor).overhealing.asInstanceOf[AnyRef]
+      case Deaths => data(actor).deaths.asInstanceOf[AnyRef]
       case _ => null
     }
   }
@@ -67,7 +68,7 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
 
   def getRowCount = data.size
 
-  def update(summary: Map[String, Summary]) {
+  def update(summary: Map[Actor, Summary]) {
     data = summary
     fireTableDataChanged()
   }

@@ -26,7 +26,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     }
   }
 
-  def update(summary: Map[String, Summary]) {
+  def update(summary: Map[Actor, Summary]) {
     val oldActor = selectedActor
     summaryModel.update(summary)
     if (oldActor.isDefined) selectActor(oldActor.get)

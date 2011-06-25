@@ -25,6 +25,9 @@ case object Nobody extends Actor {
   }
 }
 case class Player(var name: String) extends Actor
-case class PlayerPet(var name: String, owner: Player) extends Actor
+case class PlayerPet(var _name: String, owner: Player) extends Actor {
+  def name = _name + " (" + owner.name + ")"
+  def name_=(s: String) { _name = s }
+}
 case class NonPlayer(var name: String) extends Actor
 

@@ -8,31 +8,31 @@ object EventProcessor {
   var includeOverhealing = false
   var useActorCombatTime = true
 
- def summary(fight: Fight): Map[String, Summary] = {
-    val results = new HashMap[String, Summary] {
-      override def default(key: String) = Summary()
+  def summary(fight: Fight): Map[Actor, Summary] = {
+    val results = new HashMap[Actor, Summary] {
+      override def default(key: Actor) = Summary()
     }
     Utils.timeit("summary") { () =>
       for (e <- fight.events) e match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-          results(ae.actor.name) = results(ae.actor.name).addDamageOut(ae.amount).updateTimes(ae.time)
-          results(ae.target.name) = results(ae.target.name).addDamageIn(ae.amount)
+          results(ae.actor) = results(ae.actor).addDamageOut(ae.amount).updateTimes(ae.time)
+          results(ae.target) = results(ae.target).addDamageIn(ae.amount)
         }
         case ae: ActorEvent if (HealTypes.contains(ae.eventType)) => {
-          results(ae.actor.name) = results(ae.actor.name).addHealingOut(ae.amount).updateTimes(ae.time)
-          results(ae.target.name) = results(ae.target.name).addHealingIn(ae.amount)
+          results(ae.actor) = results(ae.actor).addHealingOut(ae.amount).updateTimes(ae.time)
+          results(ae.target) = results(ae.target).addHealingIn(ae.amount)
           val overheal = CombatLogParser.extractOverheal(ae.text)
-          results(ae.target.name) = results(ae.target.name).addOverhealing(overheal)
+          results(ae.target) = results(ae.target).addOverhealing(overheal)
           if (includeOverhealing) {
-            results(ae.actor.name) = results(ae.actor.name).addHealingOut(overheal)
-            results(ae.target.name) = results(ae.target.name).addHealingIn(overheal)
+            results(ae.actor) = results(ae.actor).addHealingOut(overheal)
+            results(ae.target) = results(ae.target).addHealingIn(overheal)
           }
         }
         case ae: ActorEvent if (ae.eventType == Died) => {
-          results(ae.actor.name) = results(ae.actor.name).addDeath()
+          results(ae.actor) = results(ae.actor).addDeath()
         }
         case ae: ActorEvent if (ae.eventType == Slain) => {
-          results(ae.target.name) = results(ae.target.name).addDeath()
+          results(ae.target) = results(ae.target).addDeath()
         }
         case _ =>
       }
@@ -176,19 +176,19 @@ object EventProcessor {
         }
   }
 
-  def dpsSummary(data: Map[String, Summary]) = data.map {case (name, summary) => name -> summary.dpsOut}
+  def dpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
 
-  def dpsSorted(data: Map[String, Summary]) = dpsSummary(data).toList.sortBy {case (name, value) => value}.reverse
+  def dpsSorted(data: Map[Actor, Summary]) = dpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
 
-  def hpsSummary(data: Map[String, Summary]) = data.map {case (name, summary) => name -> summary.hpsOut}
+  def hpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.hpsOut}
 
-  def hpsSorted(data: Map[String, Summary]) = hpsSummary(data).toList.sortBy {case (name, value) => value}.reverse
+  def hpsSorted(data: Map[Actor, Summary]) = hpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
 
-  def raidDPS(data: Map[String, Summary]) = dpsSummary(data).map {case (name, value) => value}.sum
+  def raidDPS(data: Map[Actor, Summary]) = dpsSummary(data).map {case (actor, value) => value}.sum
 
-  def raidHPS(data: Map[String, Summary]) = hpsSummary(data).map {case (name, value) => value}.sum
+  def raidHPS(data: Map[Actor, Summary]) = hpsSummary(data).map {case (actor, value) => value}.sum
 
-  def dpsSummaryForClipboard(data: Map[String, Summary]): String = {
+  def dpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
     val dps = dpsSorted(data).take(10).filter {case (name, value) => value > 0}
     "DPS: Raid:%d - %s".format(
       raidDPS(data),
@@ -196,7 +196,7 @@ object EventProcessor {
     )
   }
 
-  def hpsSummaryForClipboard(data: Map[String, Summary]): String = {
+  def hpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
     val hps = hpsSorted(data).take(10).filter {case (name, value) => value > 0}
     "HPS: Raid:%d - %s".format(
       raidHPS(data),
@@ -204,11 +204,11 @@ object EventProcessor {
     )
   }
 
-  def filterSummaryByActors(summary: Map[String, Summary], actors: Set[String]): Map[String, Summary] = {
+  def filterSummaryByActors(summary: Map[Actor, Summary], actors: Set[String]): Map[Actor, Summary] = {
     if (actors.isEmpty)
       summary
     else
-      summary filter { case (actor, sum) => actors.contains(actor) }
+      summary filter { case (actor, sum) => actors.contains(actor.name) }
   }
 }
 

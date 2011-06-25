@@ -24,7 +24,7 @@ class SummaryPanels extends TabbedPane {
   }
 
   def current: SummaryPanel = panels(selection.page.index)
-  def update(summary: Map[String, Summary]) {
+  def update(summary: Map[Actor, Summary]) {
     panels foreach { _.update(summary) }
   }
 }
