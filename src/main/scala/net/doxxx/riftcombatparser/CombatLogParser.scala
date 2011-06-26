@@ -2,8 +2,8 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import util.matching.Regex
-import collection.mutable.HashMap
 import java.lang.RuntimeException
+import collection.mutable.{SynchronizedMap, HashMap}
 
 object CombatLogParser {
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
@@ -19,15 +19,15 @@ object CombatLogParser {
   case class NPC(override val id: Long) extends ActorID(id)
   case class PC(override val id: Long) extends ActorID(id)
 
-  private val actors = new HashMap[ActorID, Actor] {
+  private val actors = new HashMap[ActorID, Actor] with SynchronizedMap[ActorID, Actor] {
     override def default(key: ActorID) = Nobody
   }
 
   def parse(source: Source): List[LogEvent] = {
     try {
       Utils.timeit("logparse") { () =>
-        source.getLines().toList.map(parseLine).toList.flatten
-        //source.getLines().toList.par.map(parseLine).toList.flatten
+        //source.getLines().toList.map(parseLine).toList.flatten
+        source.getLines().toList.par.map(parseLine).toList.flatten
       }
     }
     finally {
@@ -133,7 +133,7 @@ object CombatLogParser {
             val owner = actors(ownerID)
             actor match {
               case p: PlayerPet =>
-                if (p.owner != owner)
+                if (p.owner.id != owner.id)
                   throw new RuntimeException("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
               case _ => throw new RuntimeException("%s cannot be owned by %s".format(actor, owner))
             }
@@ -144,12 +144,12 @@ object CombatLogParser {
       case None => {
         actorID match {
           case pc: PC => {
-            actors += actorID -> Player(actorName.getOrElse("$dummy$"))
+            actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
           }
           case npc: NPC => {
             val actor: Actor = ownerID match {
-              case NullActorID => NonPlayer(actorName.getOrElse("$dummy$"))
-              case _ => PlayerPet(actorName.getOrElse("$dummy$"), getPlayer(ownerID))
+              case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
+              case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
             }
             actors += actorID -> actor
           }
