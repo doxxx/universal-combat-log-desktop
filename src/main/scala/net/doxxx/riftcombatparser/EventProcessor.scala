@@ -3,11 +3,24 @@ package net.doxxx.riftcombatparser
 import EventType._
 import collection.immutable.List._
 import collection.mutable.HashMap
+import java.util.prefs.Preferences
 
 object EventProcessor {
   var includeOverhealing = false
   var useActorCombatTime = true
   var mergePetsIntoOwners = false
+
+  def loadSettings(prefs: Preferences) {
+    includeOverhealing = prefs.getBoolean("includeOverhealing", false)
+    useActorCombatTime = prefs.getBoolean("useActorCombatTime", true)
+    mergePetsIntoOwners = prefs.getBoolean("mergePetsIntoOwners", true)
+  }
+
+  def saveSettings(prefs: Preferences) {
+    prefs.putBoolean("includeOverhealing", includeOverhealing)
+    prefs.putBoolean("useActorCombatTime", useActorCombatTime)
+    prefs.putBoolean("mergePetsIntoOwners", mergePetsIntoOwners)
+  }
 
   def summary(fight: Fight): Map[Actor, Summary] = {
     val results = new HashMap[Actor, Summary] {

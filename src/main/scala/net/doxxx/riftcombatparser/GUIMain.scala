@@ -1,7 +1,7 @@
 package net.doxxx.riftcombatparser
 
 import scala.swing._
-import scala.swing.event.{Event, ButtonClicked}
+import event.{Event, ButtonClicked}
 import io.Source
 import java.util.prefs.Preferences
 import javax.swing.JFileChooser
@@ -149,6 +149,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
 
+    EventProcessor.loadSettings(prefs)
+
     MI_IncludeOverhealing.selected = EventProcessor.includeOverhealing
     MI_UseActorCombatTime.selected = EventProcessor.useActorCombatTime
     MI_MergePetsIntoOwners.selected = EventProcessor.mergePetsIntoOwners
@@ -231,14 +233,17 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_IncludeOverhealing) => {
         EventProcessor.includeOverhealing = MI_IncludeOverhealing.selected
+        EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
       case ButtonClicked(MI_UseActorCombatTime) => {
         EventProcessor.useActorCombatTime = MI_UseActorCombatTime.selected
+        EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
       case ButtonClicked(MI_MergePetsIntoOwners) => {
         EventProcessor.mergePetsIntoOwners = MI_MergePetsIntoOwners.selected
+        EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
       case ButtonClicked(`spellBreakdownButton`) => {
