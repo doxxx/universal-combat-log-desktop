@@ -9,13 +9,13 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
 import java.awt.Toolkit
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSelection}
-import java.io.{IOException, FileReader, File}
+import java.io.{IOException, File}
 import java.util.{Date, Calendar}
 import java.text.{SimpleDateFormat, DateFormat}
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
-  case class UpdateWithEvents(events: List[LogEvent]) extends Event
+  case class LogFileLoaded(events: List[LogEvent], playersAndPets: Set[Actor]) extends Event
 
   val LogFileKey = "logFile"
   val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
@@ -64,9 +64,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case Some(f) => actor {
         log("Loading events from %s", f.toString)
         try {
+          CombatLogParser.reset()
           val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
+          val playersAndPets = CombatLogParser.playersAndPets
           Swing.onEDT {
-            logFileEventPublisher.publish(UpdateWithEvents(events))
+            logFileEventPublisher.publish(LogFileLoaded(events, playersAndPets))
           }
         }
         catch {
@@ -100,13 +102,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   def top = new MainFrame {
     title = "Rift Combat Parser"
 
-    val summaryPanels = new SummaryPanels
-    val actorList = new ActorList
-    val fightList = new FightList
+    private var _playersAndPets: Set[Actor] = Set.empty
+    private var _summary: Map[Actor, Summary] = Map.empty
 
-    var fullSummary: Map[Actor, Summary] = Map.empty
-    var filteredSummary: Option[Map[Actor, Summary]] = None
-    def summary = filteredSummary getOrElse fullSummary
+    val summaryPanels = new SummaryPanels
+    val fightList = new FightList
 
     def summaryPanel = summaryPanels.current
 
@@ -133,14 +133,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           contents += summaryPanels
         }
         contents += Swing.HStrut(5)
-        contents += actorList
-        contents += Swing.HStrut(5)
       }
       contents += Swing.VStrut(5)
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
-    val MI_LoadActorsFromRaidXML = new MenuItem("Load Actors From raid.xml")
     val MI_NewSession = new MenuItem("New Session")
     val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
     val MI_CopyDPSSummary = new MenuItem("Copy DPS Summary")
@@ -158,7 +155,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     menuBar = new MenuBar {
       contents += new Menu("File") {
         contents += MI_ChooseCombatLogFile
-        contents += MI_LoadActorsFromRaidXML
         contents += MI_NewSession
         contents += MI_SpellBreakdown
         contents += MI_CopyDPSSummary
@@ -172,7 +168,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     }
 
     listenTo(MI_ChooseCombatLogFile)
-    listenTo(MI_LoadActorsFromRaidXML)
     listenTo(MI_NewSession)
     listenTo(MI_SpellBreakdown)
     listenTo(MI_CopyDPSSummary)
@@ -181,7 +176,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(MI_UseActorCombatTime)
     listenTo(MI_MergePetsIntoOwners)
     listenTo(logFileEventPublisher)
-    listenTo(actorList)
     listenTo(fightList)
     listenTo(summaryPanels)
     listenTo(spellBreakdownButton)
@@ -191,21 +185,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         logFile = chooseCombatLogFile(logFile)
         createFileLoaderActor()
         createFileWatchActor()
-      }
-      case ButtonClicked(MI_LoadActorsFromRaidXML) => {
-        logFile match {
-          case Some(f) => {
-            val raidXMLFile = new File(f.getParentFile, "raid.xml")
-            if (raidXMLFile.exists) {
-              val raidInfo = new RaidInfoParser(new FileReader(raidXMLFile)).parse()
-              log("Loading actors from %s", raidXMLFile.toString)
-              actorList.selectActors(raidInfo.members.map(_.name).toSet)
-            } else {
-              println("No raid.xml to load")
-            }
-          }
-          case None => println("No combat log file to locate raid.xml")
-        }
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
@@ -223,12 +202,12 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_CopyDPSSummary) => {
         val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(summary))
+        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(_summary))
         clipboard.setContents(data, GUIMain)
       }
       case ButtonClicked(MI_CopyHPSSummary) => {
         val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(summary))
+        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(_summary))
         clipboard.setContents(data, GUIMain)
       }
       case ButtonClicked(MI_IncludeOverhealing) => {
@@ -256,17 +235,14 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           case None =>
         }
       }
-      case UpdateWithEvents(events) => {
+      case LogFileLoaded(events, playersAndPets) => {
         fightList.update(events)
+        _playersAndPets = playersAndPets
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
-        fullSummary = EventProcessor.summary(combined)
-        actorList.update(EventProcessor.actorsSortedByActivity(combined.events))
-      }
-      case ActorFilterChanged(actors) => {
-        filteredSummary = Some(EventProcessor.filterSummaryByActors(fullSummary, actors))
-        summaryPanels.update(summary)
+        _summary = EventProcessor.summary(combined, _playersAndPets)
+        summaryPanels.update(_summary)
       }
       case SelectedActorChanged(actor) => {
         if (spellBreakdownDialog.visible) {

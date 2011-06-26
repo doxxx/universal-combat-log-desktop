@@ -22,12 +22,12 @@ object EventProcessor {
     prefs.putBoolean("mergePetsIntoOwners", mergePetsIntoOwners)
   }
 
-  def summary(fight: Fight): Map[Actor, Summary] = {
+  def summary(fight: Fight, actors: Set[Actor]): Map[Actor, Summary] = {
     val results = new HashMap[Actor, Summary] {
       override def default(key: Actor) = Summary()
     }
     Utils.timeit("summary") { () =>
-      for (e <- fight.events) e match {
+      for (e <- filterByActors(fight.events, actors)) e match {
         case ae: ActorEvent => {
           val actor = mergePetIntoOwner(ae.actor)
           val target = mergePetIntoOwner(ae.target)

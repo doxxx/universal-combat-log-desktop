@@ -23,6 +23,10 @@ object CombatLogParser {
     override def default(key: ActorID) = Nobody
   }
 
+  def reset() {
+    actors.clear()
+  }
+
   def parse(source: Source): List[LogEvent] = {
     try {
       Utils.timeit("logparse") { () =>
@@ -34,6 +38,12 @@ object CombatLogParser {
       source.close()
     }
   }
+
+  def playersAndPets: Set[Actor] = actors.filter {
+    case (id: ActorID, player: Player) => true
+    case (id: ActorID, playerPet: PlayerPet) => true
+    case _ => false
+  }.values.toSet
 
   def extractOverheal(text: String): Int = {
     OverhealRE.findFirstMatchIn(text) match {
