@@ -105,36 +105,33 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     private var _playersAndPets: Set[Actor] = Set.empty
     private var _summary: Map[Actor, Summary] = Map.empty
 
-    val summaryPanels = new SummaryPanels
     val fightList = new FightList
-
+    val summaryPanels = new SummaryPanels
     def summaryPanel = summaryPanels.current
 
-    val spellBreakdownButton = new Button("Spell Breakdown")
-    spellBreakdownButton.enabled = false
-
+    val spellBreakdownButton = new Button("Spell Breakdown") {
+      enabled = false
+    }
     val spellBreakdownDialog = new SpellBreakdownDialog(this)
 
-    contents = new BoxPanel(Orientation.Vertical) {
-      contents += Swing.VStrut(5)
+    val centerComponent = new BoxPanel(Orientation.Vertical) {
       contents += new BoxPanel(Orientation.Horizontal) {
-        contents += Swing.HStrut(5)
-        contents += fightList
-        contents += Swing.HStrut(5)
-        contents += new BoxPanel(Orientation.Vertical) {
-          contents += new BoxPanel(Orientation.Horizontal) {
-            contents += new Label {
-              text = "Summary"
-            }
-            contents += Swing.HGlue
-            contents += spellBreakdownButton
-          }
-          contents += Swing.VStrut(5)
-          contents += summaryPanels
+        contents += new Label {
+          text = "Summary"
         }
-        contents += Swing.HStrut(5)
+        contents += Swing.HGlue
+        contents += spellBreakdownButton
       }
       contents += Swing.VStrut(5)
+      contents += summaryPanels
+    }
+
+    contents = new BorderPanel {
+      layoutManager.setHgap(5)
+      layoutManager.setVgap(5)
+      border = Swing.EmptyBorder(5)
+      layout(fightList) = BorderPanel.Position.West
+      layout(centerComponent) = BorderPanel.Position.Center
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
