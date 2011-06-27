@@ -238,7 +238,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
-        _summary = EventProcessor.summary(combined, _playersAndPets)
+        _summary = EventProcessor.summary(combined).filter {
+          case (actor, summary) => _playersAndPets.contains(actor)
+        }
         summaryPanels.update(_summary)
       }
       case SelectedActorChanged(actor) => {

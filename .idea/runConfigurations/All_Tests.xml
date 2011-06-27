@@ -17,7 +17,7 @@
     <ConfigurationWrapper RunnerId="Run" />
     <method>
       <option name="Make" enabled="false" />
-      <option name="SBT.BeforeRunTask" enabled="true" action="test-compile" />
+      <option name="SBT.BeforeRunTask" enabled="true" action="test-compile" runInCurrentModule="false" />
     </method>
   </configuration>
 </component>
