@@ -27,6 +27,7 @@
     <orderEntry type="library" name="scala-library" level="project" />
     <orderEntry type="library" name="scala-swing" level="project" />
     <orderEntry type="library" name="scalatest" level="project" />
+    <orderEntry type="library" name="scala-compiler" level="project" />
   </component>
 </module>
 
