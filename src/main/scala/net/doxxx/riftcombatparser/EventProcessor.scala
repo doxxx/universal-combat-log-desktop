@@ -110,16 +110,21 @@ object EventProcessor {
     }
   }
 
-  def splitFights(events: List[LogEvent]): List[SingleFight] = {
+  def splitFights(events: List[LogEvent]): List[Fight] = {
     events match {
       case Nil => Nil
       case (start @ CombatToggleEvent(_, true)) :: tail => {
-        val (fight, rest) = tail span {
+        val (fightEvents, rest) = tail span {
           case CombatToggleEvent(_, false) => false
           case _ => true
         }
-        // fight might be empty, so prepend the combat start event so it can calc start/end time
-        SingleFight(start :: fight) :: (rest match {
+
+        val fight:Fight = fightEvents match {
+          case Nil => EmptyFight(start.time)
+          case _ => SingleFight(fightEvents)
+        }
+
+        fight :: (rest match {
           case Nil => Nil
           case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
           case _ => throw new IllegalStateException
@@ -276,6 +281,13 @@ abstract class Fight {
   val endTime:Long
   val duration:Int
   override def toString = title getOrElse ("@%d (%ds)" format (startTime, duration))
+}
+case class EmptyFight(time: Long) extends Fight {
+  val events = Nil
+  val title = None
+  val startTime = time
+  val endTime = time
+  val duration = 0
 }
 case class SingleFight(events: List[LogEvent], title: Option[String] = None) extends Fight {
   val startTime = if (events.isEmpty) 0 else events.head.time
