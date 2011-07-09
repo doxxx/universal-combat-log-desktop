@@ -144,8 +144,8 @@ object CombatLogParser {
             actor match {
               case p: PlayerPet =>
                 if (p.owner.id != owner.id)
-                  throw new RuntimeException("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
-              case _ => throw new RuntimeException("%s cannot be owned by %s".format(actor, owner))
+                  println("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
+              case _ => println("%s cannot be owned by %s".format(actor, owner))
             }
           }
         }
@@ -170,7 +170,7 @@ object CombatLogParser {
     }
   }
 
- private def getPlayer(id: ActorID): Player = {
+  private def getPlayer(id: ActorID): Player = {
    getActor(id, NullActorID, None) match {
      case p: Player => p
      case a => throw new RuntimeException("Actor %s is not player".format(a))
