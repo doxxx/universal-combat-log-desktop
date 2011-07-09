@@ -110,6 +110,30 @@ object EventProcessor {
     }
   }
 
+  def primaryNPC(events: List[LogEvent]): Option[String] = {
+    val nonPlayerDamage = new HashMap[NonPlayer,Int]
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
+          ae.target match {
+            case np: NonPlayer => {
+              nonPlayerDamage(np) = nonPlayerDamage.getOrElse(np, 0) + ae.amount
+            }
+            case _ => // nothing
+          }
+        }
+        case _ => // nothing
+      }
+    }
+    if (nonPlayerDamage.isEmpty) return None
+    implicit val ordering = new Ordering[(NonPlayer,Int)] {
+      def compare(x: (NonPlayer, Int), y: (NonPlayer, Int)) = {
+        x._2 - y._2
+      }
+    }
+    Some(nonPlayerDamage.max(ordering)._1.name)
+  }
+
   def splitFights(events: List[LogEvent]): List[Fight] = {
     events match {
       case Nil => Nil
@@ -121,7 +145,7 @@ object EventProcessor {
 
         val fight:Fight = fightEvents match {
           case Nil => EmptyFight(start.time)
-          case _ => SingleFight(fightEvents)
+          case _ => SingleFight(fightEvents, primaryNPC(fightEvents))
         }
 
         fight :: (rest match {
@@ -275,12 +299,12 @@ case class Summary(start: Long = Long.MaxValue, end: Long = 0, damageIn: Int = 0
 }
 
 abstract class Fight {
-  val events:List[LogEvent]
-  val title:Option[String]
-  val startTime:Long
-  val endTime:Long
-  val duration:Int
-  override def toString = title getOrElse ("@%d (%ds)" format (startTime, duration))
+  def events:List[LogEvent]
+  def title:Option[String]
+  def startTime:Long
+  def endTime:Long
+  def duration:Int
+  override def toString = "%s (%ds)".format(title.getOrElse("@%d".format(startTime)), duration)
 }
 case class EmptyFight(time: Long) extends Fight {
   val events = Nil
