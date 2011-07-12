@@ -1,7 +1,7 @@
 package net.doxxx.riftcombatparser
 
 import scala.swing._
-import event.{Event, ButtonClicked}
+import event.{WindowActivated, Event, ButtonClicked}
 import io.Source
 import java.util.prefs.Preferences
 import javax.swing.JFileChooser
@@ -190,10 +190,13 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(breakdownButton)
 
     reactions += {
+      case WindowActivated(_) => {
+        createFileLoaderActor()
+      }
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         createFileLoaderActor()
-        createFileWatchActor()
+        //createFileWatchActor()
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
@@ -279,7 +282,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     }
 
     createFileLoaderActor()
-    createFileWatchActor()
+    //createFileWatchActor()
   }
 
   def log(msg: String, args: Any*) {
