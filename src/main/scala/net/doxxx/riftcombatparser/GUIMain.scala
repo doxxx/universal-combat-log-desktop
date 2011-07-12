@@ -29,6 +29,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     else
       Some(new File(path))
   }
+  var logFileLastModified = 0L
 
   val logFileEventPublisher = new Publisher {}
 
@@ -61,18 +62,23 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   def createFileLoaderActor() {
     logFile match {
-      case Some(f) => actor {
-        log("Loading events from %s", f.toString)
-        try {
-          CombatLogParser.reset()
-          val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
-          val playersAndPets = CombatLogParser.playersAndPets
-          Swing.onEDT {
-            logFileEventPublisher.publish(LogFileLoaded(events, playersAndPets))
+      case Some(f) => {
+        if (f.lastModified() <= logFileLastModified) return
+
+        actor {
+          log("Loading events from %s", f.toString)
+          try {
+            CombatLogParser.reset()
+            val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
+            logFileLastModified = f.lastModified();
+            val playersAndPets = CombatLogParser.playersAndPets
+            Swing.onEDT {
+              logFileEventPublisher.publish(LogFileLoaded(events, playersAndPets))
+            }
           }
-        }
-        catch {
-          case e: IOException => log("Couldn't load combat log file: " + e.toString)
+          catch {
+            case e: IOException => log("Couldn't load combat log file: " + e.toString)
+          }
         }
       }
       case None =>
