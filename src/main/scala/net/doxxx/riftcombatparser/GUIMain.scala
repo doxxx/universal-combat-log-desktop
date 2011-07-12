@@ -109,7 +109,13 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val summaryPanels = new SummaryPanels
     def summaryPanel = summaryPanels.current
 
-    val spellBreakdownButton = new Button("Spell Breakdown") {
+    val copyDPSButton = new Button("Copy DPS") {
+      enabled = false
+    }
+    val copyHPSButton = new Button("Copy HPS") {
+      enabled = false
+    }
+    val breakdownButton = new Button("Breakdown") {
       enabled = false
     }
     val spellBreakdownDialog = new SpellBreakdownDialog(this)
@@ -120,7 +126,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           text = "Summary"
         }
         contents += Swing.HGlue
-        contents += spellBreakdownButton
+        contents += copyDPSButton
+        contents += Swing.HStrut(5)
+        contents += copyHPSButton
+        contents += Swing.HStrut(5)
+        contents += breakdownButton
       }
       contents += Swing.VStrut(5)
       contents += summaryPanels
@@ -175,7 +185,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     listenTo(logFileEventPublisher)
     listenTo(fightList)
     listenTo(summaryPanels)
-    listenTo(spellBreakdownButton)
+    listenTo(copyDPSButton)
+    listenTo(copyHPSButton)
+    listenTo(breakdownButton)
 
     reactions += {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
@@ -222,7 +234,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
-      case ButtonClicked(`spellBreakdownButton`) => {
+      case ButtonClicked(`breakdownButton`) => {
         summaryPanel.selectedActor match {
           case Some(actor) => {
             val combined = Fights(fightList.selectedFights)
@@ -231,6 +243,16 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           }
           case None =>
         }
+      }
+      case ButtonClicked(`copyDPSButton`) => {
+        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(_summary))
+        clipboard.setContents(data, GUIMain)
+      }
+      case ButtonClicked(`copyHPSButton`) => {
+        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(_summary))
+        clipboard.setContents(data, GUIMain)
       }
       case LogFileLoaded(events, playersAndPets) => {
         fightList.update(events)
@@ -242,13 +264,17 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           case (actor, summary) => _playersAndPets.contains(actor)
         }
         summaryPanels.update(_summary)
+        if (fights.size > 0) {
+          copyDPSButton.enabled = true
+          copyHPSButton.enabled = true
+        }
       }
       case SelectedActorChanged(actor) => {
         if (spellBreakdownDialog.visible) {
           val events = (for (f <- fightList.selectedFights) yield f.events).flatten
           spellBreakdownDialog.update(actor, EventProcessor.filterByActors(events, Set(actor)))
         }
-        spellBreakdownButton.enabled = true
+        breakdownButton.enabled = true
       }
     }
 

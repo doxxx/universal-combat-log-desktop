@@ -251,18 +251,18 @@ object EventProcessor {
   def raidHPS(data: Map[Actor, Summary]) = hpsSummary(data).map {case (actor, value) => value}.sum
 
   def dpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
-    val dps = dpsSorted(data).take(10).filter {case (name, value) => value > 0}
+    val dps = dpsSorted(data).take(10).filter {case (actor, value) => value > 0}
     "DPS: Raid:%d - %s".format(
       raidDPS(data),
-      (dps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+      (dps.map {case (actor, value) => "%.4s:%d".format(actor.name, value)}).mkString(", ")
     )
   }
 
   def hpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
-    val hps = hpsSorted(data).take(10).filter {case (name, value) => value > 0}
+    val hps = hpsSorted(data).take(10).filter {case (actor, value) => value > 0}
     "HPS: Raid:%d - %s".format(
       raidHPS(data),
-      (hps.map {case (name, value) => "%.4s:%d".format(name, value)}).mkString(", ")
+      (hps.map {case (actor, value) => "%.4s:%d".format(actor.name, value)}).mkString(", ")
     )
   }
 
