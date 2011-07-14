@@ -4,7 +4,6 @@ import scala.swing._
 import event.{WindowActivated, Event, ButtonClicked}
 import io.Source
 import java.util.prefs.Preferences
-import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
 import java.awt.Toolkit
@@ -12,6 +11,7 @@ import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSel
 import java.io.{IOException, File}
 import java.util.{Date, Calendar}
 import java.text.{SimpleDateFormat, DateFormat}
+import javax.swing.JFileChooser
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
@@ -65,6 +65,10 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case Some(f) => {
         if (f.lastModified() <= logFileLastModified) return
 
+        Swing.onEDT {
+          top.progressBar.visible = true
+        }
+
         actor {
           log("Loading events from %s", f.toString)
           try {
@@ -78,6 +82,10 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           }
           catch {
             case e: IOException => log("Couldn't load combat log file: " + e.toString)
+          }
+
+          Swing.onEDT {
+            top.progressBar.visible = false
           }
         }
       }
@@ -105,7 +113,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     }
   }
 
-  def top = new MainFrame {
+  val top = new MainFrame {
     title = "Rift Combat Parser"
 
     private var _playersAndPets: Set[Actor] = Set.empty
@@ -114,6 +122,12 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val fightList = new FightList
     val summaryPanels = new SummaryPanels
     def summaryPanel = summaryPanels.current
+    val progressBar = new ProgressBar {
+      indeterminate = true
+      labelPainted = true
+      label = "Parsing log file..."
+      visible = false
+    }
 
     val copyDPSButton = new Button("Copy DPS") {
       enabled = false
@@ -148,6 +162,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       border = Swing.EmptyBorder(5)
       layout(fightList) = BorderPanel.Position.West
       layout(centerComponent) = BorderPanel.Position.Center
+      layout(progressBar) = BorderPanel.Position.South
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
