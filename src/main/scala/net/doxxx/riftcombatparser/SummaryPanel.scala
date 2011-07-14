@@ -10,6 +10,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     model = summaryModel
     peer.setRowSorter(summaryModel.rowSorter(defaultColumn))
     selection.intervalMode = Table.IntervalMode.Single
+    peer.getColumnModel.getColumn(0).setPreferredWidth(200)
   }
 
   contents = table
