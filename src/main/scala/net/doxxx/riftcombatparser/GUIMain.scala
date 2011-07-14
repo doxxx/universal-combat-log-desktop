@@ -288,7 +288,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
     }
 
-    createFileLoaderActor()
+    //createFileLoaderActor()
     //createFileWatchActor()
   }
 
