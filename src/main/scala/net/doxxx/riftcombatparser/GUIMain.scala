@@ -201,6 +201,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
+        logFileLastModified = 0L
         createFileLoaderActor()
         //createFileWatchActor()
       }
