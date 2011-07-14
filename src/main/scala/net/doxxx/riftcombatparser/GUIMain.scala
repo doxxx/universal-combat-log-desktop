@@ -151,6 +151,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         contents += copyHPSButton
         contents += Swing.HStrut(5)
         contents += breakdownButton
+        maximumSize = new Dimension(maximumSize.width, preferredSize.height)
       }
       contents += Swing.VStrut(5)
       contents += summaryPanels
