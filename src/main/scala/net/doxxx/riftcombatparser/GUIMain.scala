@@ -15,10 +15,11 @@ import javax.swing.JFileChooser
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
+  import Utils._
+
   case class LogFileLoaded(events: List[LogEvent], playersAndPets: Set[Actor]) extends Event
 
   val LogFileKey = "logFile"
-  val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
@@ -72,8 +73,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         actor {
           log("Loading events from %s", f.toString)
           try {
-            CombatLogParser.reset()
-            val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(f)))
+            val events = EventProcessor.normalizeTimes(CombatLogParser.parse(f))
             logFileLastModified = f.lastModified();
             val playersAndPets = CombatLogParser.playersAndPets
             Swing.onEDT {
@@ -218,6 +218,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         logFileLastModified = 0L
+        CombatLogParser.reset()
         createFileLoaderActor()
         //createFileWatchActor()
       }
@@ -306,15 +307,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     //createFileLoaderActor()
     //createFileWatchActor()
-  }
-
-  def log(msg: String, args: Any*) {
-    val a = formattedDate :: args.toList
-    printf("%s: " + msg + "\n", a: _*)
-  }
-
-  def formattedDate = {
-    LoggingDateFormat.format(Calendar.getInstance.getTime)
   }
 
   def lostOwnership(clipboard: Clipboard, contents: Transferable) {

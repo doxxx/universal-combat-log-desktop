@@ -2,10 +2,15 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import util.matching.Regex
-import java.lang.RuntimeException
-import collection.mutable.{SynchronizedMap, HashMap}
+import collection.mutable.{ListBuffer, SynchronizedMap, HashMap}
+import java.io._
+import java.lang.{Boolean, RuntimeException}
 
 object CombatLogParser {
+  import Utils._
+
+  private val parallelize = !Boolean.getBoolean("nopar")
+
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
     new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
@@ -22,20 +27,88 @@ object CombatLogParser {
   private val actors = new HashMap[ActorID, Actor] with SynchronizedMap[ActorID, Actor] {
     override def default(key: ActorID) = Nobody
   }
+  private var lastFilePos: Long = 0
+  private var lastEvents: List[LogEvent] = Nil
+  private var threads: Set[String] = Set.empty
 
   def reset() {
     actors.clear()
+    lastFilePos = 0
+    lastEvents = Nil
   }
 
   def parse(source: Source): List[LogEvent] = {
     try {
-      Utils.timeit("logparse") { () =>
-        //source.getLines().toList.map(parseLine).toList.flatten
-        source.getLines().toList.par.map(parseLine).toList.flatten
+      timeit("logparse") { () =>
+        parse(source.getLines().toList)
       }
     }
     finally {
       source.close()
+    }
+  }
+
+  def parse(file: File): List[LogEvent] = {
+    val raf = new RandomAccessFile(file, "r")
+    if (raf.length < lastFilePos) {
+      log("File size smaller than last position; resetting")
+      reset()
+    }
+    else {
+      log("Seeking to last position: %d", lastFilePos)
+      raf.seek(lastFilePos)
+    }
+
+    val data:Array[Byte] = Array.ofDim((raf.length - raf.getFilePointer).toInt)
+    timeit("readFully") { () =>
+      log("Reading %d bytes", data.length)
+      raf.readFully(data)
+    }
+
+    lastFilePos = raf.getFilePointer
+
+    log("Saved last position: %d", lastFilePos)
+
+    raf.close()
+
+    val reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)))
+    var lines = new ListBuffer[String]
+    var done = false
+
+    timeit("readLines") { () =>
+      while (!done) {
+        val line = reader.readLine()
+        if (line == null) {
+          done = true
+        }
+        else {
+          lines += line
+        }
+      }
+    }
+
+    log("Read %d lines", lines.length)
+
+    threads = Set.empty
+
+    val newEvents = timeit("parseLines") { () =>
+      parse(lines.toList)
+    }
+
+    log("Parsed %d events using %d threads", newEvents.length, threads.size)
+
+    lastEvents = lastEvents ::: newEvents
+
+    lastEvents
+  }
+
+  def parse(lines: List[String]): List[LogEvent] = {
+    if (parallelize) {
+      log("Parsing in parallel")
+      lines.par.map(parseLine).toList.flatten
+    }
+    else {
+      lines.map(parseLine).toList.flatten
     }
   }
 
@@ -53,6 +126,7 @@ object CombatLogParser {
   }
 
   private def parseLine(line: String): Option[LogEvent] = {
+    threads += Thread.currentThread().getName
     line match {
       case CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
       case LineRE(time, data, text) => parseActorEvent(time, data, text)
