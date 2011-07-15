@@ -6,6 +6,8 @@ import collection.mutable.HashMap
 import java.util.prefs.Preferences
 
 object EventProcessor {
+  import Utils._
+
   var includeOverhealing = false
   var useActorCombatTime = true
   var mergePetsIntoOwners = false
@@ -26,7 +28,7 @@ object EventProcessor {
     val results = new HashMap[Actor, Summary] {
       override def default(key: Actor) = Summary()
     }
-    Utils.timeit("summary") { () =>
+    timeit("summary") { () =>
       for (e <- fight.events) e match {
         case ae: ActorEvent => {
           val actor = mergePetIntoOwner(ae.actor)
