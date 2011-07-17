@@ -164,6 +164,7 @@ object EventProcessor {
 
   private val dayTime = 24*60*60
   def normalizeTimes(events: List[LogEvent]): List[LogEvent] = {
+    if (events.isEmpty) return events
     val startTime = events.head.time
     for (e <- events) yield {
       val relTime = e.time - startTime
