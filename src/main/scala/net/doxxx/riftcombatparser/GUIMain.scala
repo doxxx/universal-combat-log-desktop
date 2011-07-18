@@ -34,6 +34,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   val logFileEventPublisher = new Publisher {}
 
+  var loadingLogFile = false
+
   def chooseCombatLogFile(default: Option[File]): Option[File] = {
     val chooser = new JFileChooser
     chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"))
@@ -66,6 +68,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case Some(f) => {
         if (f.lastModified() <= logFileLastModified) return
 
+        loadingLogFile = true
+
         Swing.onEDT {
           top.progressBar.visible = true
         }
@@ -87,6 +91,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           Swing.onEDT {
             top.progressBar.visible = false
           }
+
+          loadingLogFile = false
         }
       }
       case None =>
@@ -213,7 +219,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     reactions += {
       case WindowActivated(_) => {
-        createFileLoaderActor()
+        if (!loadingLogFile) {
+          createFileLoaderActor()
+        }
       }
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
