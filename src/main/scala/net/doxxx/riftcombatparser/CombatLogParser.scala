@@ -2,9 +2,10 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import util.matching.Regex
-import collection.mutable.{ListBuffer, SynchronizedMap, HashMap}
+import collection.mutable.{ListBuffer, HashMap}
 import java.io._
 import java.lang.{Boolean, RuntimeException}
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 object CombatLogParser {
   import Utils._
@@ -24,7 +25,8 @@ object CombatLogParser {
   case class NPC(override val id: Long) extends ActorID(id)
   case class PC(override val id: Long) extends ActorID(id)
 
-  private val actors = new HashMap[ActorID, Actor] with SynchronizedMap[ActorID, Actor] {
+  private val actorsLock = new ReentrantReadWriteLock()
+  private val actors = new HashMap[ActorID, Actor] {
     override def default(key: ActorID) = Nobody
   }
   private var lastFilePos: Long = 0
@@ -200,47 +202,61 @@ object CombatLogParser {
   }
 
   private def getActor(actorID: ActorID, ownerID: ActorID, actorName: Option[String]): Actor = {
-    actors.get(actorID) match {
-      case Some(actor) => {
-        actorName match {
-          case Some(name) => {
-            if (actor.name != name) {
-              //println("Actor %s has changed name: %s -> %s".format(actorID, actor.name, name))
-              actor.name = name
+    actorsLock.readLock().lock()
+    try {
+      actors.get(actorID) match {
+        case Some(actor) => {
+          actorName match {
+            case Some(name) => {
+              if (actor.name != name) {
+                //println("Actor %s has changed name: %s -> %s".format(actorID, actor.name, name))
+                actor.name = name
+              }
+            }
+            case None => // nothing
+          }
+          ownerID match {
+            case NullActorID => // nothing
+            case _ => {
+              val owner = actors(ownerID)
+              actor match {
+                case p: PlayerPet =>
+                  if (p.owner.id != owner.id)
+                    println("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
+                case _ => println("%s cannot be owned by %s".format(actor, owner))
+              }
             }
           }
-          case None => // nothing
+          actor
         }
-        ownerID match {
-          case NullActorID => // nothing
-          case _ => {
-            val owner = actors(ownerID)
-            actor match {
-              case p: PlayerPet =>
-                if (p.owner.id != owner.id)
-                  println("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
-              case _ => println("%s cannot be owned by %s".format(actor, owner))
+        case None => {
+          actorsLock.readLock().unlock()
+          actorsLock.writeLock().lock()
+          try {
+            actorID match {
+              case pc: PC => {
+                actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
+              }
+              case npc: NPC => {
+                val actor: Actor = ownerID match {
+                  case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
+                  case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
+                }
+                actors += actorID -> actor
+              }
+              case _ => // nothing
             }
           }
+          finally {
+            actorsLock.readLock().lock()
+            actorsLock.writeLock().unlock()
+          }
+          actors(actorID)
         }
-        actor
       }
-      case None => {
-        actorID match {
-          case pc: PC => {
-            actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
-          }
-          case npc: NPC => {
-            val actor: Actor = ownerID match {
-              case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
-              case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
-            }
-            actors += actorID -> actor
-          }
-          case _ => // nothing
-        }
-        actors(actorID)
-      }
+    }
+    finally {
+      actorsLock.readLock().unlock()
     }
   }
 
