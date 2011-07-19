@@ -208,10 +208,7 @@ object CombatLogParser {
         case Some(actor) => {
           actorName match {
             case Some(name) => {
-              if (actor.name != name) {
-                //println("Actor %s has changed name: %s -> %s".format(actorID, actor.name, name))
-                actor.name = name
-              }
+              actor.name = name
             }
             case None => // nothing
           }

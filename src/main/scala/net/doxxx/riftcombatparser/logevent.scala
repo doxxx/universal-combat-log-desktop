@@ -18,18 +18,28 @@ case class ActorEvent(override val time: Long, eventType: EventType.Value,
 
 sealed abstract class Actor(val id: ActorID) {
   def name: String
-  def name_=(s: String)
+  def name_=(newName: String)
 }
+
 case object Nobody extends Actor(NullActorID) {
   def name = "Mr Nobody!"
-  def name_=(s: String) {
+  override def name_=(newName: String) {
     throw new RuntimeException("Cannot rename Mr Nobody!")
   }
 }
+
 case class Player(override val id: ActorID, var name: String) extends Actor(id)
+
 case class PlayerPet(override val id: ActorID, var _name: String, owner: Player) extends Actor(id) {
   def name = _name + " (" + owner.name + ")"
-  def name_=(s: String) { _name = s }
+
+  override def name_=(newName: String) {
+    if (_name != newName) {
+      println("Actor %s has changed name: %s -> %s".format(id, _name, newName))
+      _name = newName
+    }
+  }
 }
+
 case class NonPlayer(override val id: ActorID, var name: String) extends Actor(id)
 
