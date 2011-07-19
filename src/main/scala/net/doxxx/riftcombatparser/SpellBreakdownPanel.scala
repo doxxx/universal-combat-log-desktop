@@ -17,6 +17,7 @@ class SpellBreakdownPanel extends ScrollPane {
     rowSorter.setComparator(5, IntComparator)
     rowSorter.setSortKeys(List(new RowSorter.SortKey(1, SortOrder.DESCENDING)))
     peer.setRowSorter(rowSorter)
+    peer.getColumnModel.getColumn(0).setPreferredWidth(200)
   }
 
   contents = table
