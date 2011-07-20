@@ -6,7 +6,7 @@ import net.doxxx.riftcombatparser.SummaryColumns._
 
 class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Column) extends ScrollPane {
   val summaryModel = new SummaryModel(columns)
-  val table = new Table {
+  val table = new FixedTable {
     model = summaryModel
     peer.setRowSorter(summaryModel.rowSorter(defaultColumn))
     selection.intervalMode = Table.IntervalMode.Single

@@ -1,13 +1,13 @@
 package net.doxxx.riftcombatparser
 
 import collection.JavaConversions._
-import swing.{Table, ScrollPane}
+import swing.ScrollPane
 import javax.swing.table.TableRowSorter
 import javax.swing.{SortOrder, RowSorter}
 
 class SpellBreakdownPanel extends ScrollPane {
   val spellBreakdownModel = new SpellBreakdownModel
-  val table = new Table {
+  val table = new FixedTable {
     model = spellBreakdownModel
     val rowSorter = new TableRowSorter(model)
     rowSorter.setComparator(1, IntComparator)
