@@ -7,7 +7,7 @@ import net.doxxx.riftcombatparser.SummaryColumns._
 class SummaryPanels extends TabbedPane {
 
   val panels = Seq(
-    new SummaryPanel("Overview", Seq(Name, DPSOut, HPSOut, Deaths), DPSOut),
+    new SummaryPanel("Overview", Seq(Name, DPSOut, HPSOut, Deaths, CombatTime), DPSOut),
     new SummaryPanel("Damage", Seq(Name, DPSOut, DamageOut, DPSIn, DamageIn), DPSOut),
     new SummaryPanel("Healing", Seq(Name, HPSOut, HealingOut, HPSIn, HealingIn, Overhealing), HPSOut)
   )

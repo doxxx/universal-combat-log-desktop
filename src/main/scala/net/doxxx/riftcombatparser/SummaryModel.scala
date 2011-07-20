@@ -6,7 +6,7 @@ import javax.swing.{SortOrder, RowSorter}
 
 object SummaryColumns extends Enumeration {
   type Column = Value
-  val Name, DamageIn, DPSIn, DamageOut, DPSOut, HealingIn, HPSIn, HealingOut, HPSOut, Overhealing, Deaths = Value
+  val Name, DamageIn, DPSIn, DamageOut, DPSOut, HealingIn, HPSIn, HealingOut, HPSOut, Overhealing, Deaths, CombatTime = Value
   val ColumnNames = Map(
     Name -> "Name",
     DamageIn -> "Damage In",
@@ -18,7 +18,8 @@ object SummaryColumns extends Enumeration {
     HealingOut -> "Healing Out",
     HPSOut -> "HPS Out",
     Overhealing -> "Overhealing",
-    Deaths -> "Deaths"
+    Deaths -> "Deaths",
+    CombatTime -> "Combat Time"
   )
 }
 
@@ -60,6 +61,7 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
       case HPSOut => data(actor).hpsOut.asInstanceOf[AnyRef]
       case Overhealing => data(actor).overhealing.asInstanceOf[AnyRef]
       case Deaths => data(actor).deaths.asInstanceOf[AnyRef]
+      case CombatTime => data(actor).combatTime.asInstanceOf[AnyRef]
       case _ => null
     }
   }
