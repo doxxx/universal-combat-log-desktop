@@ -315,7 +315,7 @@ abstract class Fight {
   def duration:Int
   override def toString = "%s (%ds)".format(title.getOrElse("@%d".format(startTime)), duration)
 }
-case class EmptyFight(time: Long) extends Fight {
+case class EmptyFight(time: Long = 0) extends Fight {
   val events = Nil
   val title = None
   val startTime = time

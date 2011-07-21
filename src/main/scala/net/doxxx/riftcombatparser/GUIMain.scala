@@ -2,15 +2,13 @@ package net.doxxx.riftcombatparser
 
 import scala.swing._
 import event.{WindowActivated, Event, ButtonClicked}
-import io.Source
 import java.util.prefs.Preferences
 import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
-import java.awt.Toolkit
-import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner, StringSelection}
+import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner}
 import java.io.{IOException, File}
-import java.util.{Date, Calendar}
-import java.text.{SimpleDateFormat, DateFormat}
+import java.util.Date
+import java.text.SimpleDateFormat
 import javax.swing.JFileChooser
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
@@ -123,7 +121,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     title = "Rift Combat Parser"
 
     private var _playersAndPets: Set[Actor] = Set.empty
-    private var _summary: Map[Actor, Summary] = Map.empty
 
     val fightList = new FightList
     val summaryPanels = new SummaryPanels
@@ -135,48 +132,17 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       visible = false
     }
 
-    val copyDPSButton = new Button("Copy DPS") {
-      enabled = false
-    }
-    val copyHPSButton = new Button("Copy HPS") {
-      enabled = false
-    }
-    val breakdownButton = new Button("Breakdown") {
-      enabled = false
-    }
-    val spellBreakdownDialog = new SpellBreakdownDialog(this)
-
-    val centerComponent = new BoxPanel(Orientation.Vertical) {
-      contents += new BoxPanel(Orientation.Horizontal) {
-        contents += new Label {
-          text = "Summary"
-        }
-        contents += Swing.HGlue
-        contents += copyDPSButton
-        contents += Swing.HStrut(5)
-        contents += copyHPSButton
-        contents += Swing.HStrut(5)
-        contents += breakdownButton
-        maximumSize = new Dimension(maximumSize.width, preferredSize.height)
-      }
-      contents += Swing.VStrut(5)
-      contents += summaryPanels
-    }
-
     contents = new BorderPanel {
       layoutManager.setHgap(5)
       layoutManager.setVgap(5)
       border = Swing.EmptyBorder(5)
       layout(fightList) = BorderPanel.Position.West
-      layout(centerComponent) = BorderPanel.Position.Center
+      layout(summaryPanels) = BorderPanel.Position.Center
       layout(progressBar) = BorderPanel.Position.South
     }
 
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_NewSession = new MenuItem("New Session")
-    val MI_SpellBreakdown = new MenuItem("Spell Breakdown")
-    val MI_CopyDPSSummary = new MenuItem("Copy DPS Summary")
-    val MI_CopyHPSSummary = new MenuItem("Copy HPS Summary")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
@@ -191,9 +157,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       contents += new Menu("File") {
         contents += MI_ChooseCombatLogFile
         contents += MI_NewSession
-        contents += MI_SpellBreakdown
-        contents += MI_CopyDPSSummary
-        contents += MI_CopyHPSSummary
       }
       contents += new Menu("Options") {
         contents += MI_IncludeOverhealing
@@ -204,18 +167,12 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     listenTo(MI_ChooseCombatLogFile)
     listenTo(MI_NewSession)
-    listenTo(MI_SpellBreakdown)
-    listenTo(MI_CopyDPSSummary)
-    listenTo(MI_CopyHPSSummary)
     listenTo(MI_IncludeOverhealing)
     listenTo(MI_UseActorCombatTime)
     listenTo(MI_MergePetsIntoOwners)
     listenTo(logFileEventPublisher)
     listenTo(fightList)
     listenTo(summaryPanels)
-    listenTo(copyDPSButton)
-    listenTo(copyHPSButton)
-    listenTo(breakdownButton)
 
     reactions += {
       case WindowActivated(_) => {
@@ -228,31 +185,10 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         logFileLastModified = 0L
         CombatLogParser.reset()
         createFileLoaderActor()
-        //createFileWatchActor()
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
         fightList.update(Nil)
-      }
-      case ButtonClicked(MI_SpellBreakdown) => {
-        summaryPanel.selectedActor match {
-          case Some(actor) => {
-            val combined = Fights(fightList.selectedFights)
-            spellBreakdownDialog.update(actor, EventProcessor.filterByActors(combined.events, Set(actor)))
-            spellBreakdownDialog.visible = true
-          }
-          case None =>
-        }
-      }
-      case ButtonClicked(MI_CopyDPSSummary) => {
-        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(_summary))
-        clipboard.setContents(data, GUIMain)
-      }
-      case ButtonClicked(MI_CopyHPSSummary) => {
-        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(_summary))
-        clipboard.setContents(data, GUIMain)
       }
       case ButtonClicked(MI_IncludeOverhealing) => {
         EventProcessor.includeOverhealing = MI_IncludeOverhealing.selected
@@ -269,52 +205,15 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
-      case ButtonClicked(`breakdownButton`) => {
-        summaryPanel.selectedActor match {
-          case Some(actor) => {
-            val combined = Fights(fightList.selectedFights)
-            spellBreakdownDialog.update(actor, EventProcessor.filterByActors(combined.events, Set(actor)))
-            spellBreakdownDialog.visible = true
-          }
-          case None =>
-        }
-      }
-      case ButtonClicked(`copyDPSButton`) => {
-        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(_summary))
-        clipboard.setContents(data, GUIMain)
-      }
-      case ButtonClicked(`copyHPSButton`) => {
-        val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-        val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(_summary))
-        clipboard.setContents(data, GUIMain)
-      }
       case LogFileLoaded(events, playersAndPets) => {
         fightList.update(events)
         _playersAndPets = playersAndPets
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
-        _summary = EventProcessor.summary(combined).filter {
-          case (actor, summary) => _playersAndPets.contains(actor)
-        }
-        summaryPanels.update(_summary)
-        if (fights.size > 0) {
-          copyDPSButton.enabled = true
-          copyHPSButton.enabled = true
-        }
-      }
-      case SelectedActorChanged(actor) => {
-        if (spellBreakdownDialog.visible) {
-          val events = (for (f <- fightList.selectedFights) yield f.events).flatten
-          spellBreakdownDialog.update(actor, EventProcessor.filterByActors(events, Set(actor)))
-        }
-        breakdownButton.enabled = true
+        summaryPanels.update(combined, _playersAndPets)
       }
     }
-
-    //createFileLoaderActor()
-    //createFileWatchActor()
   }
 
   def lostOwnership(clipboard: Clipboard, contents: Transferable) {
