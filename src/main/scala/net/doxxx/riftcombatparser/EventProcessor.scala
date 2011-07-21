@@ -147,7 +147,7 @@ object EventProcessor {
 
         val fight:Fight = fightEvents match {
           case Nil => EmptyFight(start.time)
-          case _ => SingleFight(fightEvents, primaryNPC(fightEvents))
+          case _ => SingleFight(fightEvents)
         }
 
         fight :: (rest match {
@@ -322,7 +322,8 @@ case class EmptyFight(time: Long = 0) extends Fight {
   val endTime = time
   val duration = 0
 }
-case class SingleFight(events: List[LogEvent], title: Option[String] = None) extends Fight {
+case class SingleFight(events: List[LogEvent]) extends Fight {
+  val title = EventProcessor.primaryNPC(events)
   val startTime = if (events.isEmpty) 0 else events.head.time
   val endTime = if (events.isEmpty) 0 else events.last.time
   val duration: Int = (endTime - startTime).toInt

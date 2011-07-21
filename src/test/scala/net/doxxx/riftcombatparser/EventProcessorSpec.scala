@@ -19,9 +19,9 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         ActorEvent(100, DirectDamage, middleActor1, middleTarget1, "middleSpell1",
           101, 123, "text")
       )
-      val middleFightBracketed = List(CombatToggleEvent(1, true)) ::: middleFight ::: List(CombatToggleEvent(1, false))
+      val middleFightBracketed = List(CombatToggleEvent(1, true)) ::: middleFight ::: List(CombatToggleEvent(200, false))
 
-      "ignore events + CombatStart at beginning" in {
+      "ignore events before first CombatStart" in {
         val start = List(
           ActorEvent(1, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
         )
@@ -30,7 +30,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(SingleFight(middleFight)))
       }
 
-      "treat events + CombatEnd at beginning as a fight" in {
+      "treat events before first CombatEnd as a fight" in {
         val start = List(
           ActorEvent(1, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
         )
@@ -39,7 +39,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(SingleFight(start), SingleFight(middleFight)))
       }
 
-      "ignore CombatEnd + events at end" in {
+      "ignore events after last CombatEnd" in {
         val end = List(
           ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
         )
@@ -48,7 +48,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(SingleFight(middleFight)))
       }
 
-      "treat CombatStart + events at end as a fight" in {
+      "treat events after last CombatStart as a fight" in {
         val end = List(
           ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
         )
