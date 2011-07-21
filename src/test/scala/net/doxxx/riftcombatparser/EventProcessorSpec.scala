@@ -14,6 +14,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
     val middleActor2 = Player(PC(4), "middleActor2")
     val middleTarget1 = NonPlayer(NPC(5), "middleTarget1")
     val middleTarget2 = NonPlayer(NPC(6), "middleTarget2")
+
     "splitting fights" should {
       val middleFight = List(
         ActorEvent(100, DirectDamage, middleActor1, middleTarget1, "middleSpell1",
@@ -57,6 +58,24 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(SingleFight(middleFight), SingleFight(end)))
       }
 
+      "treat double CombatStart as two fights" in {
+        val end = List(
+          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+        )
+        val events = List(CombatToggleEvent(1, true)) ::: middleFight ::: List(CombatToggleEvent(101, true)) ::: end ::: List(CombatToggleEvent(1, false))
+        val fights = EventProcessor.splitFights(events)
+        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
+      }
+
+      "treat double CombatEnd as two fights" in {
+        val end = List(
+          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+        )
+        val events = List(CombatToggleEvent(1, true)) ::: middleFight ::: List(CombatToggleEvent(101, false)) ::: end ::: List(CombatToggleEvent(1, false))
+        val fights = EventProcessor.splitFights(events)
+        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
+      }
+
       "discard events in between fights" in {
         val middleFight2 = List(
           ActorEvent(150, DirectDamage, middleActor2, middleTarget2, "middleSpell2", 102, 123, "text")
@@ -69,6 +88,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         fights should equal (List(SingleFight(middleFight), SingleFight(middleFight2)))
       }
     }
+
     "normalizing times" should {
       val events = List(
         CombatToggleEvent(86300, true),
@@ -80,6 +100,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
       "start with time zero" in {
         normalized.head.time should equal (0)
       }
+      
       "handle midnight rollovers" in {
         normalized should equal (List(
           CombatToggleEvent(0, true),

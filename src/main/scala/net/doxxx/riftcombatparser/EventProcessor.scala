@@ -2,8 +2,8 @@ package net.doxxx.riftcombatparser
 
 import EventType._
 import collection.immutable.List._
-import collection.mutable.HashMap
 import java.util.prefs.Preferences
+import collection.mutable.{ListBuffer, HashMap}
 
 object EventProcessor {
   import Utils._
@@ -141,7 +141,7 @@ object EventProcessor {
       case Nil => Nil
       case (start @ CombatToggleEvent(_, true)) :: tail => {
         val (fightEvents, rest) = tail span {
-          case CombatToggleEvent(_, false) => false
+          case CombatToggleEvent(_, _) => false
           case _ => true
         }
 
