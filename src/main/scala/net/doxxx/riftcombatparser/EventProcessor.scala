@@ -241,6 +241,13 @@ object EventProcessor {
         }
   }
 
+  def filterByTarget(events: List[LogEvent], target: Actor): List[LogEvent] = {
+    events filter {
+      case ae: ActorEvent => target == ae.target
+      case _ => true
+    }
+  }
+
   def dpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
 
   def dpsSorted(data: Map[Actor, Summary]) = dpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse

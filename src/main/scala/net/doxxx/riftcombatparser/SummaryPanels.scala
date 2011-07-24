@@ -1,7 +1,7 @@
 package net.doxxx.riftcombatparser
 
 import swing._
-import event.ButtonClicked
+import event.{SelectionChanged, ButtonClicked}
 import swing.TabbedPane.Page
 import net.doxxx.riftcombatparser.SummaryColumns._
 import java.awt.Toolkit
@@ -15,6 +15,26 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     new SummaryPanel("Healing", Seq(Name, HPSOut, HealingOut, HPSIn, HealingIn, Overhealing), HPSOut)
   )
 
+  val targetDropdown = new ComboBox[String](Nil) {
+    implicit val order = new Ordering[Actor] {
+      def compare(x: Actor, y: Actor):Int = x.name.compareTo(y.name)
+    }
+    var actors: Seq[Actor] = Nil
+    def setItems(items: Seq[Actor]) {
+      actors = items.sorted
+      val actorNames:List[String] = actors.map(_.name).toList
+      peer.setModel(ComboBox.newConstantModel("**ALL**" :: actorNames))
+    }
+    def selectedActor: Option[Actor] = {
+      actors.find(_.name == selection.item)
+    }
+    def selectActor(actor: Option[Actor]) {
+      actor match {
+        case None => selection.item = "**ALL**"
+        case Some(a) => selection.item = a.name
+      }
+    }
+  }
   val copyDPSButton = new Button("Copy DPS") {
     enabled = false
   }
@@ -31,6 +51,8 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
       text = "Summary"
     }
     contents += Swing.HGlue
+    contents += targetDropdown
+    contents += Swing.HStrut(5)
     contents += copyDPSButton
     contents += Swing.HStrut(5)
     contents += copyHPSButton
@@ -58,6 +80,7 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   listenTo(breakdownButton)
   listenTo(copyDPSButton)
   listenTo(copyHPSButton)
+  listenTo(targetDropdown.selection)
 
   reactions += {
     case e: SelectedActorChanged => {
@@ -86,18 +109,64 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
       val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(summary))
       clipboard.setContents(data, GUIMain)
     }
+    case SelectionChanged(`targetDropdown`) => {
+      targetDropdown.selectedActor match {
+        case None => {
+          resetTargetFilter()
+        }
+        case Some(a) => {
+          applyTargetFilter(a)
+        }
+      }
+    }
   }
 
   def current: SummaryPanel = panels(tabs.selection.page.index)
-  
+
   def update(newFight: Fight, newPlayersAndPets: Set[Actor]) {
     fight = newFight
     playersAndPets = newPlayersAndPets
     summary = EventProcessor.summary(fight).filter {
       case (actor, _) => playersAndPets.contains(actor)
     }
-    panels foreach { _.update(summary) }
+    panels foreach { _.update(summary)}
+    val oldTarget = targetDropdown.selectedActor
+    targetDropdown.setItems(EventProcessor.actorsSortedByActivity(newFight.events))
+    targetDropdown.selectActor(oldTarget)
     copyDPSButton.enabled = fight.duration > 0
     copyHPSButton.enabled = fight.duration > 0
   }
+
+  private def applyTargetFilter(target: Actor) {
+    val filtered = SingleFight(EventProcessor.filterByTarget(fight.events, target))
+    summary = EventProcessor.summary(filtered).filter {
+      case (actor, _) => playersAndPets.contains(actor)
+    }
+    panels foreach { _.update(summary)}
+  }
+
+  private def resetTargetFilter() {
+    summary = EventProcessor.summary(fight).filter {
+      case (actor, _) => playersAndPets.contains(actor)
+    }
+    panels foreach { _.update(summary)}
+  }
+
+/*
+  private def newActorDropdownModel(items: Seq[Actor]) = {
+    new AbstractListModel with ComboBoxModel {
+      private var selected: Actor = if (items.isEmpty) null.asInstanceOf[Actor] else items(0)
+      def getSelectedItem: AnyRef = if (selected == null) null else selected.name.asInstanceOf[AnyRef]
+      def setSelectedItem(a: Any) {
+        if ((selected != null && selected != a) ||
+            selected == null && a != null) {
+          selected = items.find { _.name == a }.get
+          fireContentsChanged(this, -1, -1)
+        }
+      }
+      def getElementAt(n: Int) = items(n).name.asInstanceOf[AnyRef]
+      def getSize = items.size
+    }
+  }
+*/
 }
