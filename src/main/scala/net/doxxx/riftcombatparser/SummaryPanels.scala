@@ -11,8 +11,10 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
 
   val panels = Seq(
     new SummaryPanel("Overview", Seq(Name, DPSOut, HPSOut, Deaths, CombatTime), DPSOut),
-    new SummaryPanel("Damage", Seq(Name, DPSOut, DamageOut, DPSIn, DamageIn), DPSOut),
-    new SummaryPanel("Healing", Seq(Name, HPSOut, HealingOut, HPSIn, HealingIn, Overhealing), HPSOut)
+    new SummaryPanel("Damage Out", Seq(Name, DPSOut, DamageOut), DPSOut),
+    new SummaryPanel("Healing Out", Seq(Name, HPSOut, HealingOut, Overhealing), HPSOut),
+    new SummaryPanel("Damage In", Seq(Name, DPSIn, DamageIn), DamageIn),
+    new SummaryPanel("Healing In", Seq(Name, HPSIn, HealingIn), HealingIn)
   )
 
   val targetDropdown = new ComboBox[String](Nil) {
