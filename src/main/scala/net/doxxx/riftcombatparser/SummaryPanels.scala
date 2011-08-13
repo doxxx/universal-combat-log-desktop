@@ -80,12 +80,7 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   listenTo(targetDropdown.selection)
 
   def breakdown(breakdownType: BreakdownType.Value, actor: Actor): Map[String,Breakdown] = {
-    breakdownType match {
-      case BreakdownType.OutgoingDamageBySpell => {
-        EventProcessor.breakdown(breakdownType, EventProcessor.filterByActors(fight.events, Set(actor)))
-      }
-      // TODO: Implement other breakdown types
-    }
+    EventProcessor.breakdown(breakdownType, actor, fight.events)
   }
 
   reactions += {

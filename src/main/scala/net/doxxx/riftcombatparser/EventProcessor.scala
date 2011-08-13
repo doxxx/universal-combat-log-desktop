@@ -177,24 +177,61 @@ object EventProcessor {
     }
   }
 
-  def breakdown(breakdownType: BreakdownType.Value, events: List[LogEvent]): Map[String, Breakdown] = {
-    val mapKey = breakdownType match {
-      case BreakdownType.OutgoingDamageBySpell => (ae: ActorEvent) => {
-        ae.actor match {
-          case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
-          case _ => ae.spell
+  def breakdown(breakdownType: BreakdownType.Value, player: Actor, events: List[LogEvent]): Map[String, Breakdown] = {
+    val filteredEvents =
+      if (BreakdownType.OutgoingTypes.contains(breakdownType)) {
+        EventProcessor.filterByActors(events, Set(player))
+      }
+      else if (BreakdownType.IncomingTypes.contains(breakdownType)) {
+        EventProcessor.filterByTarget(events, player)
+      }
+      else throw new RuntimeException("Invalid breakdown type")
+
+    val healingDamageFilter =
+      if (BreakdownType.DamageTypes.contains(breakdownType)) {
+        (ae: ActorEvent) => {
+          EventType.DamageTypes.contains(ae.eventType)
         }
       }
-        // TODO: Implement other breakdown types
-    }
+      else if (BreakdownType.HealingTypes.contains(breakdownType)) {
+        (ae: ActorEvent) => {
+          EventType.HealTypes.contains(ae.eventType)
+        }
+      }
+      else {
+        throw new RuntimeException("Invalid breakdown type")
+      }
+
+    val extractKey =
+      if (BreakdownType.BySpellTypes.contains(breakdownType)) {
+        (ae: ActorEvent) => {
+          ae.actor match {
+            case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
+            case _ => ae.spell
+          }
+        }
+      }
+      else if (BreakdownType.ByTargetTypes.contains(breakdownType)) {
+        (ae: ActorEvent) => {
+          ae.target.name
+        }
+      }
+      else if (BreakdownType.ByActorTypes.contains(breakdownType)) {
+        (ae: ActorEvent) => {
+          ae.actor.name
+        }
+      }
+      else throw new RuntimeException("Invalid breakdown type")
+
     val results = new HashMap[String, Breakdown] {
       override def default(key: String) = Breakdown()
     }
     var totalDamage: Int = 0
     var totalHealing: Int = 0
-    for (e <- events) e match {
-      case ae: ActorEvent => {
-        val key = mapKey(ae)
+
+    for (e <- filteredEvents) e match {
+      case ae: ActorEvent if (healingDamageFilter(ae)) => {
+        val key = extractKey(ae)
         if (DamageTypes.contains(ae.eventType)) {
           if (ae.eventType == CritDamage) {
             results(key) = results(key).addCrit()
