@@ -6,8 +6,8 @@ class SpellBreakdownDialog(owner: Window) extends Dialog(owner) {
   val panel = new SpellBreakdownPanel
   contents = panel
 
-  def update(actor: Actor, events: List[LogEvent]) {
+  def update(actor: Actor, breakdown: Map[String, Breakdown]) {
     title = actor.name
-    panel.update(events)
+    panel.update(breakdown)
   }
 }

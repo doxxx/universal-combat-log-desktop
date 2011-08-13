@@ -5,7 +5,7 @@ import javax.swing.table.AbstractTableModel
 class SpellBreakdownModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Damage", "Healing", "Count", "Miss %", "Crit %", "% Total")
 
-  private var breakdown: Map[String, SpellBreakdown] = Map.empty
+  private var breakdown: Map[String, Breakdown] = Map.empty
 
   def data = breakdown
 
@@ -33,7 +33,7 @@ class SpellBreakdownModel extends AbstractTableModel {
 
   def getRowCount = data.size
 
-  def update(breakdown: Map[String, SpellBreakdown]) {
+  def update(breakdown: Map[String, Breakdown]) {
     this.breakdown = breakdown
     fireTableDataChanged()
   }

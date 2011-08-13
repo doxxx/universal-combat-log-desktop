@@ -177,43 +177,49 @@ object EventProcessor {
     }
   }
 
-  def spellBreakdown(events: List[LogEvent]): Map[String, SpellBreakdown] = {
-    val results = new HashMap[String, SpellBreakdown] {
-      override def default(key: String) = SpellBreakdown()
+  def breakdown(breakdownType: BreakdownType.Value, events: List[LogEvent]): Map[String, Breakdown] = {
+    val mapKey = breakdownType match {
+      case BreakdownType.OutgoingDamageBySpell => (ae: ActorEvent) => {
+        ae.actor match {
+          case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
+          case _ => ae.spell
+        }
+      }
+        // TODO: Implement other breakdown types
+    }
+    val results = new HashMap[String, Breakdown] {
+      override def default(key: String) = Breakdown()
     }
     var totalDamage: Int = 0
     var totalHealing: Int = 0
     for (e <- events) e match {
       case ae: ActorEvent => {
-        val spell = ae.actor match {
-          case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
-          case _ => ae.spell
-        }
+        val key = mapKey(ae)
         if (DamageTypes.contains(ae.eventType)) {
           if (ae.eventType == CritDamage) {
-            results(spell) = results(spell).addCrit()
-            results(spell) = results(spell).addDamage(ae.amount)
+            results(key) = results(key).addCrit()
+            results(key) = results(key).addDamage(ae.amount)
           }
           else if (MissTypes.contains(ae.eventType)) {
-            results(spell) = results(spell).addMiss()
+            results(key) = results(key).addMiss()
           }
           else {
-            results(spell) = results(spell).addDamage(ae.amount)
-            results(spell) = results(spell).addHit()
+            results(key) = results(key).addDamage(ae.amount)
+            results(key) = results(key).addHit()
           }
           totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
-          results(spell) = results(spell).addHealing(ae.amount)
+          results(key) = results(key).addHealing(ae.amount)
           if (includeOverhealing) {
             val overheal = CombatLogParser.extractOverheal(ae.text)
-            results(spell) = results(spell).addHealing(overheal)
+            results(key) = results(key).addHealing(overheal)
           }
           if (ae.eventType == CritHeal) {
-            results(spell) = results(spell).addCrit()
+            results(key) = results(key).addCrit()
           }
           else {
-            results(spell) = results(spell).addHit()
+            results(key) = results(key).addHit()
           }
           totalHealing += ae.amount
         }
@@ -343,7 +349,7 @@ case class Fights(fights: List[Fight], title: Option[String] = None) extends Fig
   lazy val duration = fights.map(_.duration).foldLeft(0)(_+_)
 }
 
-case class SpellBreakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, percent: Int = 0) {
+case class Breakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, percent: Int = 0) {
   def addDamage(amount: Int) = copy(damage = damage + amount)
   def addHealing(amount: Int) = copy(healing = healing + amount)
   def addHit() = copy(hits = hits + 1)

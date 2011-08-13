@@ -43,10 +43,7 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   val copyHPSButton = new Button("Copy HPS") {
     enabled = false
   }
-  val breakdownButton = new Button("Breakdown") {
-    enabled = false
-  }
-  val spellBreakdownDialog = new SpellBreakdownDialog(GUIMain.top)
+  val breakdownDialog = new SpellBreakdownDialog(GUIMain.top)
 
   contents += new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
@@ -58,8 +55,6 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     contents += copyDPSButton
     contents += Swing.HStrut(5)
     contents += copyHPSButton
-    contents += Swing.HStrut(5)
-    contents += breakdownButton
     maximumSize = new Dimension(maximumSize.width, preferredSize.height)
   }
 
@@ -77,29 +72,33 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   var fight: Fight = EmptyFight()
   var playersAndPets: Set[Actor] = Set.empty
   var summary: Map[Actor, Summary] = Map.empty
+  var currentBreakdownType: Option[BreakdownType.Value] = None
 
   deafTo(this) // otherwise publishing SelectedActorChanged causes StackOverflowError
-  listenTo(breakdownButton)
   listenTo(copyDPSButton)
   listenTo(copyHPSButton)
   listenTo(targetDropdown.selection)
 
+  def breakdown(breakdownType: BreakdownType.Value, actor: Actor): Map[String,Breakdown] = {
+    breakdownType match {
+      case BreakdownType.OutgoingDamageBySpell => {
+        EventProcessor.breakdown(breakdownType, EventProcessor.filterByActors(fight.events, Set(actor)))
+      }
+      // TODO: Implement other breakdown types
+    }
+  }
+
   reactions += {
     case e: SelectedActorChanged => {
-      breakdownButton.enabled = true
-      if (spellBreakdownDialog.visible) {
-        spellBreakdownDialog.update(e.actor, EventProcessor.filterByActors(fight.events, Set(e.actor)))
+      if (breakdownDialog.visible) {
+        currentBreakdownType match {
+          case Some(breakdownType) => {
+            breakdownDialog.update(e.actor, breakdown(breakdownType, e.actor))
+          }
+          case None =>
+        }
       }
       publish(e)
-    }
-    case ButtonClicked(`breakdownButton`) => {
-      current.selectedActor match {
-        case Some(actor) => {
-          spellBreakdownDialog.update(actor, EventProcessor.filterByActors(fight.events, Set(actor)))
-          spellBreakdownDialog.visible = true
-        }
-        case None =>
-      }
     }
     case ButtonClicked(`copyDPSButton`) => {
       val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
@@ -120,6 +119,11 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
           applyTargetFilter(a)
         }
       }
+    }
+    case BreakdownRequested(actor, breakdownType) => {
+      breakdownDialog.update(actor, breakdown(breakdownType, actor))
+      breakdownDialog.visible = true
+      currentBreakdownType = Some(breakdownType)
     }
   }
 
@@ -154,21 +158,4 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     panels foreach { _.update(summary)}
   }
 
-/*
-  private def newActorDropdownModel(items: Seq[Actor]) = {
-    new AbstractListModel with ComboBoxModel {
-      private var selected: Actor = if (items.isEmpty) null.asInstanceOf[Actor] else items(0)
-      def getSelectedItem: AnyRef = if (selected == null) null else selected.name.asInstanceOf[AnyRef]
-      def setSelectedItem(a: Any) {
-        if ((selected != null && selected != a) ||
-            selected == null && a != null) {
-          selected = items.find { _.name == a }.get
-          fireContentsChanged(this, -1, -1)
-        }
-      }
-      def getElementAt(n: Int) = items(n).name.asInstanceOf[AnyRef]
-      def getSize = items.size
-    }
-  }
-*/
 }

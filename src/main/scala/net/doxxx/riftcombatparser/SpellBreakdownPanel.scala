@@ -22,7 +22,7 @@ class SpellBreakdownPanel extends ScrollPane {
 
   contents = table
 
-  def update(events: List[LogEvent]) {
-    spellBreakdownModel.update(EventProcessor.spellBreakdown(events))
+  def update(breakdown: Map[String, Breakdown]) {
+    spellBreakdownModel.update(breakdown)
   }
 }
