@@ -235,23 +235,23 @@ object EventProcessor {
         if (DamageTypes.contains(ae.eventType)) {
           if (ae.eventType == CritDamage) {
             results(key) = results(key).addCrit()
-            results(key) = results(key).addDamage(ae.amount)
+            results(key) = results(key).addAmount(ae.amount)
           }
           else if (MissTypes.contains(ae.eventType)) {
             results(key) = results(key).addMiss()
           }
           else {
-            results(key) = results(key).addDamage(ae.amount)
+            results(key) = results(key).addAmount(ae.amount)
             results(key) = results(key).addHit()
           }
           results(key) = results(key).addDamageType(CombatLogParser.extractDamageType(ae.text))
           totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
-          results(key) = results(key).addHealing(ae.amount)
+          results(key) = results(key).addAmount(ae.amount)
           if (includeOverhealing) {
             val overheal = CombatLogParser.extractOverheal(ae.text)
-            results(key) = results(key).addHealing(overheal)
+            results(key) = results(key).addAmount(overheal)
           }
           if (ae.eventType == CritHeal) {
             results(key) = results(key).addCrit()
@@ -264,14 +264,18 @@ object EventProcessor {
       }
       case _ =>
     }
-    for (spell <- results.keys) {
-      if (results(spell).damage > 0) {
+
+    if (BreakdownType.DamageTypes.contains(breakdownType)) {
+      for (spell <- results.keys) {
         results(spell) = results(spell).setPercentOfTotal(totalDamage)
       }
-      else if (results(spell).healing > 0) {
+    }
+    else if (BreakdownType.HealingTypes.contains(breakdownType)) {
+      for (spell <- results.keys) {
         results(spell) = results(spell).setPercentOfTotal(totalHealing)
       }
     }
+
     results.toMap
   }
 
@@ -387,13 +391,12 @@ case class Fights(fights: List[Fight], title: Option[String] = None) extends Fig
   lazy val duration = fights.map(_.duration).foldLeft(0)(_+_)
 }
 
-case class Breakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, damageTypes: Set[String] = Set.empty, percent: Int = 0) {
-  def addDamage(amount: Int) = copy(damage = damage + amount)
-  def addHealing(amount: Int) = copy(healing = healing + amount)
+case class Breakdown(amount: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, damageTypes: Set[String] = Set.empty, percent: Int = 0) {
+  def addAmount(newAmount: Int) = copy(amount = amount + newAmount)
   def addHit() = copy(hits = hits + 1)
   def addMiss() = copy(misses = misses + 1)
   def addCrit() = copy(crits = crits + 1)
   def addDamageType(damageType: String) = copy(damageTypes = damageTypes + damageType)
   def setPercentOfTotal(total: Int) =
-    copy(percent = scala.math.round(scala.math.max(damage, healing).toDouble / total.toDouble * 100.0).toInt)
+    copy(percent = scala.math.round(amount.toDouble / total.toDouble * 100.0).toInt)
 }
