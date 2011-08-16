@@ -1,6 +1,7 @@
 package net.doxxx.riftcombatparser
 
 object BreakdownType extends Enumeration {
+  val None = Value
   val OutgoingDamageBySpell = Value
   val OutgoingDamageByTarget = Value
   val OutgoingHealingBySpell = Value
@@ -17,4 +18,18 @@ object BreakdownType extends Enumeration {
   val ByActorTypes = Set(IncomingDamageByActor, IncomingHealingByActor)
   val IncomingTypes = Set(IncomingDamageByActor, IncomingDamageBySpell, IncomingHealingByActor, IncomingHealingBySpell)
   val OutgoingTypes = Set(OutgoingDamageBySpell, OutgoingDamageByTarget, OutgoingHealingBySpell, OutgoingHealingByTarget)
+
+  def nameFor(breakdownType: Value): String = {
+    breakdownType match {
+      case OutgoingDamageBySpell => "Outgoing Damage By Spell"
+      case OutgoingDamageByTarget => "Outgoing Damage By Target"
+      case OutgoingHealingBySpell => "Outgoing Healing By Spell"
+      case OutgoingHealingByTarget => "Outgoing Healing By Target"
+      case IncomingDamageBySpell => "Incoming Damage By Spell"
+      case IncomingDamageByActor => "Incoming Damage By Actor"
+      case IncomingHealingBySpell => "Incoming Healing By Spell"
+      case IncomingHealingByActor => "Incoming Healing By Actor"
+      case _ => throw new IllegalArgumentException(breakdownType.toString)
+    }
+  }
 }

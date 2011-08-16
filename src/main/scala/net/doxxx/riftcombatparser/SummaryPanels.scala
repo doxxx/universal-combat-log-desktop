@@ -72,26 +72,16 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   var fight: Fight = EmptyFight()
   var playersAndPets: Set[Actor] = Set.empty
   var summary: Map[Actor, Summary] = Map.empty
-  var currentBreakdownType: Option[BreakdownType.Value] = None
 
   deafTo(this) // otherwise publishing SelectedActorChanged causes StackOverflowError
   listenTo(copyDPSButton)
   listenTo(copyHPSButton)
   listenTo(targetDropdown.selection)
 
-  def breakdown(breakdownType: BreakdownType.Value, actor: Actor): Map[String,Breakdown] = {
-    EventProcessor.breakdown(breakdownType, actor, fight.events)
-  }
-
   reactions += {
     case e: SelectedActorChanged => {
       if (breakdownDialog.visible) {
-        currentBreakdownType match {
-          case Some(breakdownType) => {
-            breakdownDialog.update(e.actor, breakdown(breakdownType, e.actor))
-          }
-          case None =>
-        }
+        breakdownDialog.update(e.actor)
       }
       publish(e)
     }
@@ -116,9 +106,8 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
       }
     }
     case BreakdownRequested(actor, breakdownType) => {
-      breakdownDialog.update(actor, breakdown(breakdownType, actor))
+      breakdownDialog.update(actor, breakdownType, fight.events)
       breakdownDialog.visible = true
-      currentBreakdownType = Some(breakdownType)
     }
   }
 
@@ -136,6 +125,12 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     targetDropdown.selectActor(oldTarget)
     copyDPSButton.enabled = fight.duration > 0
     copyHPSButton.enabled = fight.duration > 0
+    if (breakdownDialog.visible) {
+      current.selectedActor match {
+        case Some(actor) => breakdownDialog.update(actor, breakdownDialog.currentBreakdownType, fight.events)
+        case None => breakdownDialog.visible = false
+      }
+    }
   }
 
   private def applyTargetFilter(target: Actor) {
