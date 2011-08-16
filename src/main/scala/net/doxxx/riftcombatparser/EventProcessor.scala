@@ -244,6 +244,7 @@ object EventProcessor {
             results(key) = results(key).addDamage(ae.amount)
             results(key) = results(key).addHit()
           }
+          results(key) = results(key).addDamageType(CombatLogParser.extractDamageType(ae.text))
           totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
@@ -386,12 +387,13 @@ case class Fights(fights: List[Fight], title: Option[String] = None) extends Fig
   lazy val duration = fights.map(_.duration).foldLeft(0)(_+_)
 }
 
-case class Breakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, percent: Int = 0) {
+case class Breakdown(damage: Int = 0, healing: Int = 0, hits: Int = 0, misses: Int = 0, crits: Int = 0, damageTypes: Set[String] = Set.empty, percent: Int = 0) {
   def addDamage(amount: Int) = copy(damage = damage + amount)
   def addHealing(amount: Int) = copy(healing = healing + amount)
   def addHit() = copy(hits = hits + 1)
   def addMiss() = copy(misses = misses + 1)
   def addCrit() = copy(crits = crits + 1)
+  def addDamageType(damageType: String) = copy(damageTypes = damageTypes + damageType)
   def setPercentOfTotal(total: Int) =
     copy(percent = scala.math.round(scala.math.max(damage, healing).toDouble / total.toDouble * 100.0).toInt)
 }

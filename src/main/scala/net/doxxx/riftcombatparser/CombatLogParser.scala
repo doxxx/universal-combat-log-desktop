@@ -19,6 +19,7 @@ object CombatLogParser {
               "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
   private val OverhealRE = new Regex("\\(([0-9]+) overheal\\)", "amount")
+  private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
   sealed abstract class ActorID(val id: Long)
   case object NullActorID extends ActorID(0)
@@ -124,6 +125,13 @@ object CombatLogParser {
     OverhealRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("amount").toInt
       case None => 0
+    }
+  }
+
+  def extractDamageType(text: String): String = {
+    DamageTypeRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("type")
+      case None => ""
     }
   }
 
