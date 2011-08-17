@@ -44,6 +44,7 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     enabled = false
   }
   val breakdownDialog = new BreakdownDialog(GUIMain.top)
+  val deathLogDialog = new DeathLogDialog(GUIMain.top)
 
   contents += new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
@@ -108,6 +109,10 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
     case BreakdownRequested(actor, breakdownType) => {
       breakdownDialog.update(actor, breakdownType, fight.events)
       breakdownDialog.visible = true
+    }
+    case DeathLogRequested(actor) => {
+      deathLogDialog.update(actor, fight.events)
+      deathLogDialog.visible = true
     }
   }
 

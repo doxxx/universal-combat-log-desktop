@@ -296,6 +296,41 @@ object EventProcessor {
     }
   }
 
+  def actorDeaths(actor: Actor, events: List[LogEvent]): List[ActorEvent] = {
+    val deaths = new ListBuffer[ActorEvent]
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          if (ae.eventType == Died) {
+            if (ae.actor == actor) {
+              deaths += ae
+            }
+          }
+          else if (ae.eventType == Slain) {
+            if (ae.target == actor) {
+              deaths += ae
+            }
+          }
+        }
+        case _ => // skip
+      }
+    }
+    deaths.toList
+  }
+
+  def eventsUpToDeath(death: ActorEvent, events: List[LogEvent], eventTypes: Set[EventType.Value] = Set.empty): List[LogEvent] = {
+    val actor = death.eventType match {
+      case Died => death.actor
+      case Slain => death.target
+    }
+    val eventsBeforeDeath = events.takeWhile(_.time <= death.time)
+    val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10)
+    withinTimeframe.filter {
+      case ae: ActorEvent => ae == death || (ae.actor == actor || ae.target == actor) && (eventTypes == Nil || eventTypes.contains(ae.eventType))
+      case _ => false
+    }
+  }
+
   def dpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
 
   def dpsSorted(data: Map[Actor, Summary]) = dpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse

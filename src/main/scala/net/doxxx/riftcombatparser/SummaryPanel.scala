@@ -15,6 +15,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   val MI_BreakdownIncomingDamageByActor = new MenuItem("By Actor")
   val MI_BreakdownIncomingHealingBySpell = new MenuItem("By Spell")
   val MI_BreakdownIncomingHealingByActor = new MenuItem("By Actor")
+  val MI_DeathLog = new MenuItem("Death Log")
   val popupMenu = new PopupMenu("Breakdown") {
     contents += new Menu("Outgoing") {
       contents += new Menu("Damage") {
@@ -36,6 +37,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
         contents += MI_BreakdownIncomingHealingByActor
       }
     }
+    contents += MI_DeathLog
   }
 
   val summaryModel = new SummaryModel(columns)
@@ -72,6 +74,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   listenTo(MI_BreakdownIncomingDamageByActor)
   listenTo(MI_BreakdownIncomingHealingBySpell)
   listenTo(MI_BreakdownIncomingHealingByActor)
+  listenTo(MI_DeathLog)
 
   reactions += {
     case TableRowsSelected(source, range, adjusting) => {
@@ -81,6 +84,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
           case None =>
         }
     }
+    case ButtonClicked(MI_DeathLog) => publish(DeathLogRequested(selectedActor.get))
     case ButtonClicked(button) => {
       val breakdownType = button match {
         case MI_BreakdownOutgoingDamageBySpell => BreakdownType.OutgoingDamageBySpell
@@ -123,3 +127,4 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
 
 case class SelectedActorChanged(actor: Actor) extends Event
 case class BreakdownRequested(actor: Actor, breakdownType: BreakdownType.Value) extends Event
+case class DeathLogRequested(actor: Actor) extends Event
