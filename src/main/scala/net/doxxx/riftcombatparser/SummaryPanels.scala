@@ -43,7 +43,7 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   val copyHPSButton = new Button("Copy HPS") {
     enabled = false
   }
-  val breakdownDialog = new SpellBreakdownDialog(GUIMain.top)
+  val breakdownDialog = new BreakdownDialog(GUIMain.top)
 
   contents += new BoxPanel(Orientation.Horizontal) {
     contents += new Label {

@@ -2,7 +2,7 @@ package net.doxxx.riftcombatparser
 
 import javax.swing.table.AbstractTableModel
 
-class SpellBreakdownModel extends AbstractTableModel {
+class BreakdownModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Amount", "Count", "Miss %", "Crit %", "Damage Type", "% Total")
 
   private var breakdown: Map[String, Breakdown] = Map.empty

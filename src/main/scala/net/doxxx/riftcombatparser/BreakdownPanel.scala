@@ -5,8 +5,8 @@ import swing.ScrollPane
 import javax.swing.table.TableRowSorter
 import javax.swing.{SortOrder, RowSorter}
 
-class SpellBreakdownPanel extends ScrollPane {
-  val spellBreakdownModel = new SpellBreakdownModel
+class BreakdownPanel extends ScrollPane {
+  val spellBreakdownModel = new BreakdownModel
   val table = new FixedTable {
     model = spellBreakdownModel
     val rowSorter = new TableRowSorter(model)
