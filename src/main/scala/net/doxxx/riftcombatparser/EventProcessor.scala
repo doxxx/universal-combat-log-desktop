@@ -180,10 +180,10 @@ object EventProcessor {
   def breakdown(breakdownType: BreakdownType.Value, player: Actor, events: List[LogEvent]): Map[String, Breakdown] = {
     val filteredEvents =
       if (BreakdownType.OutgoingTypes.contains(breakdownType)) {
-        EventProcessor.filterByActors(events, Set(player))
+        filterByActors(events, Set(player))
       }
       else if (BreakdownType.IncomingTypes.contains(breakdownType)) {
-        EventProcessor.filterByTarget(events, player)
+        filterByTarget(events, player)
       }
       else throw new RuntimeException("Invalid breakdown type")
 
@@ -280,13 +280,13 @@ object EventProcessor {
   }
 
   def filterByActors(events: List[LogEvent], actors: Set[Actor]) = {
-      if (actors.isEmpty)
-        events
-      else
-        events filter {
-          case ae: ActorEvent => actors.contains(mergePetIntoOwner(ae.actor))
-          case _ => true
-        }
+    if (actors.isEmpty)
+      events
+    else
+      events filter {
+        case ae: ActorEvent => actors.contains(mergePetIntoOwner(ae.actor))
+        case _ => true
+      }
   }
 
   def filterByTarget(events: List[LogEvent], target: Actor): List[LogEvent] = {
@@ -346,11 +346,13 @@ case class Summary(start: Long = Long.MaxValue, end: Long = 0, damageIn: Int = 0
   def addHealingOut(amount: Int) = copy(healingOut = healingOut + amount)
   def addOverhealing(amount: Int) = copy(overhealing = overhealing + amount)
   def addDeath() = copy(deaths = deaths + 1, duration = duration + (end - start).toInt, start = Long.MaxValue, end = 0)
-  def combatTime: Int = duration + {
-    if (start == Long.MaxValue && end == 0)
-      0
-    else
-      (end - start).toInt
+  def combatTime: Int = {
+    duration + {
+      if (start == Long.MaxValue && end == 0)
+        0
+      else
+        (end - start).toInt
+    }
   }
   def calculatePerSecond(fightDuration: Int) = {
     val d = if (EventProcessor.useActorCombatTime) combatTime else fightDuration
