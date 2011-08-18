@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import EventType._
 import collection.immutable.List._
 import java.util.prefs.Preferences
-import collection.mutable.{ListBuffer, HashMap}
+import collection.mutable.{ArrayBuffer, ListBuffer, HashMap}
 
 object EventProcessor {
   import Utils._
@@ -329,6 +329,36 @@ object EventProcessor {
       case ae: ActorEvent => ae == death || (ae.actor == actor || ae.target == actor) && (eventTypes == Nil || eventTypes.contains(ae.eventType))
       case _ => false
     }
+  }
+
+  def chartHealthPriorToDeath(actor: Actor, events: List[LogEvent]): Array[Int] = {
+    val chart = new ArrayBuffer[Int]
+    val rev = events.reverse
+    var health: Int = 0
+    var time = rev.head.time
+    chart += 0
+    for (e <- rev) {
+      if (e.time < time) {
+        chart += health
+        time = e.time
+      }
+      e match {
+        case ae: ActorEvent => {
+          if (ae.target == actor) {
+            if (EventType.DamageTypes.contains(ae.eventType)) {
+              val overkill = CombatLogParser.extractOverkill(ae.text)
+              health += ae.amount - overkill
+            }
+            else if (EventType.HealTypes.contains(ae.eventType)) {
+              health -= ae.amount
+            }
+          }
+        }
+        case _ => // do nothing
+      }
+    }
+    chart += health
+    chart.reverse.toArray
   }
 
   def dpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
