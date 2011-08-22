@@ -35,9 +35,9 @@ class Graph extends Component {
     if (data.length == 0) return
 
     // scale data to component size
-    val xScale = (w - 2 * PAD).toDouble / (data.length + 1).toDouble
+    val xScale = (w - 2 * PAD).toDouble / (data.length.toDouble - 1)
     val max = data.max
-    val yScale = (h - 2 * PAD).toDouble / max.toDouble
+    val yScale = (h - 2 * PAD).toDouble / (max.toDouble - 1)
 
     // calculate origin
     val x0 = PAD
@@ -47,11 +47,11 @@ class Graph extends Component {
     g.setPaint(Color.red)
     var j = 0
     while (j < data.length) {
-      val x = x0 + (xScale * (j + 1)).toInt;
+      val x = x0 + (xScale * j).toInt;
       val y = y0 - (yScale * data(j)).toInt;
       g.fillOval(x - 2, y - 2, 4, 4);
       if (j > 0) {
-        val px = x0 + (xScale * (j)).toInt;
+        val px = x0 + (xScale * (j - 1)).toInt;
         val py = y0 - (yScale * data(j - 1)).toInt;
         g.drawLine(px, py, x, y)
       }
