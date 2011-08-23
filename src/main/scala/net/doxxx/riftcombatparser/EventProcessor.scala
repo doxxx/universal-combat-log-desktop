@@ -194,11 +194,43 @@ object EventProcessor {
     val fights = new ListBuffer[Fight]
     val currentFight = new ListBuffer[LogEvent]
     val activeNPCs = new HashSet[NonPlayer]
+    val pendingDeaths = new ListBuffer[ActorEvent]
+
+    def processPendingDeaths(time: Long) {
+      for (death <- pendingDeaths) {
+        if (death.time < time) {
+          pendingDeaths -= death
+          currentFight += death
+          val actor = deadActor(death)
+          actor match {
+            case Some(np: NonPlayer) => {
+              log("Removing active NPC: %s", np.name)
+              activeNPCs -= np
+            }
+            case Some(p: Player) => {
+              log("Processed player death: %s", p.name)
+            }
+            case Some(pp: PlayerPet) => {
+              log("Processed player pet death: %s", pp.name)
+            }
+            case Some(Nobody) => {
+              log("Nobody died?!")
+            }
+            case None => {
+              log("Death event which contains no dead actor?!")
+            }
+          }
+        }
+      }
+    }
 
     for (event <- events) {
       event match {
         case ae: ActorEvent => {
-          // first check if there was more than 5 seconds of dead time since the last fight event
+          // process queued deaths
+          processPendingDeaths(ae.time)
+
+          // check if there was more than 5 seconds of dead time since the last fight event
           if (currentFight.size > 0 && (ae.time - currentFight.last.time) >= 5) {
             val f = SingleFight(currentFight.toList)
             log("5 second timeout, creating fight: %s", f.toString)
@@ -208,19 +240,16 @@ object EventProcessor {
 
           // if it was a hostile action or a fight is in progress, add it to the current fight
           if (isHostileAction(ae) || !currentFight.isEmpty) {
-            currentFight += ae
-
-            // track active NPCs and their deaths
             val actor = deadActor(ae)
             actor match {
-              case Some(np: NonPlayer) => {
-                log("Removing active NPC: %s", np.name)
-                activeNPCs -= np
+              case Some(a) => {
+                // if it was a death event, queue it, since they occur before the actual killing blow
+                log("Queuing actor death: %s", a.toString)
+                pendingDeaths += ae
               }
-              case Some(p: Player) => // do nothing for players
-              case Some(pp: PlayerPet) => // do nothing for players' pets
               case None => {
                 // non-death event
+                currentFight += ae
                 involvesNonPlayer(ae) match {
                   case Some(np) => {
                     if (!activeNPCs.contains(np)) {
@@ -245,6 +274,8 @@ object EventProcessor {
         case _ => // do nothing
       }
     }
+
+    processPendingDeaths(Long.MaxValue)
 
     if (!currentFight.isEmpty) {
       val f = SingleFight(currentFight.toList)
