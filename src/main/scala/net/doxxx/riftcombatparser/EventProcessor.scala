@@ -499,7 +499,13 @@ object EventProcessor {
     val eventsBeforeDeath = events.takeWhile(_.time <= death.time)
     val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10)
     withinTimeframe.filter {
-      case ae: ActorEvent => ae == death || (ae.actor == actor || ae.target == actor) && (eventTypes == Nil || eventTypes.contains(ae.eventType))
+      case ae: ActorEvent => {
+        ae == death ||
+        (ae.actor == actor || ae.target == actor) &&
+        (eventTypes == Nil || eventTypes.contains(ae.eventType)) &&
+        ((EventType.HealTypes.contains(ae.eventType) && ae.actor != actor) ||
+         (EventType.DamageTypes.contains(ae.eventType) && ae.target == actor))
+      }
       case _ => false
     }
   }
