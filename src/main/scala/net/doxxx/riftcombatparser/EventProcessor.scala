@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import EventType._
 import collection.immutable.List._
 import java.util.prefs.Preferences
-import collection.mutable.{ArrayBuffer, ListBuffer, HashMap}
+import collection.mutable.{ArrayBuffer,HashSet,HashMap,ListBuffer}
 
 object EventProcessor {
   import Utils._
@@ -136,6 +136,7 @@ object EventProcessor {
     Some(nonPlayerDamage.max(ordering)._1.name)
   }
 
+/*
   def splitFights(events: List[LogEvent]): List[Fight] = {
     events match {
       case Nil => Nil
@@ -160,6 +161,98 @@ object EventProcessor {
         splitFights(stripPreCombat(events))
       }
     }
+  }
+*/
+
+  val ignoredHostileSpells = List("Sacrifice Life: Mana")
+
+  def isHostileAction(ae: ActorEvent): Boolean = {
+    EventType.HostileTypes.contains(ae.eventType) && !ignoredHostileSpells.contains(ae.spell)
+  }
+
+  def deadActor(ae: ActorEvent): Option[Actor] = {
+    ae.eventType match {
+      case Died => Some(ae.actor)
+      case Slain => Some(ae.target)
+      case _ => None
+    }
+  }
+
+  def involvesNonPlayer(ae: ActorEvent): Option[NonPlayer] = {
+    if (ae.actor.isInstanceOf[NonPlayer]) {
+      Some(ae.actor.asInstanceOf[NonPlayer])
+    }
+    else if (ae.target.isInstanceOf[NonPlayer]) {
+      Some(ae.target.asInstanceOf[NonPlayer])
+    }
+    else {
+      None
+    }
+  }
+
+  def splitFights(events: List[LogEvent]): List[Fight] = {
+    val fights = new ListBuffer[Fight]
+    val currentFight = new ListBuffer[LogEvent]
+    val activeNPCs = new HashSet[NonPlayer]
+
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          // first check if there was more than 5 seconds of dead time since the last fight event
+          if (currentFight.size > 0 && (ae.time - currentFight.last.time) >= 5) {
+            val f = SingleFight(currentFight.toList)
+            log("5 second timeout, creating fight: %s", f.toString)
+            fights += f
+            currentFight.clear()
+          }
+
+          // if it was a hostile action or a fight is in progress, add it to the current fight
+          if (isHostileAction(ae) || !currentFight.isEmpty) {
+            currentFight += ae
+
+            // track active NPCs and their deaths
+            val actor = deadActor(ae)
+            actor match {
+              case Some(np: NonPlayer) => {
+                log("Removing active NPC: %s", np.name)
+                activeNPCs -= np
+              }
+              case Some(p: Player) => // do nothing for players
+              case Some(pp: PlayerPet) => // do nothing for players' pets
+              case None => {
+                // non-death event
+                involvesNonPlayer(ae) match {
+                  case Some(np) => {
+                    if (!activeNPCs.contains(np)) {
+                      log("Adding active NPC: %s", np.name)
+                      activeNPCs += np
+                    }
+                  }
+                  case None => // do nothing
+                }
+              }
+            }
+
+            // if all active NPCs have died, fight is finished
+            if (activeNPCs.isEmpty) {
+              val f = SingleFight(currentFight.toList)
+              log("All active NPCs dead, creating fight: %s", f.toString)
+              fights += f
+              currentFight.clear()
+            }
+          }
+        }
+        case _ => // do nothing
+      }
+    }
+
+    if (!currentFight.isEmpty) {
+      val f = SingleFight(currentFight.toList)
+      log("Events remain, creating fight: %s", f.toString)
+      fights += f
+    }
+
+    fights.toList.filter(_.duration > 5)
   }
 
   private val dayTime = 24*60*60
