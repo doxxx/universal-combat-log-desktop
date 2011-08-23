@@ -15,7 +15,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   import Utils._
 
-  case class LogFileLoaded(events: List[LogEvent], playersAndPets: Set[Actor]) extends Event
+  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
 
   val LogFileKey = "logFile"
 
@@ -76,10 +76,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           log("Loading events from %s", f.toString)
           try {
             val events = EventProcessor.normalizeTimes(CombatLogParser.parse(f))
+            val fights = EventProcessor.splitFights(events)
             logFileLastModified = f.lastModified();
             val playersAndPets = CombatLogParser.playersAndPets
             Swing.onEDT {
-              logFileEventPublisher.publish(LogFileLoaded(events, playersAndPets))
+              logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
             }
           }
           catch {
@@ -205,8 +206,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
-      case LogFileLoaded(events, playersAndPets) => {
-        fightList.update(events)
+      case LogFileLoaded(fights, playersAndPets) => {
+        fightList.update(fights)
         _playersAndPets = playersAndPets
       }
       case SelectedFightsChanged(fights) => {
