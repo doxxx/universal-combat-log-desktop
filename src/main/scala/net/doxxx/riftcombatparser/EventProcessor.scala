@@ -228,21 +228,21 @@ object EventProcessor {
           val actor = deadActor(death)
           actor match {
             case Some(np: NonPlayer) => {
-              log("%d: Processing NPC death: %s", death.time, np.toString)
+              debuglog("%d: Processing NPC death: %s", death.time, np.toString)
               deadNPCs += np
             }
             case Some(p: Player) => {
-              log("%d: Processing player death: %s", death.time, p.name)
+              debuglog("%d: Processing player death: %s", death.time, p.name)
               deadPCs += p
             }
             case Some(pp: PlayerPet) => {
-              log("%d: Processing player pet death: %s", death.time, pp.toString)
+              debuglog("%d: Processing player pet death: %s", death.time, pp.toString)
             }
             case Some(Nobody) => {
-              log("Nobody died?!")
+              debuglog("Nobody died?!")
             }
             case None => {
-              log("Death event which contains no dead actor?!")
+              debuglog("Death event which contains no dead actor?!")
             }
           }
         }
@@ -267,19 +267,19 @@ object EventProcessor {
           // if all active NPCs have died, fight is finished
           if (!npcs.isEmpty && npcs == deadNPCs && !currentFight.isEmpty) {
             val f = SingleFight(currentFight.toList)
-            log("%d: All active NPCs have died, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: All active NPCs have died, creating fight: %s", ae.time, f.toString)
             finishFight(f)
           }
           // if all active PCs have died, fight is finished
           else if (!pcs.isEmpty && pcs == deadPCs && !currentFight.isEmpty) {
             val f = SingleFight(currentFight.toList)
-            log("%d: All active PCs have died, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: All active PCs have died, creating fight: %s", ae.time, f.toString)
             finishFight(f)
           }
           // if more than 5 seconds have passed since the last hostile fight event, fight is finished
           else if (!currentFight.isEmpty && (ae.time - currentFight.last.time) >= 5) {
             val f = SingleFight(currentFight.toList)
-            log("%d: 5 second timeout, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: 5 second timeout, creating fight: %s", ae.time, f.toString)
             finishFight(f)
           }
 
@@ -287,21 +287,21 @@ object EventProcessor {
           actor match {
             case Some(a) => {
               // if it was a death event, queue it, since they occur before the actual killing blow
-              log("%d: Queuing actor death: %s", ae.time, a.toString)
+              debuglog("%d: Queuing actor death: %s", ae.time, a.toString)
               pendingDeaths += ae
             }
             case None => {
               // if it was a hostile action or a fight is in progress, add it to the current fight
               if (isHostileAction(ae) || !currentFight.isEmpty) {
                 if (currentFight.isEmpty) {
-                  log("%d: First hostile action: %s", ae.time, ae.toString)
+                  debuglog("%d: First hostile action: %s", ae.time, ae.toString)
                 }
                 // non-death event
                 currentFight += ae
                 involvesNonPlayer(ae) match {
                   case Some(np) => {
                     if (!npcs.contains(np)) {
-                      log("%d: Adding active NPC: %s [%s]", ae.time, np.toString, ae.text)
+                      debuglog("%d: Adding active NPC: %s [%s]", ae.time, np.toString, ae.text)
                       npcs += np
                     }
                   }
@@ -310,7 +310,7 @@ object EventProcessor {
                 involvesPlayer(ae) match {
                   case Some(p) => {
                     if (!pcs.contains(p)) {
-                      log("%d: Adding active PC: %s", ae.time, p.name)
+                      debuglog("%d: Adding active PC: %s", ae.time, p.name)
                       pcs += p
                     }
                   }
@@ -328,7 +328,7 @@ object EventProcessor {
 
     if (!currentFight.isEmpty) {
       val f = SingleFight(currentFight.toList)
-      log("Events remain, creating fight: %s", f.toString)
+      debuglog("Events remain, creating fight: %s", f.toString)
       finishFight(f)
     }
 
