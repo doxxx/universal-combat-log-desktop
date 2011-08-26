@@ -22,10 +22,16 @@ object CombatLogParser {
   private val OverkillRE = new Regex("\\(([0-9]+) overkill\\)", "amount")
   private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
-  sealed abstract class ActorID(val id: Long)
-  case object NullActorID extends ActorID(0)
-  case class NPC(override val id: Long) extends ActorID(id)
-  case class PC(override val id: Long) extends ActorID(id)
+  sealed abstract class ActorID {
+    def id: Long
+    def rel: Char
+  }
+  case object NullActorID extends ActorID {
+    val id = 0L
+    val rel = 'X'
+  }
+  case class NPC(id: Long, rel: Char) extends ActorID
+  case class PC(id: Long, rel: Char) extends ActorID
 
   private val actorsLock = new ReentrantReadWriteLock()
   private val actors = new HashMap[ActorID, Actor] {
@@ -183,16 +189,17 @@ object CombatLogParser {
   private def parseEntity(s: String): ActorID = {
     val parts = s.split('#')
 
-    // T=P
-    // T=N
-    // T=X
+    // T=P (Player)
+    // T=N (Non-player)
+    // T=X (nobody)
     val t = parts(0).charAt(2)
 
     // R=C (character who collected combat log)
     // R=G (same group as C)
     // R=R (same raid as C)
     // R=O (others)
-    //val r = parts(1).charAt(2)
+    // r=X (nobody)
+    val r = parts(1).charAt(2)
 
     // 227009568756889439
     // 9223372041715776949 (when T=N, '9' is prepended to the ID)
@@ -210,8 +217,8 @@ object CombatLogParser {
     }
 
     t match {
-      case 'P' => PC(id)
-      case 'N' => NPC(id)
+      case 'P' => PC(id, r)
+      case 'N' => NPC(id, r)
       case 'X' => NullActorID
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }

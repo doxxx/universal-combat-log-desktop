@@ -19,6 +19,7 @@ case class ActorEvent(override val time: Long, eventType: EventType.Value,
 sealed abstract class Actor(val id: ActorID) {
   def name: String
   def name_=(newName: String)
+  def grouped: Boolean = id.rel == 'C' || id.rel == 'G' || id.rel == 'R'
 }
 
 case object Nobody extends Actor(NullActorID) {

@@ -165,6 +165,10 @@ object EventProcessor {
 */
 
   def isValidAction(ae: ActorEvent): Boolean = {
+    (ae.actor.grouped ||
+     ae.target.grouped ||
+     ae.actor.isInstanceOf[NonPlayer] ||
+     ae.target.isInstanceOf[NonPlayer]) &&
     (ae.eventType == EventType.Slain ||
      ae.eventType == EventType.Died ||
      ae.eventType == EventType.PowerGain ||
@@ -187,7 +191,7 @@ object EventProcessor {
     }
   }
 
-  def involvesNonPlayer(ae: ActorEvent): Option[NonPlayer] = {
+  def extractNonPlayer(ae: ActorEvent): Option[NonPlayer] = {
     if (ae.actor.isInstanceOf[NonPlayer]) {
       Some(ae.actor.asInstanceOf[NonPlayer])
     }
@@ -199,7 +203,7 @@ object EventProcessor {
     }
   }
 
-  def involvesPlayer(ae: ActorEvent): Option[Player] = {
+  def extractPlayer(ae: ActorEvent): Option[Player] = {
     if (ae.actor.isInstanceOf[Player]) {
       Some(ae.actor.asInstanceOf[Player])
     }
@@ -246,6 +250,24 @@ object EventProcessor {
             }
           }
         }
+      }
+    }
+
+    def trackActor(a: Actor) {
+      a match {
+        case np: NonPlayer => {
+          if (!npcs.contains(np)) {
+            //debuglog("%d: Adding active NPC: %s [%s]", ae.time, np.toString, ae.text)
+            npcs += np
+          }
+        }
+        case p: Player => {
+          if (!pcs.contains(p)) {
+            //debuglog("%d: Adding active PC: %s", ae.time, p.name)
+            pcs += p
+          }
+        }
+        case _ => // do nothing
       }
     }
 
@@ -298,24 +320,8 @@ object EventProcessor {
                 }
                 // non-death event
                 currentFight += ae
-                involvesNonPlayer(ae) match {
-                  case Some(np) => {
-                    if (!npcs.contains(np)) {
-                      debuglog("%d: Adding active NPC: %s [%s]", ae.time, np.toString, ae.text)
-                      npcs += np
-                    }
-                  }
-                  case None => // do nothing
-                }
-                involvesPlayer(ae) match {
-                  case Some(p) => {
-                    if (!pcs.contains(p)) {
-                      debuglog("%d: Adding active PC: %s", ae.time, p.name)
-                      pcs += p
-                    }
-                  }
-                  case None => // do nothing
-                }
+                trackActor(ae.actor)
+                trackActor(ae.target)
               }
             }
           }
