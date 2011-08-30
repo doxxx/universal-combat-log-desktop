@@ -1,7 +1,7 @@
 package net.doxxx.riftcombatparser
 
 import scala.swing._
-import event.{WindowActivated, Event, ButtonClicked}
+import event._
 import java.util.prefs.Preferences
 import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
@@ -124,7 +124,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     private var _playersAndPets: Set[Actor] = Set.empty
 
     val fightList = new FightList
-    val summaryPanels = new SummaryPanels
+    val summaryPanels = new SummaryPanels(prefs)
     def summaryPanel = summaryPanels.current
     val progressBar = new ProgressBar {
       indeterminate = true
@@ -142,13 +142,22 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       layout(progressBar) = BorderPanel.Position.South
     }
 
+    EventProcessor.loadSettings(prefs)
+
+    if (prefs.getInt("mainX", 0) > 0) {
+      Utils.log("Restoring main window bounds")
+      bounds = new Rectangle(prefs.getInt("mainX", 0), prefs.getInt("mainY", 0),
+        prefs.getInt("mainW", 0), prefs.getInt("mainH", 0))
+    }
+    else {
+      centerOnScreen()
+    }
+
     val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
-
-    EventProcessor.loadSettings(prefs)
 
     MI_IncludeOverhealing.selected = EventProcessor.includeOverhealing
     MI_UseActorCombatTime.selected = EventProcessor.useActorCombatTime
@@ -180,6 +189,18 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         if (!loadingLogFile) {
           createFileLoaderActor()
         }
+        summaryPanels.raiseDialogs()
+      }
+      case WindowDeactivated(_) => {
+        summaryPanels.lowerDialogs()
+      }
+      case WindowClosing(_) => {
+        Utils.log("Saving main window bounds")
+        prefs.putInt("mainX", bounds.x)
+        prefs.putInt("mainY", bounds.y)
+        prefs.putInt("mainW", bounds.width)
+        prefs.putInt("mainH", bounds.height)
+        summaryPanels.saveDialogBounds()
       }
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)

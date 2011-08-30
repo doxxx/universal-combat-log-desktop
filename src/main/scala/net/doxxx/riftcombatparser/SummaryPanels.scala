@@ -4,10 +4,11 @@ import swing._
 import event.{SelectionChanged, ButtonClicked}
 import swing.TabbedPane.Page
 import net.doxxx.riftcombatparser.SummaryColumns._
-import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.util.prefs.Preferences
+import java.awt.{Rectangle, Toolkit}
 
-class SummaryPanels extends BoxPanel(Orientation.Vertical) {
+class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
   val panels = Seq(
     new SummaryPanel("Overview", Seq(Name, DPSOut, HPSOut, Deaths, CombatTime), DPSOut),
@@ -43,8 +44,30 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
   val copyHPSButton = new Button("Copy HPS") {
     enabled = false
   }
-  val breakdownDialog = new BreakdownDialog(GUIMain.top)
-  val deathLogDialog = new DeathLogDialog(GUIMain.top)
+  val breakdownDialog = new BreakdownDialog(GUIMain.top) {
+    peer.setAlwaysOnTop(true)
+    peer.setFocusableWindowState(false)
+    if (prefs.getInt("breakdownDialogX", 0) > 0) {
+      Utils.log("Restoring breakdown dialog bounds")
+      bounds = new Rectangle(prefs.getInt("breakdownDialogX", 0), prefs.getInt("breakdownDialogY", 0),
+        prefs.getInt("breakdownDialogW", 0), prefs.getInt("breakdownDialogH", 0))
+    }
+    else {
+      centerOnScreen()
+    }
+  }
+  val deathLogDialog = new DeathLogDialog(GUIMain.top) {
+    peer.setAlwaysOnTop(true)
+    peer.setFocusableWindowState(false)
+    if (prefs.getInt("deathLogDialogX", 0) > 0) {
+      Utils.log("Restoring breakdown dialog pos")
+      bounds = new Rectangle(prefs.getInt("deathLogDialogX", 0), prefs.getInt("deathLogDialogY", 0),
+        prefs.getInt("deathLogDialogW", 0), prefs.getInt("deathLogDialogH", 0))
+    }
+    else {
+      centerOnScreen()
+    }
+  }
 
   contents += new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
@@ -136,6 +159,30 @@ class SummaryPanels extends BoxPanel(Orientation.Vertical) {
         case None => breakdownDialog.visible = false
       }
     }
+  }
+
+  def raiseDialogs() {
+    breakdownDialog.peer.setAlwaysOnTop(true)
+    deathLogDialog.peer.setAlwaysOnTop(true)
+  }
+
+  def lowerDialogs() {
+    breakdownDialog.peer.setAlwaysOnTop(false)
+    deathLogDialog.peer.setAlwaysOnTop(false)
+  }
+
+  def saveDialogBounds() {
+    Utils.log("Saving death log dialog bounds")
+    prefs.putInt("deathLogDialogX", deathLogDialog.bounds.x)
+    prefs.putInt("deathLogDialogY", deathLogDialog.bounds.y)
+    prefs.putInt("deathLogDialogW", deathLogDialog.bounds.width)
+    prefs.putInt("deathLogDialogH", deathLogDialog.bounds.height)
+
+    Utils.log("Saving breakdown dialog bounds")
+    prefs.putInt("breakdownDialogX", breakdownDialog.bounds.x)
+    prefs.putInt("breakdownDialogY", breakdownDialog.bounds.y)
+    prefs.putInt("breakdownDialogW", breakdownDialog.bounds.width)
+    prefs.putInt("breakdownDialogH", breakdownDialog.bounds.height)
   }
 
   private def applyTargetFilter(target: Actor) {
