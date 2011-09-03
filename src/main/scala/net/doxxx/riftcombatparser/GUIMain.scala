@@ -70,12 +70,14 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
         Swing.onEDT {
           top.progressBar.visible = true
+          top.progressBar.label = "Loading combat log..."
         }
 
         actor {
           log("Loading events from %s", f.toString)
           try {
             val events = EventProcessor.normalizeTimes(CombatLogParser.parse(f))
+            top.progressBar.label = "Detecting fights..."
             val fights = EventProcessor.splitFights(events)
             logFileLastModified = f.lastModified();
             val playersAndPets = CombatLogParser.playersAndPets
@@ -129,7 +131,6 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val progressBar = new ProgressBar {
       indeterminate = true
       labelPainted = true
-      label = "Parsing log file..."
       visible = false
     }
 
