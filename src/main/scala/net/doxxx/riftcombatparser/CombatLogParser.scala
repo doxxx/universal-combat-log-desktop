@@ -18,8 +18,8 @@ object CombatLogParser {
               "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
               "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
-  private val OverhealRE = new Regex("\\(([0-9]+) overheal\\)", "amount")
-  private val OverkillRE = new Regex("\\(([0-9]+) overkill\\)", "amount")
+  private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
+  private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
   private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
   sealed abstract class ActorID {
