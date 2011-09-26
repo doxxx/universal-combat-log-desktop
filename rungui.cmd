@@ -1,1 +1,1 @@
-@scala -cp target\scala_2.8.1\classes net.doxxx.riftcombatparser.GUIMain %*
+@scala -cp target\scala_2.9.0\classes net.doxxx.riftcombatparser.GUIMain %*
