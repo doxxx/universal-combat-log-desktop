@@ -502,7 +502,7 @@ object EventProcessor {
       case Died => death.actor
       case Slain => death.target
     }
-    val eventsBeforeDeath = events.takeWhile(_.time <= death.time)
+    val eventsBeforeDeath = events.takeWhile(_.time <= death.time+1)
     val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10)
     withinTimeframe.filter {
       case ae: ActorEvent => {
