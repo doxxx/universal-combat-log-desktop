@@ -5,8 +5,11 @@
     <setting name="package" value="net.doxxx.riftcombatparser" />
     <setting name="vmparams" value="" />
     <setting name="params" value="" />
-    <setting name="version" value="true" />
-    <setting name="workingDirectory" value="$PROJECT_DIR$" />
+    <setting name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <setting name="searchForTest" value="Across module dependencies" />
+    <setting name="testName" value="" />
+    <setting name="testKind" value="All in package" />
+    <setting name="showProgressMessages" value="false" />
     <RunnerSettings RunnerId="Debug">
       <option name="DEBUG_PORT" value="61777" />
       <option name="TRANSPORT" value="0" />
