@@ -7,9 +7,9 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner}
 import java.io.{IOException, File}
-import java.util.Date
 import java.text.SimpleDateFormat
 import javax.swing.JFileChooser
+import java.util
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
@@ -55,7 +55,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     if (logFile.isDefined) {
       val f = logFile.get
       if (f.exists) {
-        val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date())
+        val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new util.Date())
         f.renameTo(new File(f.getParentFile, f.getName + '.' + date))
       }
     }
@@ -79,7 +79,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
             val events = EventProcessor.normalizeTimes(CombatLogParser.parse(f))
             top.progressBar.label = "Detecting fights..."
             val fights = EventProcessor.splitFights(events)
-            logFileLastModified = f.lastModified();
+            logFileLastModified = f.lastModified()
             val playersAndPets = CombatLogParser.playersAndPets
             Swing.onEDT {
               logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))

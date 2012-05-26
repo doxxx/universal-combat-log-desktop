@@ -55,9 +55,9 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
           val column = source.columnAtPoint( e.getPoint )
 
           if (! source.isRowSelected(row))
-              source.changeSelection(row, column, false, false);
+              source.changeSelection(row, column, false, false)
 
-          popupMenu.show(table, e.getX, e.getY);
+          popupMenu.show(table, e.getX, e.getY)
         }
       }
     })

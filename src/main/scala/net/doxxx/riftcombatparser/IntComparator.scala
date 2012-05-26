@@ -1,8 +1,8 @@
 package net.doxxx.riftcombatparser
 
-import java.util.Comparator
+import java.util
 
-object IntComparator extends Comparator[Int] {
+object IntComparator extends util.Comparator[Int] {
   def compare(o1: Int, o2: Int) = o1 - o2
 }
 

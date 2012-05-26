@@ -2,7 +2,6 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import collection.immutable.TreeMap
-import collection.mutable.HashMap
 
 object InspectLog {
 

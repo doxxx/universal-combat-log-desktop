@@ -3,7 +3,7 @@ package net.doxxx.riftcombatparser
 import EventType._
 import collection.immutable.List._
 import java.util.prefs.Preferences
-import collection.mutable.{ArrayBuffer,HashSet,HashMap,ListBuffer}
+import collection.mutable
 
 object EventProcessor {
   import Utils._
@@ -25,7 +25,7 @@ object EventProcessor {
   }
 
   def summary(fight: Fight): Map[Actor, Summary] = {
-    val results = new HashMap[Actor, Summary] {
+    val results = new mutable.HashMap[Actor, Summary] {
       override def default(key: Actor) = Summary()
     }
     timeit("summary") { () =>
@@ -72,7 +72,7 @@ object EventProcessor {
   }
 
   def actorsSortedByActivity(events: List[LogEvent]): List[Actor] = {
-    val activity = new HashMap[Actor, Int] {
+    val activity = new mutable.HashMap[Actor, Int] {
       override def default(key: Actor) = 0
     }
     for (e <- events) e match {
@@ -103,7 +103,7 @@ object EventProcessor {
               rest
             }
             else {
-              CombatToggleEvent(start.head.time, true) :: start ::: rest
+              CombatToggleEvent(start.head.time, state = true) :: start ::: rest
             }
           }
           case _ => throw new IllegalStateException
@@ -113,7 +113,7 @@ object EventProcessor {
   }
 
   def primaryNPC(events: List[LogEvent]): Option[String] = {
-    val nonPlayerDamage = new HashMap[NonPlayer,Int]
+    val nonPlayerDamage = new mutable.HashMap[NonPlayer,Int]
     for (event <- events) {
       event match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
@@ -216,13 +216,13 @@ object EventProcessor {
   }
 
   def splitFights(events: List[LogEvent]): List[Fight] = {
-    val fights = new ListBuffer[Fight]
-    val currentFight = new ListBuffer[LogEvent]
-    val npcs = new HashSet[NonPlayer]
-    val deadNPCs = new HashSet[NonPlayer]
-    val pcs = new HashSet[Player]
-    val deadPCs = new HashSet[Player]
-    val pendingDeaths = new ListBuffer[ActorEvent]
+    val fights = new mutable.ListBuffer[Fight]
+    val currentFight = new mutable.ListBuffer[LogEvent]
+    val npcs = new mutable.HashSet[NonPlayer]
+    val deadNPCs = new mutable.HashSet[NonPlayer]
+    val pcs = new mutable.HashSet[Player]
+    val deadPCs = new mutable.HashSet[Player]
+    val pendingDeaths = new mutable.ListBuffer[ActorEvent]
 
     def processPendingDeaths(time: Long) {
       for (death <- pendingDeaths) {
@@ -402,7 +402,7 @@ object EventProcessor {
       }
       else throw new RuntimeException("Invalid breakdown type")
 
-    val results = new HashMap[String, Breakdown] {
+    val results = new mutable.HashMap[String, Breakdown] {
       override def default(key: String) = Breakdown()
     }
     var totalDamage: Int = 0
@@ -476,7 +476,7 @@ object EventProcessor {
   }
 
   def actorDeaths(actor: Actor, events: List[LogEvent]): List[ActorEvent] = {
-    val deaths = new ListBuffer[ActorEvent]
+    val deaths = new mutable.ListBuffer[ActorEvent]
     for (event <- events) {
       event match {
         case ae: ActorEvent => {
@@ -517,7 +517,7 @@ object EventProcessor {
   }
 
   def chartHealthPriorToDeath(actor: Actor, events: List[LogEvent]): Array[Int] = {
-    val chart = new ArrayBuffer[Int]
+    val chart = new mutable.ArrayBuffer[Int]
     val rev = events.reverse
     var health: Int = 0
     var time = rev.head.time

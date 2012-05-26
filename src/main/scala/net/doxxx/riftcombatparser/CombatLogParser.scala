@@ -2,10 +2,10 @@ package net.doxxx.riftcombatparser
 
 import io.Source
 import util.matching.Regex
-import collection.mutable.{ListBuffer, HashMap}
 import java.io._
 import java.lang.{Boolean, RuntimeException}
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import collection.mutable
 
 object CombatLogParser {
   import Utils._
@@ -35,7 +35,7 @@ object CombatLogParser {
   case class PC(id: Long, rel: Char) extends ActorID
 
   private val actorsLock = new ReentrantReadWriteLock()
-  private val actors = new HashMap[ActorID, Actor] {
+  private val actors = new mutable.HashMap[ActorID, Actor] {
     override def default(key: ActorID) = Nobody
   }
   private var lastFilePos: Long = 0
@@ -83,7 +83,7 @@ object CombatLogParser {
     raf.close()
 
     val reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)))
-    var lines = new ListBuffer[String]
+    var lines = new mutable.ListBuffer[String]
     var done = false
 
     timeit("readLines") { () =>

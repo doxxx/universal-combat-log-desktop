@@ -1,15 +1,15 @@
 package net.doxxx.riftcombatparser
 
 import java.lang.Boolean
-import java.util.Calendar
 import java.text.DateFormat
+import java.util
 
 object Utils {
   private val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
   private val DebugMode = false
 
   private def formattedDate = {
-    LoggingDateFormat.format(Calendar.getInstance.getTime)
+    LoggingDateFormat.format(util.Calendar.getInstance.getTime)
   }
 
   def log(msg: String, args: Any*) {

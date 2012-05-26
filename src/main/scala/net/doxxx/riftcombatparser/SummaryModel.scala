@@ -76,7 +76,3 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
   }
 
 }
-
-
-
-
