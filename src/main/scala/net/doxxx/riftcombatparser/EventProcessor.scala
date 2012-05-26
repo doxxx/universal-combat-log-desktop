@@ -103,7 +103,7 @@ object EventProcessor {
               rest
             }
             else {
-              CombatToggleEvent(start.head.time, state = true) :: start ::: rest
+              CombatToggleEvent(start.head.time, inCombat = true) :: start ::: rest
             }
           }
           case _ => throw new IllegalStateException
