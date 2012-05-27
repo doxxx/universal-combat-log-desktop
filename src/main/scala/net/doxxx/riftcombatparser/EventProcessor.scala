@@ -88,30 +88,6 @@ object EventProcessor {
     for ((k,v) <- activity.toList.sortWith(cmp)) yield k
   }
 
-  def stripPreCombat(events: List[LogEvent]): List[LogEvent] = {
-    events match {
-      case Nil => Nil
-      case _ => {
-        val (start, rest) = events span {
-          case CombatToggleEvent(time, state) => false
-          case _ => true
-        }
-        rest match {
-          case Nil => Nil
-          case CombatToggleEvent(time, state) :: _ => {
-            if (state) {
-              rest
-            }
-            else {
-              CombatToggleEvent(start.head.time, inCombat = true) :: start ::: rest
-            }
-          }
-          case _ => throw new IllegalStateException
-        }
-      }
-    }
-  }
-
   def primaryNPC(events: List[LogEvent]): Option[String] = {
     val nonPlayerDamage = new mutable.HashMap[NonPlayer,Int]
     for (event <- events) {
@@ -135,34 +111,6 @@ object EventProcessor {
     }
     Some(nonPlayerDamage.max(ordering)._1.name)
   }
-
-/*
-  def splitFights(events: List[LogEvent]): List[Fight] = {
-    events match {
-      case Nil => Nil
-      case (start @ CombatToggleEvent(_, true)) :: tail => {
-        val (fightEvents, rest) = tail span {
-          case CombatToggleEvent(_, _) => false
-          case _ => true
-        }
-
-        val fight:Fight = fightEvents match {
-          case Nil => EmptyFight(start.time)
-          case _ => SingleFight(fightEvents)
-        }
-
-        fight :: (rest match {
-          case Nil => Nil
-          case CombatToggleEvent(_, _) :: restTail => splitFights(restTail)
-          case _ => throw new IllegalStateException
-        })
-      }
-      case _ => {
-        splitFights(stripPreCombat(events))
-      }
-    }
-  }
-*/
 
   def isValidAction(ae: ActorEvent): Boolean = {
     (ae.actor.grouped ||
