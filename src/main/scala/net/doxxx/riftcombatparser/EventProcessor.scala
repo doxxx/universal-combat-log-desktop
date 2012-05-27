@@ -286,7 +286,7 @@ object EventProcessor {
       finishFight(f)
     }
 
-    fights.toList.filter(_.duration > 5)
+    fights.toList
   }
 
   private val dayTime = 24*60*60
