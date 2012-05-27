@@ -1,4 +1,8 @@
+organization := "net.doxxx"
+
 name := "RiftCombatParser"
+
+normalizedName := "rift-combat-parser"
 
 version := "1.0"
 
