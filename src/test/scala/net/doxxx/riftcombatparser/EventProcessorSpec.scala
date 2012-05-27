@@ -8,92 +8,79 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
   import EventType._
 
   "An EventProcessor" when {
-    val actor1 = Player(PC(1, 'C'), "actor1")
-    val target1 = NonPlayer(NPC(2, 'O'), "target1")
-    val middleActor1 = Player(PC(3, 'G'), "middleActor1")
-    val middleActor2 = Player(PC(4, 'G'), "middleActor2")
-    val middleTarget1 = NonPlayer(NPC(5, 'O'), "middleTarget1")
-    val middleTarget2 = NonPlayer(NPC(6, 'O'), "middleTarget2")
+    val pc1 = Player(PC(1, 'C'), "pc1")
+    val pc2 = Player(PC(2, 'G'), "pc2")
+    val pc3 = Player(PC(3, 'G'), "cp3")
+    val npc1 = NonPlayer(NPC(4, 'O'), "npc1")
+    val npc2 = NonPlayer(NPC(5, 'O'), "npc2")
+    val npc3 = NonPlayer(NPC(6, 'O'), "npc3")
 
     "splitting fights" should {
-      val middleFight = List(
-        ActorEvent(100, DirectDamage, middleActor1, middleTarget1, "middleSpell1",
-          101, 123, "text")
-      )
-      val middleFightBracketed = List(CombatToggleEvent(1, inCombat = true)) ::: middleFight ::: List(CombatToggleEvent(200, inCombat = false))
-
-      "ignore events before first CombatStart" in {
-        val start = List(
-          ActorEvent(1, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+      "end a fight after 5 seconds of inactivity" in {
+        val fight1 = List(
+          ActorEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(1, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(2, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
         )
-        val events = start ::: middleFightBracketed
+        val fight2 = List(
+          ActorEvent(7, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+        )
+        val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight)))
+        fights should equal (List(SingleFight(fight1), SingleFight(fight2)))
       }
 
-      "treat events before first CombatEnd as a fight" in {
-        val start = List(
-          ActorEvent(1, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+      "end a fight after all NPCs have died" in {
+        val fight1 = List(
+          ActorEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(1, DirectDamage, pc2, npc2, "spell1", 1, 123, "text"),
+          ActorEvent(2, DirectDamage, pc3, npc3, "spell1", 1, 123, "text"),
+          ActorEvent(3, Died, npc1, Nobody, "", 0, 0, "text"),
+          ActorEvent(4, Died, npc2, Nobody, "", 0, 0, "text"),
+          ActorEvent(5, Died, npc3, Nobody, "", 0, 0, "text")
         )
-        val events = start ::: List(CombatToggleEvent(1, inCombat = false)) ::: middleFightBracketed
+        val fight2 = List(
+          ActorEvent(6, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+        )
+        val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(start), SingleFight(middleFight)))
+        fights should equal (List(SingleFight(fight1), SingleFight(fight2)))
       }
 
-      "ignore events after last CombatEnd" in {
-        val end = List(
-          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+      "end a fight after all PCs have died" in {
+        val fight1 = List(
+          ActorEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(1, DirectDamage, pc2, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(2, DirectDamage, pc3, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(3, Died, pc1, Nobody, "", 0, 0, "text"),
+          ActorEvent(4, Died, pc2, Nobody, "", 0, 0, "text"),
+          ActorEvent(5, Died, pc3, Nobody, "", 0, 0, "text")
         )
-        val events = middleFightBracketed ::: end
+        val fight2 = List(
+          ActorEvent(6, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+        )
+        val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight)))
+        fights should equal (List(SingleFight(fight1), SingleFight(fight2)))
       }
 
-      "treat events after last CombatStart as a fight" in {
-        val end = List(
-          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
+      "collect remaining events as a fight" in {
+        val fight1 = List(
+          ActorEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(1, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          ActorEvent(2, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
         )
-        val events = middleFightBracketed ::: List(CombatToggleEvent(199, inCombat = true)) ::: end
+        val events = fight1
         val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
-      }
-
-      "treat double CombatStart as two fights" in {
-        val end = List(
-          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
-        )
-        val events = List(CombatToggleEvent(1, inCombat = true)) ::: middleFight ::: List(CombatToggleEvent(101, inCombat = true)) ::: end ::: List(CombatToggleEvent(1, inCombat = false))
-        val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
-      }
-
-      "treat double CombatEnd as two fights" in {
-        val end = List(
-          ActorEvent(200, DirectDamage, actor1, target1, "spell1", 1, 123, "text")
-        )
-        val events = List(CombatToggleEvent(1, inCombat = true)) ::: middleFight ::: List(CombatToggleEvent(101, inCombat = false)) ::: end ::: List(CombatToggleEvent(1, inCombat = false))
-        val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight), SingleFight(end)))
-      }
-
-      "discard events in between fights" in {
-        val middleFight2 = List(
-          ActorEvent(150, DirectDamage, middleActor2, middleTarget2, "middleSpell2", 102, 123, "text")
-        )
-        val middleFightBracketed2 = List(CombatToggleEvent(1, inCombat = true)) ::: middleFight2 ::: List(CombatToggleEvent(1, inCombat = false))
-        val events = middleFightBracketed ::: List(
-          ActorEvent(120, DirectDamage, Nobody, Nobody, "discardSpell", 999, 123, "text")
-        ) ::: middleFightBracketed2
-        val fights = EventProcessor.splitFights(events)
-        fights should equal (List(SingleFight(middleFight), SingleFight(middleFight2)))
+        fights should equal (List(SingleFight(fight1)))
       }
     }
 
     "normalizing times" should {
       val events = List(
         CombatToggleEvent(86300, inCombat = true),
-        ActorEvent(86350, DirectDamage, middleActor2, middleTarget2, "middleSpell2", 102, 123, "text"),
-        ActorEvent(50, DirectDamage, actor1, target1, "spell1", 1, 123, "text"),
+        ActorEvent(86350, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, "text"),
+        ActorEvent(50, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
         CombatToggleEvent(100, inCombat = false)
       )
       val normalized = EventProcessor.normalizeTimes(events)
@@ -104,8 +91,8 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
       "handle midnight rollovers" in {
         normalized should equal (List(
           CombatToggleEvent(0, inCombat = true),
-          ActorEvent(50, DirectDamage, middleActor2, middleTarget2, "middleSpell2", 102, 123, "text"),
-          ActorEvent(150, DirectDamage, actor1, target1, "spell1", 1, 123, "text"),
+          ActorEvent(50, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, "text"),
+          ActorEvent(150, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
           CombatToggleEvent(200, inCombat = false)
         ))
       }
