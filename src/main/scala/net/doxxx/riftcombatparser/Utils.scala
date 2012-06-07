@@ -6,7 +6,7 @@ import java.util
 
 object Utils {
   private val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
-  private val DebugMode = false
+  private val DebugMode = true
 
   private def formattedDate = {
     LoggingDateFormat.format(util.Calendar.getInstance.getTime)
@@ -18,7 +18,7 @@ object Utils {
   }
 
   def debuglog(msg: String, args: Any*) {
-    if (DebugMode) log(msg, args)
+    if (DebugMode) log(msg, args: _*)
   }
 
   def timeit[U](msg: String)(f: () => U): U = {
