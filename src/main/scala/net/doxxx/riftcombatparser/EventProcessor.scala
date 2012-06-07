@@ -4,6 +4,7 @@ import EventType._
 import collection.immutable.List._
 import java.util.prefs.Preferences
 import collection.mutable
+import annotation.tailrec
 
 object EventProcessor {
   import Utils._
@@ -257,7 +258,7 @@ object EventProcessor {
           actor match {
             case Some(a) => {
               // if it was a death event, queue it, since they occur before the actual killing blow
-              debuglog("%d: Queuing actor death: %s", ae.time, a.toString)
+              //debuglog("%d: Queuing actor death: %s", ae.time, a.toString)
               pendingDeaths += ae
             }
             case None => {
@@ -293,15 +294,21 @@ object EventProcessor {
   def normalizeTimes(events: List[LogEvent]): List[LogEvent] = {
     if (events.isEmpty) return events
     val startTime = events.head.time
-    for (e <- events) yield {
-      val relTime = e.time - startTime
-      if (relTime < 0) {
-        e.copy(relTime + dayTime)
-      }
-      else {
-        e.copy(relTime)
+    @tailrec
+    def normalize(result: List[LogEvent], offset: Long, prev: LogEvent, events: List[LogEvent]): List[LogEvent] = {
+      events match {
+        case Nil => result
+        case current :: rest => {
+          if (current.time < prev.time) {
+            normalize(current.copy(current.time + offset + dayTime) :: result, offset + dayTime, current, rest)
+          }
+          else {
+            normalize(current.copy(current.time + offset) :: result, offset, current, rest)
+          }
+        }
       }
     }
+    normalize(Nil, -startTime, events.head, events).reverse
   }
 
   def breakdown(breakdownType: BreakdownType.Value, player: Actor, events: List[LogEvent]): Map[String, Breakdown] = {
