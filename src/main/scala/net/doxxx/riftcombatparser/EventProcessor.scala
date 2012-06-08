@@ -182,10 +182,12 @@ object EventProcessor {
           actor match {
             case Some(np: NonPlayer) => {
               debuglog("%d: Processing NPC death: %s", death.time, np.toString)
+              npcs += np
               deadNPCs += np
             }
             case Some(p: Player) => {
               debuglog("%d: Processing player death: %s", death.time, p.name)
+              pcs += p
               deadPCs += p
             }
             case Some(pp: PlayerPet) => {
