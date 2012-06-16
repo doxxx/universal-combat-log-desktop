@@ -165,8 +165,8 @@ object EventProcessor {
   }
 
   def splitFights(events: List[LogEvent]): List[Fight] = {
-    val fights = new mutable.ListBuffer[Fight]
-    val currentFight = new mutable.ListBuffer[LogEvent]
+    val fights = new mutable.ArrayBuffer[Fight]
+    val currentFight = new mutable.ArrayBuffer[LogEvent]
     val npcs = new mutable.HashSet[NonPlayer]
     val deadNPCs = new mutable.HashSet[NonPlayer]
     val pcs = new mutable.HashSet[Player]
