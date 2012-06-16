@@ -171,34 +171,32 @@ object EventProcessor {
     val deadNPCs = new mutable.HashSet[NonPlayer]
     val pcs = new mutable.HashSet[Player]
     val deadPCs = new mutable.HashSet[Player]
-    val pendingDeaths = new mutable.ListBuffer[ActorEvent]
+    val pendingDeaths = new mutable.Queue[ActorEvent]
 
     def processPendingDeaths(time: Long) {
-      for (death <- pendingDeaths) {
-        if (death.time < time) {
-          pendingDeaths -= death
-          currentFight += death
-          val actor = deadActor(death)
-          actor match {
-            case Some(np: NonPlayer) => {
-              debuglog("%d: Processing NPC death: %s", death.time, np.toString)
-              npcs += np
-              deadNPCs += np
-            }
-            case Some(p: Player) => {
-              debuglog("%d: Processing player death: %s", death.time, p.name)
-              pcs += p
-              deadPCs += p
-            }
-            case Some(pp: PlayerPet) => {
-              debuglog("%d: Processing player pet death: %s", death.time, pp.toString)
-            }
-            case Some(Nobody) => {
-              debuglog("Nobody died?!")
-            }
-            case None => {
-              debuglog("Death event which contains no dead actor?!")
-            }
+      while (!pendingDeaths.isEmpty && pendingDeaths.front.time < time) {
+        val death = pendingDeaths.dequeue()
+        currentFight += death
+        val actor = deadActor(death)
+        actor match {
+          case Some(np: NonPlayer) => {
+            debuglog("%d: Processing NPC death: %s", death.time, np.toString)
+            npcs += np
+            deadNPCs += np
+          }
+          case Some(p: Player) => {
+            debuglog("%d: Processing player death: %s", death.time, p.name)
+            pcs += p
+            deadPCs += p
+          }
+          case Some(pp: PlayerPet) => {
+            debuglog("%d: Processing player pet death: %s", death.time, pp.toString)
+          }
+          case Some(Nobody) => {
+            debuglog("Nobody died?!")
+          }
+          case None => {
+            debuglog("Death event which contains no dead actor?!")
           }
         }
       }
@@ -261,7 +259,7 @@ object EventProcessor {
             case Some(a) => {
               // if it was a death event, queue it, since they occur before the actual killing blow
               //debuglog("%d: Queuing actor death: %s", ae.time, a.toString)
-              pendingDeaths += ae
+              pendingDeaths.enqueue(ae)
             }
             case None => {
               // if it was a hostile action or a fight is in progress, add it to the current fight
