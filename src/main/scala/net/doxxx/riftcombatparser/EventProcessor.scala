@@ -124,7 +124,7 @@ object EventProcessor {
      !ae.spell.isEmpty)
   }
 
-  val ignoredHostileSpells = List("Sacrifice Life: Mana", "Critter Killer")
+  val ignoredHostileSpells = Set("Sacrifice Life: Mana", "Critter Killer")
 
   def isHostileAction(ae: ActorEvent): Boolean = {
     (EventType.HostileTypes.contains(ae.eventType) &&
