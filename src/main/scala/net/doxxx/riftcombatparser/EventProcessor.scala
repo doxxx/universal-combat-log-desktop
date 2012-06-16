@@ -204,18 +204,8 @@ object EventProcessor {
 
     def trackActor(a: Actor) {
       a match {
-        case np: NonPlayer => {
-          if (!npcs.contains(np)) {
-            //debuglog("%d: Adding active NPC: %s [%s]", ae.time, np.toString, ae.text)
-            npcs += np
-          }
-        }
-        case p: Player => {
-          if (!pcs.contains(p)) {
-            //debuglog("%d: Adding active PC: %s", ae.time, p.name)
-            pcs += p
-          }
-        }
+        case np: NonPlayer => npcs += np
+        case p: Player => pcs += p
         case _ => // do nothing
       }
     }
