@@ -140,30 +140,6 @@ object EventProcessor {
     }
   }
 
-  def extractNonPlayer(ae: ActorEvent): Option[NonPlayer] = {
-    if (ae.actor.isInstanceOf[NonPlayer]) {
-      Some(ae.actor.asInstanceOf[NonPlayer])
-    }
-    else if (ae.target.isInstanceOf[NonPlayer]) {
-      Some(ae.target.asInstanceOf[NonPlayer])
-    }
-    else {
-      None
-    }
-  }
-
-  def extractPlayer(ae: ActorEvent): Option[Player] = {
-    if (ae.actor.isInstanceOf[Player]) {
-      Some(ae.actor.asInstanceOf[Player])
-    }
-    else if (ae.target.isInstanceOf[Player]) {
-      Some(ae.target.asInstanceOf[Player])
-    }
-    else {
-      None
-    }
-  }
-
   def splitFights(events: List[LogEvent]): List[Fight] = {
     val fights = new mutable.ArrayBuffer[Fight]
     val currentFight = new mutable.ArrayBuffer[LogEvent]
