@@ -25,7 +25,7 @@ object InspectLog {
       log("%d events loaded.", events.length)
       while (true) {
         System.out.flush()
-        readLine()
+        readLine("Press enter to continue...")
         val fights = timeit("fight-split") {
           () => EventProcessor.splitFights(events)
         }
