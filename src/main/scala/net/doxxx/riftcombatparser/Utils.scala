@@ -6,7 +6,7 @@ import java.util
 
 object Utils {
   private val LoggingDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG)
-  private val DebugMode = true
+  private val DebugMode = Boolean.getBoolean("debug")
 
   private def formattedDate = {
     LoggingDateFormat.format(util.Calendar.getInstance.getTime)
