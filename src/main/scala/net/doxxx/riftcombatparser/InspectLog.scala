@@ -21,16 +21,16 @@ object InspectLog {
 
   def main(args: Array[String]) {
     for (arg <- args) {
-      val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(arg)))
-      log("%d events loaded.", events.length)
       while (true) {
-        System.out.flush()
-        readLine("Press enter to continue...")
+        val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(arg)))
+        log("%d events loaded.", events.length)
         val fights = timeit("fight-split") {
           () => EventProcessor.splitFights(events)
         }
         log("%d fights found.", fights.length)
         log(fights.map(_.duration).mkString(" "))
+        System.out.flush()
+        readLine("Press enter to continue...")
       }
     }
   }
