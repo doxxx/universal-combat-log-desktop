@@ -501,6 +501,30 @@ object EventProcessor {
     else
       summary filter { case (actor, sum) => actors.contains(actor.name) }
   }
+
+  def spellIndex(events: List[LogEvent]): Map[Long,String] = {
+    val result = new mutable.HashMap[Long,String]()
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          result.update(ae.spellId, ae.spell)
+        }
+      }
+    }
+    result.toMap
+  }
+
+  def actorsIndex(events: List[LogEvent]): Map[Long,Actor] = {
+    val result = new mutable.HashMap[Long,Actor]()
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          result.update(ae.actor.id.id, ae.actor)
+        }
+      }
+    }
+    result.toMap
+  }
 }
 
 case class Summary(start: Long = Long.MaxValue, end: Long = 0, damageIn: Int = 0, dpsIn: Int = 0,
