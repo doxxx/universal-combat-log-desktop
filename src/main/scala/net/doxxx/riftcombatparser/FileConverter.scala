@@ -49,16 +49,16 @@ object FileConverter {
     }
   }
 
-  def writeActorIndex(s: DataOutputStream, events: List[LogEvent]) {
-    s.writeBytes("ACT1")
-    val actorIndex = EventProcessor.actorsIndex(events)
-    s.writeInt(actorIndex.size)
-    for (id <- actorIndex.keys) {
-      val actor = actorIndex(id)
+  def writeEntityIndex(s: DataOutputStream, events: List[LogEvent]) {
+    s.writeBytes("ENT1")
+    val entityIndex = EventProcessor.entityIndex(events)
+    s.writeInt(entityIndex.size)
+    for (id <- entityIndex.keys) {
+      val entity = entityIndex(id)
       var kind: Char = 'X'
       var owner: Option[Actor] = None
-      var name = actor.name
-      actor match {
+      var name = entity.name
+      entity match {
         case p: Player => {
           kind = 'P'
         }
@@ -74,9 +74,9 @@ object FileConverter {
       }
       s.writeLong(id)
       s.writeByte(kind)
-      s.writeByte(actor.id.rel)
+      s.writeByte(entity.id.rel)
       owner match {
-        case Some(a) => s.writeLong(a.id.id)
+        case Some(o) => s.writeLong(o.id.id)
         case None => s.writeLong(0)
       }
       s.writeUTF(name)
@@ -87,7 +87,7 @@ object FileConverter {
     val s: DataOutputStream = new DataOutputStream(new FileOutputStream(file))
     s.writeBytes("UCL1")
     val allEvents = fights.map(_.events).flatten
-    writeActorIndex(s, allEvents)
+    writeEntityIndex(s, allEvents)
     writeSpellIndex(s, allEvents)
     writeFights(s, fights)
     s.close()

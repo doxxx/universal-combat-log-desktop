@@ -514,7 +514,7 @@ object EventProcessor {
     result.toMap
   }
 
-  def actorsIndex(events: List[LogEvent]): Map[Long,Actor] = {
+  def entityIndex(events: List[LogEvent]): Map[Long,Actor] = {
     val result = new mutable.HashMap[Long,Actor]()
     for (event <- events) {
       event match {
