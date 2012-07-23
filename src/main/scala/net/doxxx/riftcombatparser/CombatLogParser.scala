@@ -171,7 +171,7 @@ object CombatLogParser {
 
   private def parseTime(s: String): Long = {
     val parts = s.split(':')
-    parts(0).toInt * 60 * 60 + parts(1).toInt * 60 + parts(2).toInt
+    parts(0).toLong * 60 * 60 + parts(1).toLong * 60 + parts(2).toLong
   }
 
   private def parseCombatToggle(toggle: String): Boolean = toggle match {
