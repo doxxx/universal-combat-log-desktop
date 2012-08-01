@@ -112,6 +112,7 @@ object FileConverter {
       Utils.log("Calculated startTime: %d", startTime)
       Utils.log("Writing %s", outFile.toString)
       writeUniversalCombatLog(outFile, fights, startTime)
+      Utils.log("Wrote %d fights", fights.size)
     }
   }
 }
