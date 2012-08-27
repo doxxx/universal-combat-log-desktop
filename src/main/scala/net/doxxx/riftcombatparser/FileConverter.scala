@@ -98,7 +98,9 @@ object FileConverter {
       Utils.log("Parsing %s", arg)
       val file: File = new File((arg))
       val events: List[LogEvent] = EventProcessor.normalizeTimes(CombatLogParser.parse(file))
-      val fights: List[Fight] = EventProcessor.splitFights(events).filter(_.duration>5)
+      val fights: List[Fight] = EventProcessor.splitFights(events).filter { f: Fight =>
+        f.duration > 5 && !EventProcessor.sumNonPlayerDamage(f.events).isEmpty
+      }
       val outFile = {
         val i = file.getName.lastIndexOf('.')
         if (i < 0) {
