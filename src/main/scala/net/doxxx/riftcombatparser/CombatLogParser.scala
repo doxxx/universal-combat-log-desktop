@@ -210,19 +210,8 @@ object CombatLogParser {
     val r = parts(1).charAt(2)
 
     // 227009568756889439
-    // 9223372041715776949 (when T=N, '9' is prepended to the ID)
-    val id = if (t == 'N') {
-      val (first, rest) = parts(2).splitAt(1)
-      if (first != "9") {
-        throw new RuntimeException("NPC ID does not start with 9: " + s)
-      }
-      else {
-        rest.toLong
-      }
-    }
-    else {
-      parts(2).toLong
-    }
+    // 9223372041715776949 (when T=N, most significant bit is set)
+    val id = BigInt(parts(2)).toLong
 
     t match {
       case 'P' => PC(id, r)
