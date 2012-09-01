@@ -99,7 +99,7 @@ object FileConverter {
       val file: File = new File((arg))
       val events: List[LogEvent] = EventProcessor.normalizeTimes(CombatLogParser.parse(file))
       val fights: List[Fight] = EventProcessor.splitFights(events).filter { f: Fight =>
-        f.duration > 5 && !EventProcessor.sumNonPlayerDamage(f.events).isEmpty
+        f.duration > 5000 && !EventProcessor.sumNonPlayerDamage(f.events).isEmpty
       }
       val outFile = {
         val i = file.getName.lastIndexOf('.')
@@ -110,7 +110,7 @@ object FileConverter {
           new File(file.getParent, file.getName.substring(0, i) + ".ucl")
         }
       }
-      val startTime = file.lastModified() - events.last.time * 1000
+      val startTime = file.lastModified() - events.last.time
       Utils.log("Calculated startTime: %d", startTime)
       Utils.log("Writing %s", outFile.toString)
       writeUniversalCombatLog(outFile, fights, startTime)

@@ -28,7 +28,7 @@ object InspectLog {
           EventProcessor.splitFights(events)
         }
         log("%d fights found.", fights.length)
-        log(fights.map(_.duration).mkString(" "))
+        log(fights.map(_.duration / 1000).mkString(" "))
         System.out.flush()
         readLine("Press enter to continue...")
       }

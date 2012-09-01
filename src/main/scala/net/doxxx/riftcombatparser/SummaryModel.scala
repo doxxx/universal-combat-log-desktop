@@ -61,7 +61,7 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
       case HPSOut => data(actor).hpsOut.asInstanceOf[AnyRef]
       case Overhealing => data(actor).overhealing.asInstanceOf[AnyRef]
       case Deaths => data(actor).deaths.asInstanceOf[AnyRef]
-      case CombatTime => data(actor).combatTime.asInstanceOf[AnyRef]
+      case CombatTime => (data(actor).combatTime / 1000).asInstanceOf[AnyRef]
       case _ => null
     }
   }

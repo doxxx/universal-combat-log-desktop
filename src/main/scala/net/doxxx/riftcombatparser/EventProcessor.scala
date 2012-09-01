@@ -220,7 +220,7 @@ object EventProcessor {
             finishFight(f)
           }
           // if more than 5 seconds have passed since the last hostile fight event, fight is finished
-          else if (!currentFight.isEmpty && (ae.time - currentFight.last.time) >= 5) {
+          else if (!currentFight.isEmpty && (ae.time - currentFight.last.time) >= 5000) {
             val f = SingleFight(currentFight.toList)
             debuglog("%d: 5 second timeout, creating fight: %s", ae.time, f.toString)
             finishFight(f)
@@ -262,7 +262,7 @@ object EventProcessor {
     fights.toList
   }
 
-  private val dayTime = 24*60*60
+  private val dayTime = 24*60*60*1000
   def normalizeTimes(events: List[LogEvent]): List[LogEvent] = {
     if (events.isEmpty) return events
     val startTime = events.head.time
@@ -429,8 +429,8 @@ object EventProcessor {
       case Died => death.actor
       case Slain => death.target
     }
-    val eventsBeforeDeath = events.takeWhile(_.time <= death.time+1)
-    val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10)
+    val eventsBeforeDeath = events.takeWhile(_.time <= death.time+1000)
+    val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10000)
     withinTimeframe.filter {
       case ae: ActorEvent => {
         ae == death ||
@@ -556,7 +556,7 @@ case class Summary(start: Long = Long.MaxValue, end: Long = 0, damageIn: Int = 0
     }
   }
   def calculatePerSecond(fightDuration: Int) = {
-    val d = if (EventProcessor.useActorCombatTime) combatTime else fightDuration
+    val d = (if (EventProcessor.useActorCombatTime) combatTime else fightDuration) / 1000
     if (d > 0)
       copy(dpsIn = damageIn / d, dpsOut = damageOut / d,
         hpsIn = healingIn / d, hpsOut = healingOut / d)
@@ -571,7 +571,7 @@ abstract class Fight {
   def startTime:Long
   def endTime:Long
   def duration:Int
-  override def toString = "%s (%ds)".format(title.getOrElse("@%d".format(startTime)), duration)
+  override def toString = "%s (%ds)".format(title.getOrElse("@%d".format(startTime)), duration/1000)
 }
 case class EmptyFight(time: Long = 0) extends Fight {
   val events = Nil
