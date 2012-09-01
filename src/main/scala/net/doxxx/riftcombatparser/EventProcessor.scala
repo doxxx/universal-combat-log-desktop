@@ -29,7 +29,7 @@ object EventProcessor {
     val results = new mutable.HashMap[Actor, Summary] {
       override def default(key: Actor) = Summary()
     }
-    timeit("summary") { () =>
+    timeit("summary") {
       for (e <- fight.events) e match {
         case ae: ActorEvent => {
           val actor = mergePetIntoOwner(ae.actor)

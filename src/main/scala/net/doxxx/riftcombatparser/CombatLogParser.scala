@@ -50,7 +50,7 @@ object CombatLogParser {
 
   def parse(source: Source): List[LogEvent] = {
     try {
-      timeit("logparse") { () =>
+      timeit("logparse") {
         parse(source.getLines().toList)
       }
     }
@@ -71,7 +71,7 @@ object CombatLogParser {
     }
 
     val data:Array[Byte] = Array.ofDim((raf.length - raf.getFilePointer).toInt)
-    timeit("readFully") { () =>
+    timeit("readFully") {
       log("Reading %d bytes", data.length)
       raf.readFully(data)
     }
@@ -86,7 +86,7 @@ object CombatLogParser {
     var lines = new mutable.ListBuffer[String]
     var done = false
 
-    timeit("readLines") { () =>
+    timeit("readLines") {
       while (!done) {
         val line = reader.readLine()
         if (line == null) {
@@ -102,7 +102,7 @@ object CombatLogParser {
 
     threads = Set.empty
 
-    val newEvents = timeit("parseLines") { () =>
+    val newEvents = timeit("parseLines") {
       parse(lines.toList)
     }
 

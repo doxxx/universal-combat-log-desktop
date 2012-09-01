@@ -25,7 +25,7 @@ object InspectLog {
         val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(arg)))
         log("%d events loaded.", events.length)
         val fights = timeit("fight-split") {
-          () => EventProcessor.splitFights(events)
+          EventProcessor.splitFights(events)
         }
         log("%d fights found.", fights.length)
         log(fights.map(_.duration).mkString(" "))

@@ -21,9 +21,9 @@ object Utils {
     if (DebugMode) log(msg, args: _*)
   }
 
-  def timeit[U](msg: String)(f: () => U): U = {
+  def timeit[U](msg: String)(f: => U): U = {
     val start = System.currentTimeMillis()
-    val r = f()
+    val r = f
     val dur = System.currentTimeMillis() - start
     if (Boolean.getBoolean("timeit")) {
       log("%s: %dms".format(msg, dur))
