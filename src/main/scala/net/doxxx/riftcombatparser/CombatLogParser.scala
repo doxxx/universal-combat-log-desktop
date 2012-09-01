@@ -171,7 +171,7 @@ object CombatLogParser {
 
   private def parseTime(s: String): Long = {
     val parts = s.split(':')
-    parts(0).toInt * 60 * 60 + parts(1).toInt * 60 + parts(2).toInt
+    parts(0).toLong * 60 * 60 + parts(1).toLong * 60 + parts(2).toLong
   }
 
   private def parseCombatToggle(toggle: String): Boolean = toggle match {
@@ -210,19 +210,8 @@ object CombatLogParser {
     val r = parts(1).charAt(2)
 
     // 227009568756889439
-    // 9223372041715776949 (when T=N, '9' is prepended to the ID)
-    val id = if (t == 'N') {
-      val (first, rest) = parts(2).splitAt(1)
-      if (first != "9") {
-        throw new RuntimeException("NPC ID does not start with 9: " + s)
-      }
-      else {
-        rest.toLong
-      }
-    }
-    else {
-      parts(2).toLong
-    }
+    // 9223372041715776949 (when T=N, most significant bit is set)
+    val id = BigInt(parts(2)).toLong
 
     t match {
       case 'P' => PC(id, r)

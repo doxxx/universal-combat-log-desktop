@@ -90,7 +90,19 @@ object EventProcessor {
   }
 
   def primaryNPC(events: List[LogEvent]): Option[String] = {
-    val nonPlayerDamage = new mutable.HashMap[NonPlayer,Int]
+    val nonPlayerDamage = sumNonPlayerDamage(events)
+    if (nonPlayerDamage.isEmpty) return None
+    implicit val ordering = new Ordering[(NonPlayer,Int)] {
+      def compare(x: (NonPlayer, Int), y: (NonPlayer, Int)) = {
+        x._2 - y._2
+      }
+    }
+    Some(nonPlayerDamage.max(ordering)._1.name)
+  }
+
+
+  def sumNonPlayerDamage(events: scala.List[LogEvent]): Map[NonPlayer, Int] = {
+    val nonPlayerDamage = new mutable.HashMap[NonPlayer, Int]
     for (event <- events) {
       event match {
         case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
@@ -104,13 +116,7 @@ object EventProcessor {
         case _ => // nothing
       }
     }
-    if (nonPlayerDamage.isEmpty) return None
-    implicit val ordering = new Ordering[(NonPlayer,Int)] {
-      def compare(x: (NonPlayer, Int), y: (NonPlayer, Int)) = {
-        x._2 - y._2
-      }
-    }
-    Some(nonPlayerDamage.max(ordering)._1.name)
+    return nonPlayerDamage.toMap
   }
 
   def isValidAction(ae: ActorEvent): Boolean = {
@@ -500,6 +506,30 @@ object EventProcessor {
       summary
     else
       summary filter { case (actor, sum) => actors.contains(actor.name) }
+  }
+
+  def spellIndex(events: List[LogEvent]): Map[Long,String] = {
+    val result = new mutable.HashMap[Long,String]()
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          result.update(ae.spellId, ae.spell)
+        }
+      }
+    }
+    result.toMap
+  }
+
+  def entityIndex(events: List[LogEvent]): Map[Long,Actor] = {
+    val result = new mutable.HashMap[Long,Actor]()
+    for (event <- events) {
+      event match {
+        case ae: ActorEvent => {
+          result.update(ae.actor.id.id, ae.actor)
+        }
+      }
+    }
+    result.toMap
   }
 }
 
