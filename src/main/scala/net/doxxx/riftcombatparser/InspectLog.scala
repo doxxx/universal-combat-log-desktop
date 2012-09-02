@@ -1,8 +1,8 @@
 package net.doxxx.riftcombatparser
 
-import io.Source
 import collection.immutable.TreeMap
 import net.doxxx.riftcombatparser.Utils._
+import java.io.File
 
 object InspectLog {
 
@@ -22,7 +22,7 @@ object InspectLog {
   def main(args: Array[String]) {
     for (arg <- args) {
       while (true) {
-        val events = EventProcessor.normalizeTimes(CombatLogParser.parse(Source.fromFile(arg)))
+        val events = EventProcessor.normalizeTimes(CombatLogParser.parse(new File(arg)))
         log("%d events loaded.", events.length)
         val fights = timeit("fight-split") {
           EventProcessor.splitFights(events)
