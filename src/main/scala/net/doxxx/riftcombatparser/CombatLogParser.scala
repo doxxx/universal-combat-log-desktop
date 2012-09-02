@@ -7,7 +7,7 @@ import java.lang.{Boolean, RuntimeException}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import collection.mutable
 
-object CombatLogParser {
+class CombatLogParser {
   import Utils._
 
   private val parallelize = !Boolean.getBoolean("nopar")
@@ -18,10 +18,6 @@ object CombatLogParser {
               "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
               "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
-  private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
-  private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
-  private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
-  private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
   private val actorsLock = new ReentrantReadWriteLock()
   private val actors = new mutable.HashMap[ActorID, Actor] {
@@ -117,34 +113,6 @@ object CombatLogParser {
     case (id: ActorID, playerPet: PlayerPet) => true
     case _ => false
   }.values.toSet
-
-  def extractOverheal(text: String): Int = {
-    OverhealRE.findFirstMatchIn(text) match {
-      case Some(m) => m.group("amount").toInt
-      case None => 0
-    }
-  }
-
-  def extractOverkill(text: String): Int = {
-    OverkillRE.findFirstMatchIn(text) match {
-      case Some(m) => m.group("amount").toInt
-      case None => 0
-    }
-  }
-
-  def extractAbsorbed(text: String): Int = {
-    AbsorbedRE.findFirstMatchIn(text) match {
-      case Some(m) => m.group("amount").toInt
-      case None => 0
-    }
-  }
-
-  def extractDamageType(text: String): String = {
-    DamageTypeRE.findFirstMatchIn(text) match {
-      case Some(m) => m.group("type")
-      case None => ""
-    }
-  }
 
   private def parseLine(line: String): Option[LogEvent] = {
     threads += Thread.currentThread().getName
@@ -272,4 +240,40 @@ object CombatLogParser {
      case a => throw new RuntimeException("Actor %s is not player".format(a))
    }
  }
+}
+
+object CombatLogParser {
+  private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
+  private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
+  private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
+  private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
+
+  def extractOverheal(text: String): Int = {
+    OverhealRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("amount").toInt
+      case None => 0
+    }
+  }
+
+  def extractOverkill(text: String): Int = {
+    OverkillRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("amount").toInt
+      case None => 0
+    }
+  }
+
+  def extractAbsorbed(text: String): Int = {
+    AbsorbedRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("amount").toInt
+      case None => 0
+    }
+  }
+
+  def extractDamageType(text: String): String = {
+    DamageTypeRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("type")
+      case None => ""
+    }
+  }
+
 }

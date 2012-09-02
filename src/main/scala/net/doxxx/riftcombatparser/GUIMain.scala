@@ -34,6 +34,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   var loadingLogFile = false
 
+  var parser: CombatLogParser = new CombatLogParser
+
   def chooseCombatLogFile(default: Option[File]): Option[File] = {
     val chooser = new JFileChooser
     chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"))
@@ -76,11 +78,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         actor {
           log("Loading events from %s", f.toString)
           try {
-            val events = EventProcessor.normalizeTimes(CombatLogParser.parse(f))
+            val events = EventProcessor.normalizeTimes(parser.parse(f))
             top.progressBar.label = "Detecting fights..."
             val fights = EventProcessor.splitFights(events).filter(_.duration > 5000)
             logFileLastModified = f.lastModified()
-            val playersAndPets = CombatLogParser.playersAndPets
+            val playersAndPets = parser.playersAndPets
             Swing.onEDT {
               logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
             }
@@ -206,7 +208,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case ButtonClicked(MI_ChooseCombatLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         logFileLastModified = 0L
-        CombatLogParser.reset()
+        parser.reset()
         createFileLoaderActor()
       }
       case ButtonClicked(MI_NewSession) => {
