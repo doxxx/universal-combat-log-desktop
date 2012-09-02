@@ -249,10 +249,10 @@ class WoWParser {
     val objectType = flags & 0xFC00
     val controller = flags & 0x300
     objectType match {
-      case 0x400 => Some(Player(CombatLogParser.PC(id, rel), name))
+      case 0x400 => Some(Player(PC(id, rel), name))
       // TODO: we don't have a way to associate pets with owners yet
-      case 0x1000 => Some(NonPlayer(CombatLogParser.NPC(id, rel), name)) // pet
-      case 0x800 => Some(NonPlayer(CombatLogParser.NPC(id, rel), name))
+      case 0x1000 => Some(NonPlayer(NPC(id, rel), name)) // pet
+      case 0x800 => Some(NonPlayer(NPC(id, rel), name))
       case _ => None
     }
   }

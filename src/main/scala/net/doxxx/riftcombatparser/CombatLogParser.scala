@@ -23,17 +23,6 @@ object CombatLogParser {
   private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
   private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
-  sealed abstract class ActorID {
-    def id: Long
-    def rel: Char
-  }
-  case object NullActorID extends ActorID {
-    val id = 0L
-    val rel = 'X'
-  }
-  case class NPC(id: Long, rel: Char) extends ActorID
-  case class PC(id: Long, rel: Char) extends ActorID
-
   private val actorsLock = new ReentrantReadWriteLock()
   private val actors = new mutable.HashMap[ActorID, Actor] {
     override def default(key: ActorID) = Nobody
