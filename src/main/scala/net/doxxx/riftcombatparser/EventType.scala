@@ -1,6 +1,7 @@
 package net.doxxx.riftcombatparser
 
 object EventType extends Enumeration {
+  val Unrecognized = Value(0)
   val BeginCasting = Value(1)
   val Interrupted = Value(2)
   val DirectDamage = Value(3)
