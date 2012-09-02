@@ -2,7 +2,6 @@ package net.doxxx.riftcombatparser
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
-import net.doxxx.riftcombatparser.CombatLogParser.{NPC, PC}
 
 class EventProcessorSpec extends WordSpec with ShouldMatchers {
   import EventType._
