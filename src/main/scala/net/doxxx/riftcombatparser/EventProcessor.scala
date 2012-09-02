@@ -42,7 +42,7 @@ object EventProcessor {
           else if (HealTypes.contains(ae.eventType)) {
             results(actor) = results(actor).addHealingOut(ae.amount).updateTimes(ae.time)
             results(target) = results(target).addHealingIn(ae.amount)
-            val overheal = CombatLogParser.extractOverheal(ae.text)
+            val overheal = RiftParser.extractOverheal(ae.text)
             results(target) = results(target).addOverhealing(overheal)
             if (includeOverhealing) {
               results(actor) = results(actor).addHealingOut(overheal)
@@ -350,13 +350,13 @@ object EventProcessor {
             results(key) = results(key).addAmount(ae.amount)
             results(key) = results(key).addHit()
           }
-          results(key) = results(key).addDamageType(CombatLogParser.extractDamageType(ae.text))
+          results(key) = results(key).addDamageType(RiftParser.extractDamageType(ae.text))
           totalDamage += ae.amount
         }
         else if (HealTypes.contains(ae.eventType)) {
           results(key) = results(key).addAmount(ae.amount)
           if (includeOverhealing) {
-            val overheal = CombatLogParser.extractOverheal(ae.text)
+            val overheal = RiftParser.extractOverheal(ae.text)
             results(key) = results(key).addAmount(overheal)
           }
           if (ae.eventType == CritHeal) {
@@ -458,7 +458,7 @@ object EventProcessor {
         case ae: ActorEvent => {
           if (ae.target == actor) {
             if (EventType.DamageTypes.contains(ae.eventType)) {
-              val overkill = CombatLogParser.extractOverkill(ae.text)
+              val overkill = RiftParser.extractOverkill(ae.text)
               health += ae.amount - overkill
             }
             else if (EventType.HealTypes.contains(ae.eventType)) {

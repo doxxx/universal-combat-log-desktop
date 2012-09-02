@@ -7,7 +7,7 @@ import java.lang.{Boolean, RuntimeException}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import collection.mutable
 
-class CombatLogParser {
+class RiftParser {
   import Utils._
 
   private val parallelize = !Boolean.getBoolean("nopar")
@@ -242,7 +242,7 @@ class CombatLogParser {
  }
 }
 
-object CombatLogParser {
+object RiftParser {
   private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
   private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
   private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")

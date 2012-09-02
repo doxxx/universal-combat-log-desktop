@@ -97,7 +97,7 @@ object FileConverter {
     for (arg <- args) {
       Utils.log("Parsing %s", arg)
       val file = new File((arg))
-      val parser = new CombatLogParser
+      val parser = new RiftParser
       val events = EventProcessor.normalizeTimes(parser.parse(file))
       val fights = EventProcessor.splitFights(events).filter { f: Fight =>
         f.duration > 5000 && !EventProcessor.sumNonPlayerDamage(f.events).isEmpty

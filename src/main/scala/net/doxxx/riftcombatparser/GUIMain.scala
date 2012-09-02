@@ -34,7 +34,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   var loadingLogFile = false
 
-  var parser: CombatLogParser = new CombatLogParser
+  var parser: RiftParser = new RiftParser
 
   def chooseCombatLogFile(default: Option[File]): Option[File] = {
     val chooser = new JFileChooser
