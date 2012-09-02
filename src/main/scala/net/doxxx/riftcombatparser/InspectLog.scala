@@ -22,7 +22,7 @@ object InspectLog {
   def main(args: Array[String]) {
     for (arg <- args) {
       while (true) {
-        val events = EventProcessor.normalizeTimes(new RiftParser().parse(new File(arg)))
+        val events = new WoWParser().parse(new File(arg))
         log("%d events loaded.", events.length)
         val fights = timeit("fight-split") {
           EventProcessor.splitFights(events)

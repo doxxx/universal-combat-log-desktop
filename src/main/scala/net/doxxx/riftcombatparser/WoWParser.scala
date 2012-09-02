@@ -6,13 +6,13 @@ import util.matching.Regex
 import java.util.{Date, Calendar}
 import scala.Some
 
-class WoWParser {
+final class WoWParser extends LogParser {
   import Utils._
 
   private implicit val codec = Codec.UTF8
   private val parallelize = !java.lang.Boolean.getBoolean("nopar")
 
-  def parse(f: File): List[LogEvent] = parseLines(Resource.fromFile(f).lines())
+  override def parse(f: File): List[LogEvent] = parseLines(Resource.fromFile(f).lines())
 
   def parseLines(lines: LongTraversable[String]): List[LogEvent] = {
     timeit("parseLines") {
@@ -249,10 +249,10 @@ class WoWParser {
     val objectType = flags & 0xFC00
     val controller = flags & 0x300
     objectType match {
-      case 0x400 => Some(Player(PC(id, rel), name))
+      case 0x400 => Some(getActor(PC(id, rel), NullActorID, Some(name)))
       // TODO: we don't have a way to associate pets with owners yet
-      case 0x1000 => Some(NonPlayer(NPC(id, rel), name)) // pet
-      case 0x800 => Some(NonPlayer(NPC(id, rel), name))
+      case 0x1000 => Some(getActor(NPC(id, rel), NullActorID, Some(name))) // pet
+      case 0x800 => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
       case _ => None
     }
   }

@@ -1,13 +1,11 @@
 package net.doxxx.riftcombatparser
 
-import io.Source
 import util.matching.Regex
 import java.io._
 import java.lang.{Boolean, RuntimeException}
-import java.util.concurrent.locks.ReentrantReadWriteLock
 import collection.mutable
 
-class RiftParser {
+final class RiftParser extends LogParser {
   import Utils._
 
   private val parallelize = !Boolean.getBoolean("nopar")
@@ -19,32 +17,17 @@ class RiftParser {
               "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
 
-  private val actorsLock = new ReentrantReadWriteLock()
-  private val actors = new mutable.HashMap[ActorID, Actor] {
-    override def default(key: ActorID) = Nobody
-  }
   private var lastFilePos: Long = 0
   private var lastEvents: List[LogEvent] = Nil
   private var threads: Set[String] = Set.empty
 
-  def reset() {
-    actors.clear()
+  override def reset() {
+    super.reset()
     lastFilePos = 0
     lastEvents = Nil
   }
 
-  def parse(source: Source): List[LogEvent] = {
-    try {
-      timeit("logparse") {
-        parse(source.getLines().toList)
-      }
-    }
-    finally {
-      source.close()
-    }
-  }
-
-  def parse(file: File): List[LogEvent] = {
+  override def parse(file: File): List[LogEvent] = {
     val raf = new RandomAccessFile(file, "r")
     if (raf.length < lastFilePos) {
       log("File size smaller than last position; resetting")
@@ -88,7 +71,7 @@ class RiftParser {
     threads = Set.empty
 
     val newEvents = timeit("parseLines") {
-      parse(lines.toList)
+      parseLines(lines.toList)
     }
 
     log("Parsed %d events using %d threads", newEvents.length, threads.size)
@@ -98,21 +81,17 @@ class RiftParser {
     lastEvents
   }
 
-  def parse(lines: List[String]): List[LogEvent] = {
-    if (parallelize) {
-      log("Parsing in parallel")
-      lines.par.map(parseLine).toList.flatten
-    }
-    else {
-      lines.map(parseLine).toList.flatten
+  private def parseLines(lines: List[String]): List[LogEvent] = {
+    timeit("parseLines") {
+      if (parallelize) {
+        log("Parsing in parallel")
+        lines.par.map(parseLine).toList.flatten
+      }
+      else {
+        lines.map(parseLine).toList.flatten
+      }
     }
   }
-
-  def playersAndPets: Set[Actor] = actors.filter {
-    case (id: ActorID, player: Player) => true
-    case (id: ActorID, playerPet: PlayerPet) => true
-    case _ => false
-  }.values.toSet
 
   private def parseLine(line: String): Option[LogEvent] = {
     threads += Thread.currentThread().getName
@@ -177,69 +156,6 @@ class RiftParser {
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }
   }
-
-  private def getActor(actorID: ActorID, ownerID: ActorID, actorName: Option[String]): Actor = {
-    actorsLock.readLock().lock()
-    try {
-      actors.get(actorID) match {
-        case Some(actor) => {
-          actorName match {
-            case Some(name) => {
-              actor.name = name
-            }
-            case None => // nothing
-          }
-          ownerID match {
-            case NullActorID => // nothing
-            case _ => {
-              val owner = actors(ownerID)
-              actor match {
-                case p: PlayerPet =>
-                  if (p.owner.id != owner.id)
-                    println("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
-                case _ => println("%s cannot be owned by %s".format(actor, owner))
-              }
-            }
-          }
-          actor
-        }
-        case None => {
-          actorsLock.readLock().unlock()
-          actorsLock.writeLock().lock()
-          try {
-            actorID match {
-              case pc: PC => {
-                actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
-              }
-              case npc: NPC => {
-                val actor: Actor = ownerID match {
-                  case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
-                  case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
-                }
-                actors += actorID -> actor
-              }
-              case _ => // nothing
-            }
-          }
-          finally {
-            actorsLock.readLock().lock()
-            actorsLock.writeLock().unlock()
-          }
-          actors(actorID)
-        }
-      }
-    }
-    finally {
-      actorsLock.readLock().unlock()
-    }
-  }
-
-  private def getPlayer(id: ActorID): Player = {
-   getActor(id, NullActorID, None) match {
-     case p: Player => p
-     case a => throw new RuntimeException("Actor %s is not player".format(a))
-   }
- }
 }
 
 object RiftParser {
