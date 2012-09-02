@@ -34,11 +34,11 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   var loadingLogFile = false
 
-  var parser: RiftParser = new RiftParser
+  var parser: Option[LogParser] = None
 
   def chooseCombatLogFile(default: Option[File]): Option[File] = {
     val chooser = new JFileChooser
-    chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"))
+    chooser.setFileFilter(new FileNameExtensionFilter("Log Files", "txt"))
     chooser.setCurrentDirectory(
       default match {
         case Some(f) => f.getParentFile
@@ -75,27 +75,38 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           top.progressBar.label = "Loading combat log..."
         }
 
-        actor {
-          log("Loading events from %s", f.toString)
-          try {
-            val events = EventProcessor.normalizeTimes(parser.parse(f))
-            top.progressBar.label = "Detecting fights..."
-            val fights = EventProcessor.splitFights(events).filter(_.duration > 5000)
-            logFileLastModified = f.lastModified()
-            val playersAndPets = parser.playersAndPets
-            Swing.onEDT {
-              logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
+        parser match {
+          case Some(p) => {
+            actor {
+              log("Loading events from %s", f.toString)
+              try {
+                val events = EventProcessor.normalizeTimes(p.parse(f))
+                top.progressBar.label = "Detecting fights..."
+                val fights = EventProcessor.splitFights(events).filter(_.duration > 5000)
+                logFileLastModified = f.lastModified()
+                val playersAndPets = p.playersAndPets
+                Swing.onEDT {
+                  logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
+                }
+              }
+              catch {
+                case e: IOException => log("Couldn't load combat log file: " + e.toString)
+              }
+
+              Swing.onEDT {
+                top.progressBar.visible = false
+              }
+
+              loadingLogFile = false
             }
           }
-          catch {
-            case e: IOException => log("Couldn't load combat log file: " + e.toString)
-          }
+          case None => {
+            Swing.onEDT {
+              top.progressBar.visible = false
+            }
 
-          Swing.onEDT {
-            top.progressBar.visible = false
+            loadingLogFile = false
           }
-
-          loadingLogFile = false
         }
       }
       case None =>
@@ -156,7 +167,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       centerOnScreen()
     }
 
-    val MI_ChooseCombatLogFile = new MenuItem("Choose Combat Log File")
+    val MI_ChooseRiftLogFile = new MenuItem("Choose Rift Log File")
+    val MI_ChooseWoWLogFile = new MenuItem("Choose WoW Log File")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
@@ -168,7 +180,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     menuBar = new MenuBar {
       contents += new Menu("File") {
-        contents += MI_ChooseCombatLogFile
+        contents += MI_ChooseRiftLogFile
+        contents += MI_ChooseWoWLogFile
         contents += MI_NewSession
       }
       contents += new Menu("Options") {
@@ -178,7 +191,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
     }
 
-    listenTo(MI_ChooseCombatLogFile)
+    listenTo(MI_ChooseRiftLogFile)
+    listenTo(MI_ChooseWoWLogFile)
     listenTo(MI_NewSession)
     listenTo(MI_IncludeOverhealing)
     listenTo(MI_UseActorCombatTime)
@@ -205,10 +219,34 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         prefs.putInt("mainH", bounds.height)
         summaryPanels.saveDialogBounds()
       }
-      case ButtonClicked(MI_ChooseCombatLogFile) => {
+      case ButtonClicked(MI_ChooseRiftLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         logFileLastModified = 0L
-        parser.reset()
+
+        parser match {
+          case Some(p: RiftParser) => {
+            p.reset()
+          }
+          case _ => {
+            parser = Some(new RiftParser)
+          }
+        }
+
+        createFileLoaderActor()
+      }
+      case ButtonClicked(MI_ChooseWoWLogFile) => {
+        logFile = chooseCombatLogFile(logFile)
+        logFileLastModified = 0L
+
+        parser match {
+          case Some(p: WoWParser) => {
+            p.reset()
+          }
+          case _ => {
+            parser = Some(new WoWParser)
+          }
+        }
+
         createFileLoaderActor()
       }
       case ButtonClicked(MI_NewSession) => {
