@@ -246,25 +246,42 @@ final class WoWParser extends LogParser {
 
   private def makeActor(id: Long, name: String, flags: Long): Option[Actor] = {
     val rel = entityRelationship(flags)
-    val objectType = flags & 0xFC00
-    val controller = flags & 0x300
-    objectType match {
-      case 0x400 => Some(getActor(PC(id, rel), NullActorID, Some(name)))
+    objectType(flags) match {
+      case TYPE_PLAYER => Some(getActor(PC(id, rel), NullActorID, Some(name)))
       // TODO: we don't have a way to associate pets with owners yet
-      case 0x1000 => Some(getActor(NPC(id, rel), NullActorID, Some(name))) // pet
-      case 0x800 => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
+      case TYPE_PET => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
+      case TYPE_NPC => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
       case _ => None
     }
   }
 
   private def entityRelationship(flags: Long): Char = {
-    val flag = flags & 0xF
-    flag match {
-      case 8 => 'O'
-      case 4 => 'R'
-      case 2 => 'P'
-      case 1 => 'C'
-      case 0 => 'X'
+    affiliation(flags) match {
+      case AFFILIATION_OUTSIDER => 'O'
+      case AFFILIATION_RAID => 'R'
+      case AFFILIATION_PARTY => 'P'
+      case AFFILIATION_MINE => 'C'
+      case _ => 'X'
     }
   }
+
+  val TYPE_PLAYER = 0x400
+  val TYPE_NPC = 0x800
+  val TYPE_PET = 0x1000
+  val TYPE_GUARDIAN = 0x2000
+  val TYPE_OBJECT = 0x4000
+
+  private def objectType(flags: Long): Long = flags & 0xFC00
+
+  val CONTROLLER_PLAYER = 0x100
+  val CONTROLLER_NPC = 0x200
+
+  private def controller(flags: Long): Long = flags & 0x300
+
+  val AFFILIATION_MINE = 0x1
+  val AFFILIATION_PARTY = 0x2
+  val AFFILIATION_RAID = 0x4
+  val AFFILIATION_OUTSIDER = 0x8
+
+  private def affiliation(flags: Long): Long = flags & 0xF
 }
