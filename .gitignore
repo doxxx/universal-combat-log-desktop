@@ -2,5 +2,6 @@
 .idea_modules/
 target/
 project/project/
+project/boot/
 out/
 *.iml
