@@ -1,6 +1,6 @@
-# Rift Combat Parser
+# Universal Combat Log
 
-A GUI application for parsing and viewing the combat logs produced by Rift's `/combatlog` command.
+A GUI application for parsing and viewing the combat logs produced by various MMORPGs including Rift and World of Warcraft.
 
 ## Compiling
 

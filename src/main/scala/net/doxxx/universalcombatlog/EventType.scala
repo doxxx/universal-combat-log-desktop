@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 object EventType extends Enumeration {
   val Unrecognized = Value(0)

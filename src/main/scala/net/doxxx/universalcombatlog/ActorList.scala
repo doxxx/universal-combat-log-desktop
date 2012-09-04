@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import swing._
 import event._

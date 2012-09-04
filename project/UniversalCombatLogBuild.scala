@@ -1,15 +1,15 @@
 import sbt._
 import Keys._
 
-object RiftCombatParserBuild extends Build {
-  lazy val guiMainClass = Some("net.doxxx.riftcombatparser.GUIMain")
+object UniversalCombatLogBuild extends Build {
+  lazy val guiMainClass = Some("net.doxxx.universalcombatlog.GUIMain")
 
   lazy val root = {
-    Project("rift-combat-parser", file("."),
+    Project("universal-combat-log", file("."),
       settings = Defaults.defaultSettings ++ Seq(
         organization := "net.doxxx",
-        name := "RiftCombatParser",
-        normalizedName := "rift-combat-parser",
+        name := "UniversalCombatLog",
+        normalizedName := "universal-combat-log",
         version := "1.0",
         scalaVersion := "2.9.1",
         libraryDependencies := Seq(

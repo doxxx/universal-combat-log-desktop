@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import collection.JavaConversions._
 import javax.swing.table.{TableRowSorter, AbstractTableModel}

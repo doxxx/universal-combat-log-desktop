@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import java.lang.Boolean
 import java.text.DateFormat

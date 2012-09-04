@@ -1,8 +1,8 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import swing._
 import event.{ButtonClicked, Event, TableRowsSelected}
-import net.doxxx.riftcombatparser.SummaryColumns._
+import net.doxxx.universalcombatlog.SummaryColumns._
 import java.awt.event.{MouseEvent, MouseAdapter}
 import javax.swing.JTable
 

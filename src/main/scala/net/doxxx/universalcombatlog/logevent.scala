@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 sealed abstract class LogEvent(val time: Long) {
   def copy(newTime: Long): LogEvent

@@ -1,7 +1,7 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import collection.immutable.TreeMap
-import net.doxxx.riftcombatparser.Utils._
+import net.doxxx.universalcombatlog.Utils._
 import java.io.File
 
 object InspectLog {

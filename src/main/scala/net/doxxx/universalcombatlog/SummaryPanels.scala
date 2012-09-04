@@ -1,9 +1,9 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import swing._
 import event.{SelectionChanged, ButtonClicked}
 import swing.TabbedPane.Page
-import net.doxxx.riftcombatparser.SummaryColumns._
+import net.doxxx.universalcombatlog.SummaryColumns._
 import java.awt.datatransfer.StringSelection
 import java.util.prefs.Preferences
 import java.awt.{Rectangle, Toolkit}

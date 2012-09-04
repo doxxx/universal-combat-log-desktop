@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import javax.swing.JPopupMenu
 import swing.{SequentialContainer, Component}

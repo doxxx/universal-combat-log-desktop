@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers

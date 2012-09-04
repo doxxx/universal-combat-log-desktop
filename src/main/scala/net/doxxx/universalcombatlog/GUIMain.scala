@@ -1,4 +1,4 @@
-package net.doxxx.riftcombatparser
+package net.doxxx.universalcombatlog
 
 import scala.swing._
 import event._
@@ -24,7 +24,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   var logFile = {
     val path = prefs.get(LogFileKey, null)
     if (path == null)
-      chooseCombatLogFile(None)
+      None
     else
       Some(new File(path))
   }
@@ -134,7 +134,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   }
 
   val top = new MainFrame {
-    title = "Rift Combat Parser"
+    title = "Universal Combat Log"
 
     private var _playersAndPets: Set[Actor] = Set.empty
 
