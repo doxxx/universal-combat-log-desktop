@@ -1,6 +1,6 @@
 # Universal Combat Log
 
-A GUI application for parsing and viewing the combat logs produced by various MMORPGs including Rift and World of Warcraft.
+A GUI application for parsing and viewing the combat logs produced by various MMORPGs including Rift and World of Warcraft. It also includes a tool for converting these log files into the UCL format used by the [Universal Combat Log iPad app](https://github.com/doxxx/universal-combat-log).
 
 ## Compiling
 
