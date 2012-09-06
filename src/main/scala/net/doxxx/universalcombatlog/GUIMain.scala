@@ -44,7 +44,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         case Some(f) => f.getParentFile
         case None => null
       })
-    chooser.showDialog(null, "Choose Combat Log File") match {
+    chooser.showOpenDialog(top.self) match {
       case JFileChooser.APPROVE_OPTION => {
         prefs.put(LogFileKey, chooser.getSelectedFile.getPath)
         Some(new File(chooser.getSelectedFile.getPath))
@@ -258,11 +258,19 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           case None => new File("CombatLog.ucl")
         }
         val chooser = new JFileChooser
-        chooser.setFileFilter(new FileNameExtensionFilter("Log Files", "txt"))
+        chooser.setFileFilter(new FileNameExtensionFilter("UCL Log Files", "ucl"))
         chooser.setCurrentDirectory(default.getParentFile)
-        val uclFile = (chooser.showDialog(null, "Export UCL File") match {
+        chooser.setDialogTitle("Export UCL File")
+        chooser.setApproveButtonText("Export")
+        val uclFile = (chooser.showSaveDialog(null) match {
           case JFileChooser.APPROVE_OPTION => {
-            new File(chooser.getSelectedFile.getPath)
+            val path: String = chooser.getSelectedFile.getPath
+            if (!path.toLowerCase.endsWith(".ucl")) {
+              new File(path + ".ucl")
+            }
+            else {
+              new File(path)
+            }
           }
           case _ => default
         })
