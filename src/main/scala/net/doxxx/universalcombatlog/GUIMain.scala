@@ -169,6 +169,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     val MI_ChooseRiftLogFile = new MenuItem("Choose Rift Log File")
     val MI_ChooseWoWLogFile = new MenuItem("Choose WoW Log File")
+    val MI_ExportUCL= new MenuItem("Expot UCL File")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
@@ -182,6 +183,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       contents += new Menu("File") {
         contents += MI_ChooseRiftLogFile
         contents += MI_ChooseWoWLogFile
+        contents += MI_ExportUCL
         contents += MI_NewSession
       }
       contents += new Menu("Options") {
@@ -193,6 +195,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     listenTo(MI_ChooseRiftLogFile)
     listenTo(MI_ChooseWoWLogFile)
+    listenTo(MI_ExportUCL)
     listenTo(MI_NewSession)
     listenTo(MI_IncludeOverhealing)
     listenTo(MI_UseActorCombatTime)
@@ -248,6 +251,23 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         }
 
         createFileLoaderActor()
+      }
+      case ButtonClicked(MI_ExportUCL) => {
+        val default = logFile match {
+          case Some(f) => new File(f.getParentFile, f.getName.substring(0, f.getName.indexOf(".txt")) + ".ucl")
+          case None => new File("CombatLog.ucl")
+        }
+        val chooser = new JFileChooser
+        chooser.setFileFilter(new FileNameExtensionFilter("Log Files", "txt"))
+        chooser.setCurrentDirectory(default.getParentFile)
+        val uclFile = (chooser.showDialog(null, "Export UCL File") match {
+          case JFileChooser.APPROVE_OPTION => {
+            new File(chooser.getSelectedFile.getPath)
+          }
+          case _ => default
+        })
+
+        FileConverter.writeUniversalCombatLog(uclFile, fightList.selectedFights)
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
