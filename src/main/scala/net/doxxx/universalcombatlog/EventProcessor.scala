@@ -263,9 +263,8 @@ object EventProcessor {
   }
 
   private val dayTime = 24*60*60*1000
-  def normalizeTimes(events: List[LogEvent]): List[LogEvent] = {
+  def normalizeTimes(events: List[LogEvent], startTime: Long = 0): List[LogEvent] = {
     if (events.isEmpty) return events
-    val startTime = events.head.time
     @tailrec
     def normalize(result: List[LogEvent], offset: Long, prev: LogEvent, events: List[LogEvent]): List[LogEvent] = {
       events match {
@@ -280,7 +279,7 @@ object EventProcessor {
         }
       }
     }
-    normalize(Nil, -startTime, events.head, events).reverse
+    normalize(Nil, startTime - events.head.time, events.head, events).reverse
   }
 
   def breakdown(breakdownType: BreakdownType.Value, player: Actor, events: List[LogEvent]): Map[String, Breakdown] = {
