@@ -133,6 +133,21 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     }
   }
 
+  def createFileExportActor(file: File, fights: List[Fight]) {
+    Swing.onEDT {
+      top.progressBar.visible = true
+      top.progressBar.label = "Exporting UCL file..."
+    }
+
+    actor {
+      FileConverter.writeUniversalCombatLog(file, fights)
+
+      Swing.onEDT {
+        top.progressBar.visible = false
+      }
+    }
+  }
+
   val top = new MainFrame {
     title = "Universal Combat Log"
 
@@ -275,7 +290,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
           case _ => default
         })
 
-        FileConverter.writeUniversalCombatLog(uclFile, fightList.selectedFights)
+        createFileExportActor(uclFile, fightList.selectedFights)
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
