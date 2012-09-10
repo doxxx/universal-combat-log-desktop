@@ -88,6 +88,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
                 Swing.onEDT {
                   logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
                 }
+                createFileWatchActor()
               }
               catch {
                 case e: IOException => log("Couldn't load combat log file: " + e.toString)
