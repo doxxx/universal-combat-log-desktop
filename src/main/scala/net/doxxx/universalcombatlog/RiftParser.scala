@@ -5,72 +5,8 @@ import java.io._
 import java.lang.RuntimeException
 import scalax.io.Resource
 
-final class RiftParser extends LogParser {
-  import Utils._
-
-  private var lastFileSize: Long = 0
-  private var lastLineNum: Int = 0
-  private var lastEvents: List[LogEvent] = Nil
-  private var threads: Set[String] = Set.empty
-
-  override def reset() {
-    super.reset()
-    lastLineNum = 0
-    lastFileSize = 0
-    lastEvents = Nil
-  }
-
-  def canLoad(f: File): Boolean = {
-    Resource.fromFile(f).lines().headOption match {
-      case Some(line) => parseLine(line).isDefined
-      case _ => false
-    }
-  }
-
-  override def parse(file: File): List[LogEvent] = {
-    if (file.length() < lastFileSize) {
-      log("File size smaller than last position; resetting")
-      reset()
-    }
-
-    lastFileSize = file.length()
-    if (lastLineNum > 0) {
-      log("Skipping %d lines...", lastLineNum)
-    }
-
-    val lines = timeit("Loading lines") {
-      Resource.fromFile(file).lines().drop(lastLineNum).toList
-    }
-
-    log("Loaded %d lines", lines.size)
-
-    lastLineNum += lines.size
-    threads = Set.empty
-
-    val newEvents = parseLines(lines)
-
-    log("Parsed %d new events using %d threads", newEvents.length, threads.size)
-
-    lastEvents = lastEvents ::: newEvents
-
-    log("Total events parsed: %d", lastEvents.size)
-
-    lastEvents
-  }
-
-  private def parseLines(lines: Traversable[String]): List[LogEvent] = {
-    timeit("Parsing lines") {
-      if (RiftParser.parallelize) {
-        log("Parsing in parallel")
-        lines.par.map(parseLine).flatten.toList
-      }
-      else {
-        lines.map(parseLine).flatten.toList
-      }
-    }
-  }
-
-  private def parseLine(line: String): Option[LogEvent] = {
+final class RiftParser extends BaseLogParser {
+  protected def parseLine(line: String): Option[LogEvent] = {
     threads += Thread.currentThread().getName
     line match {
       case RiftParser.CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
@@ -136,8 +72,6 @@ final class RiftParser extends LogParser {
 }
 
 object RiftParser {
-  private val parallelize = !java.lang.Boolean.getBoolean("nopar")
-
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
     new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",

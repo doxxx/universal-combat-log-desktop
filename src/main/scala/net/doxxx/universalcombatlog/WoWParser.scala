@@ -1,39 +1,13 @@
 package net.doxxx.universalcombatlog
 
-import java.io.File
-import scalax.io.{Codec, LongTraversable, Resource}
+import scalax.io.Codec
 import util.matching.Regex
 import java.util.{Date, Calendar}
 import scala.Some
 
-final class WoWParser extends LogParser {
-  import Utils._
+final class WoWParser extends BaseLogParser {
 
   private implicit val codec = Codec.UTF8
-  private val parallelize = !java.lang.Boolean.getBoolean("nopar")
-
-  def canLoad(f: File): Boolean = {
-    Resource.fromFile(f).lines().headOption match {
-      case Some(line) => parseLine(line).isDefined
-      case _ => false
-    }
-  }
-
-  def parse(f: File): List[LogEvent] = {
-    parseLines(Resource.fromFile(f).lines())
-  }
-
-  def parseLines(lines: LongTraversable[String]): List[LogEvent] = {
-    timeit("parseLines") {
-      if (parallelize) {
-        log("Parsing in parallel")
-        lines.par.map(parseLine).toList.flatten
-      }
-      else {
-        lines.map(parseLine).toList.flatten
-      }
-    }
-  }
 
   // 8/31 21:49:35.954  SPELL_AURA_APPLIED,0x0700000004B0FBF1,"Snox-Terokkar",0x512,0x0,0x07000000049DBD4E,"Seleya-ShatteredHalls",0x514,0x0,116956,"Grace of Air",0x1,BUFF
   private val timestampRE = "([0-9]+)/([0-9]+) ([0-9]+):([0-9]+):([0-9]+)\\.([0-9]+)".r

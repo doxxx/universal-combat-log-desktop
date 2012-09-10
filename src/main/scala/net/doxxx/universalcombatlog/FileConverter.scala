@@ -136,5 +136,7 @@ object FileConverter {
       Utils.log("Calculated startTime: %d", startTime)
       EventProcessor.normalizeTimes(events, startTime)
     }
+
+    def playersAndPets = delegate.playersAndPets
   }
 }
