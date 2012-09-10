@@ -3,7 +3,7 @@ package net.doxxx.universalcombatlog
 import util.matching.Regex
 import java.io._
 import java.lang.{Boolean, RuntimeException}
-import collection.mutable
+import scalax.io.Resource
 
 final class RiftParser extends LogParser {
   import Utils._
@@ -17,78 +17,57 @@ final class RiftParser extends LogParser {
               "amount", "spellId", "spell")
   private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
 
-  private var lastFilePos: Long = 0
+  private var lastFileSize: Long = 0
+  private var lastLineNum: Int = 0
   private var lastEvents: List[LogEvent] = Nil
   private var threads: Set[String] = Set.empty
 
   override def reset() {
     super.reset()
-    lastFilePos = 0
+    lastLineNum = 0
+    lastFileSize = 0
     lastEvents = Nil
   }
 
   override def parse(file: File): List[LogEvent] = {
-    val raf = new RandomAccessFile(file, "r")
-    if (raf.length < lastFilePos) {
+    if (file.length() < lastFileSize) {
       log("File size smaller than last position; resetting")
       reset()
     }
-    else {
-      log("Seeking to last position: %d", lastFilePos)
-      raf.seek(lastFilePos)
+
+    lastFileSize = file.length()
+    if (lastLineNum > 0) {
+      log("Skipping %d lines...", lastLineNum)
     }
 
-    val data:Array[Byte] = Array.ofDim((raf.length - raf.getFilePointer).toInt)
-    timeit("readFully") {
-      log("Reading %d bytes", data.length)
-      raf.readFully(data)
+    val lines = timeit("Loading lines") {
+      Resource.fromFile(file).lines().drop(lastLineNum).toList
     }
 
-    lastFilePos = raf.getFilePointer
+    log("Loaded %d lines", lines.size)
 
-    log("Saved last position: %d", lastFilePos)
-
-    raf.close()
-
-    val reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)))
-    var lines = new mutable.ListBuffer[String]
-    var done = false
-
-    timeit("readLines") {
-      while (!done) {
-        val line = reader.readLine()
-        if (line == null) {
-          done = true
-        }
-        else {
-          lines += line
-        }
-      }
-    }
-
-    log("Read %d lines", lines.length)
-
+    lastLineNum += lines.size
     threads = Set.empty
 
-    val newEvents = timeit("parseLines") {
-      parseLines(lines.toList)
-    }
+    val newEvents = parseLines(lines)
 
-    log("Parsed %d events using %d threads", newEvents.length, threads.size)
+    log("Parsed %d new events using %d threads", newEvents.length, threads.size)
 
     lastEvents = lastEvents ::: newEvents
+
+    log("Total events parsed: %d", lastEvents.size)
 
     lastEvents
   }
 
-  private def parseLines(lines: List[String]): List[LogEvent] = {
-    timeit("parseLines") {
+  private def parseLines(lines: Traversable[String]): List[LogEvent] = {
+    timeit("Parsing lines") {
       if (parallelize) {
         log("Parsing in parallel")
-        lines.par.map(parseLine).toList.flatten
+        lines.par.map(parseLine).flatten.toList
       }
       else {
-        lines.map(parseLine).toList.flatten
+        lines.map(parseLine).flatten.toList
       }
     }
   }
