@@ -10,24 +10,20 @@ import java.io.{IOException, File}
 import java.text.SimpleDateFormat
 import javax.swing.JFileChooser
 import java.util
+import java.awt.FileDialog
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   import Utils._
 
-  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
+  System.setProperty("apple.laf.useScreenMenuBar", "true")
+  System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Universal Combat Log")
 
-  val LogFileKey = "logFile"
+  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
-  var logFile = {
-    val path = prefs.get(LogFileKey, null)
-    if (path == null)
-      None
-    else
-      Some(new File(path))
-  }
+  var logFile: Option[File] = None
   var logFileLastModified = 0L
 
   val logFileEventPublisher = new Publisher {}
@@ -36,20 +32,16 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   var parser: Option[LogParser] = None
 
-  def chooseCombatLogFile(default: Option[File]): Option[File] = {
-    val chooser = new JFileChooser
-    chooser.setFileFilter(new FileNameExtensionFilter("Log Files", "txt"))
-    chooser.setCurrentDirectory(
-      default match {
-        case Some(f) => f.getParentFile
-        case None => null
-      })
-    chooser.showOpenDialog(top.self) match {
-      case JFileChooser.APPROVE_OPTION => {
-        prefs.put(LogFileKey, chooser.getSelectedFile.getPath)
-        Some(new File(chooser.getSelectedFile.getPath))
-      }
-      case _ => None
+  def chooseFile(title: String, mode: Int, default: Option[File] = None): Option[File] = {
+    val dialog = new FileDialog(top.peer, title, mode)
+    default match {
+      case Some(f) => dialog.setFile(f.toString)
+      case None => // nothing
+    }
+    dialog.setVisible(true)
+    dialog.getFile match {
+      case s: String => Some(new File(s))
+      case null => None
     }
   }
 
@@ -183,8 +175,8 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       centerOnScreen()
     }
 
-    val MI_ChooseLogFile = new MenuItem("Choose Log File")
-    val MI_ExportUCL= new MenuItem("Expot UCL File")
+    val MI_OpenLogFile = new MenuItem("Open Log File")
+    val MI_ExportUCL= new MenuItem("Export UCL File")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
@@ -196,7 +188,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     menuBar = new MenuBar {
       contents += new Menu("File") {
-        contents += MI_ChooseLogFile
+        contents += MI_OpenLogFile
         contents += MI_ExportUCL
         contents += MI_NewSession
       }
@@ -207,7 +199,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
     }
 
-    listenTo(MI_ChooseLogFile)
+    listenTo(MI_OpenLogFile)
     listenTo(MI_ExportUCL)
     listenTo(MI_NewSession)
     listenTo(MI_IncludeOverhealing)
@@ -235,44 +227,35 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         prefs.putInt("mainH", bounds.height)
         summaryPanels.saveDialogBounds()
       }
-      case ButtonClicked(MI_ChooseLogFile) => {
-        logFile = chooseCombatLogFile(logFile)
-        logFileLastModified = 0L
-
-        logFile match {
+      case ButtonClicked(MI_OpenLogFile) => {
+        chooseFile("Open Log File", FileDialog.LOAD) match {
           case Some(f) => {
+            logFileLastModified = 0L
+            logFile = Some(f)
             parser = LogParser.detectFormat(f)
             createFileLoaderActor()
           }
-          case _ => {
-            fightList.clear()
-          }
+          case None => // do nothing
         }
       }
       case ButtonClicked(MI_ExportUCL) => {
         val default = logFile match {
-          case Some(f) => new File(f.getParentFile, f.getName.substring(0, f.getName.indexOf(".txt")) + ".ucl")
-          case None => new File("CombatLog.ucl")
+          case Some(f) => Some(new File(f.getParentFile, f.getName.substring(0, f.getName.indexOf(".txt")) + ".ucl"))
+          case None => Some(new File("CombatLog.ucl"))
         }
-        val chooser = new JFileChooser
-        chooser.setFileFilter(new FileNameExtensionFilter("UCL Log Files", "ucl"))
-        chooser.setCurrentDirectory(default.getParentFile)
-        chooser.setDialogTitle("Export UCL File")
-        chooser.setApproveButtonText("Export")
-        val uclFile = (chooser.showSaveDialog(null) match {
-          case JFileChooser.APPROVE_OPTION => {
-            val path: String = chooser.getSelectedFile.getPath
-            if (!path.toLowerCase.endsWith(".ucl")) {
+        chooseFile("Export UCL File", FileDialog.SAVE, default) match {
+          case Some(f) => {
+            val path: String = f.getPath
+            val uclFile = if (!path.toLowerCase.endsWith(".ucl")) {
               new File(path + ".ucl")
             }
             else {
               new File(path)
             }
+            createFileExportActor(uclFile, fightList.selectedFights)
           }
-          case _ => default
-        })
-
-        createFileExportActor(uclFile, fightList.selectedFights)
+          case None =>
+        }
       }
       case ButtonClicked(MI_NewSession) => {
         rolloverCombatLogFile()
