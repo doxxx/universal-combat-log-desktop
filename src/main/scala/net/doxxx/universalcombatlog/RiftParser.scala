@@ -8,15 +8,6 @@ import scalax.io.Resource
 final class RiftParser extends LogParser {
   import Utils._
 
-  private val parallelize = !java.lang.Boolean.getBoolean("nopar")
-
-  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
-  private val DataRE =
-    new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-              "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
-              "amount", "spellId", "spell")
-  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
-
   private var lastFileSize: Long = 0
   private var lastLineNum: Int = 0
   private var lastEvents: List[LogEvent] = Nil
@@ -69,7 +60,7 @@ final class RiftParser extends LogParser {
 
   private def parseLines(lines: Traversable[String]): List[LogEvent] = {
     timeit("Parsing lines") {
-      if (parallelize) {
+      if (RiftParser.parallelize) {
         log("Parsing in parallel")
         lines.par.map(parseLine).flatten.toList
       }
@@ -82,8 +73,8 @@ final class RiftParser extends LogParser {
   private def parseLine(line: String): Option[LogEvent] = {
     threads += Thread.currentThread().getName
     line match {
-      case CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
-      case LineRE(time, data, text) => parseActorEvent(time, data, text)
+      case RiftParser.CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
+      case RiftParser.LineRE(time, data, text) => parseActorEvent(time, data, text)
       case _ => {
         println("Unrecognized combat log line: " + line)
         None
@@ -104,7 +95,7 @@ final class RiftParser extends LogParser {
 
   private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
-      case DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
+      case RiftParser.DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
         Some(ActorEvent(parseTime(time), EventType(eventType.toInt),
           getActor(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
           getActor(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
@@ -145,6 +136,15 @@ final class RiftParser extends LogParser {
 }
 
 object RiftParser {
+  private val parallelize = !java.lang.Boolean.getBoolean("nopar")
+
+  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
+  private val DataRE =
+    new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
+      "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
+      "amount", "spellId", "spell")
+  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
+
   private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
   private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
   private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
