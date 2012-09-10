@@ -2,13 +2,13 @@ package net.doxxx.universalcombatlog
 
 import util.matching.Regex
 import java.io._
-import java.lang.{Boolean, RuntimeException}
+import java.lang.RuntimeException
 import scalax.io.Resource
 
 final class RiftParser extends LogParser {
   import Utils._
 
-  private val parallelize = !Boolean.getBoolean("nopar")
+  private val parallelize = !java.lang.Boolean.getBoolean("nopar")
 
   private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
   private val DataRE =
@@ -27,6 +27,13 @@ final class RiftParser extends LogParser {
     lastLineNum = 0
     lastFileSize = 0
     lastEvents = Nil
+  }
+
+  def canLoad(f: File): Boolean = {
+    Resource.fromFile(f).lines().headOption match {
+      case Some(line) => parseLine(line).isDefined
+      case _ => false
+    }
   }
 
   override def parse(file: File): List[LogEvent] = {

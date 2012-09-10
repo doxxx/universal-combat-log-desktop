@@ -12,7 +12,16 @@ final class WoWParser extends LogParser {
   private implicit val codec = Codec.UTF8
   private val parallelize = !java.lang.Boolean.getBoolean("nopar")
 
-  override def parse(f: File): List[LogEvent] = parseLines(Resource.fromFile(f).lines())
+  def canLoad(f: File): Boolean = {
+    Resource.fromFile(f).lines().headOption match {
+      case Some(line) => parseLine(line).isDefined
+      case _ => false
+    }
+  }
+
+  def parse(f: File): List[LogEvent] = {
+    parseLines(Resource.fromFile(f).lines())
+  }
 
   def parseLines(lines: LongTraversable[String]): List[LogEvent] = {
     timeit("parseLines") {

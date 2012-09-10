@@ -43,6 +43,13 @@ class FightList extends BorderPanel {
     }
   }
 
+  def clear() {
+    updating = true
+    listView.listData = Nil
+    updating = false
+    fireSelectedFightsChanged()
+  }
+
   def update(fights: List[Fight]) {
     updating = true
     val oldFights = listView.selection.items.map{ _.startTime }.toSet

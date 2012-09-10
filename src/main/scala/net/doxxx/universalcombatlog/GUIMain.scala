@@ -49,7 +49,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         prefs.put(LogFileKey, chooser.getSelectedFile.getPath)
         Some(new File(chooser.getSelectedFile.getPath))
       }
-      case _ => default
+      case _ => None
     }
   }
 
@@ -183,8 +183,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       centerOnScreen()
     }
 
-    val MI_ChooseRiftLogFile = new MenuItem("Choose Rift Log File")
-    val MI_ChooseWoWLogFile = new MenuItem("Choose WoW Log File")
+    val MI_ChooseLogFile = new MenuItem("Choose Log File")
     val MI_ExportUCL= new MenuItem("Expot UCL File")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
@@ -197,8 +196,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
     menuBar = new MenuBar {
       contents += new Menu("File") {
-        contents += MI_ChooseRiftLogFile
-        contents += MI_ChooseWoWLogFile
+        contents += MI_ChooseLogFile
         contents += MI_ExportUCL
         contents += MI_NewSession
       }
@@ -209,8 +207,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       }
     }
 
-    listenTo(MI_ChooseRiftLogFile)
-    listenTo(MI_ChooseWoWLogFile)
+    listenTo(MI_ChooseLogFile)
     listenTo(MI_ExportUCL)
     listenTo(MI_NewSession)
     listenTo(MI_IncludeOverhealing)
@@ -238,35 +235,19 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
         prefs.putInt("mainH", bounds.height)
         summaryPanels.saveDialogBounds()
       }
-      case ButtonClicked(MI_ChooseRiftLogFile) => {
+      case ButtonClicked(MI_ChooseLogFile) => {
         logFile = chooseCombatLogFile(logFile)
         logFileLastModified = 0L
 
-        parser match {
-          case Some(p: RiftParser) => {
-            p.reset()
+        logFile match {
+          case Some(f) => {
+            parser = LogParser.detectFormat(f)
+            createFileLoaderActor()
           }
           case _ => {
-            parser = Some(new RiftParser)
+            fightList.clear()
           }
         }
-
-        createFileLoaderActor()
-      }
-      case ButtonClicked(MI_ChooseWoWLogFile) => {
-        logFile = chooseCombatLogFile(logFile)
-        logFileLastModified = 0L
-
-        parser match {
-          case Some(p: WoWParser) => {
-            p.reset()
-          }
-          case _ => {
-            parser = Some(new WoWParser)
-          }
-        }
-
-        createFileLoaderActor()
       }
       case ButtonClicked(MI_ExportUCL) => {
         val default = logFile match {

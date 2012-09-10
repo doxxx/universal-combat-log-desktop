@@ -128,6 +128,8 @@ object FileConverter {
   }
 
   class StartTimeAdjustingParser(delegate: LogParser) extends LogParser {
+    def canLoad(f: File) = delegate.canLoad(f)
+
     def parse(f: File) = {
       val events = delegate.parse(f)
       val startTime = f.lastModified() - events.last.time

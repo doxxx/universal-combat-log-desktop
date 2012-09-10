@@ -15,6 +15,8 @@ abstract class LogParser {
     actors.clear()
   }
 
+  def canLoad(f: File): Boolean
+
   def parse(f: File): List[LogEvent]
 
   def playersAndPets: Set[Actor] = actors.filter {
@@ -84,5 +86,12 @@ abstract class LogParser {
       case p: Player => p
       case a => throw new RuntimeException("Actor %s is not player".format(a))
     }
+  }
+}
+
+object LogParser {
+  val knownParsers = List[LogParser](new RiftParser, new WoWParser)
+  def detectFormat(f: File): Option[LogParser] = {
+    knownParsers.find(p => p.canLoad(f))
   }
 }
