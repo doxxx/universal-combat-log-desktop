@@ -11,10 +11,7 @@ final class RiftParser extends BaseLogParser {
     line match {
       case RiftParser.CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
       case RiftParser.LineRE(time, data, text) => parseActorEvent(time, data, text)
-      case _ => {
-        println("Unrecognized combat log line: " + line)
-        None
-      }
+      case _ => None
     }
   }
 
