@@ -48,14 +48,22 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     peer.getColumnModel.getColumn(0).setPreferredWidth(200)
 
     peer.addMouseListener(new MouseAdapter {
+      override def mousePressed(e: MouseEvent) {
+        evaluatePopup(e)
+      }
+
       override def mouseReleased(e: MouseEvent) {
+        evaluatePopup(e)
+      }
+
+      private def evaluatePopup(e: MouseEvent) {
         if (e.isPopupTrigger) {
           val source = e.getSource.asInstanceOf[JTable]
-          val row = source.rowAtPoint( e.getPoint )
-          val column = source.columnAtPoint( e.getPoint )
+          val row = source.rowAtPoint(e.getPoint)
+          val column = source.columnAtPoint(e.getPoint)
 
-          if (! source.isRowSelected(row))
-              source.changeSelection(row, column, false, false)
+          if (!source.isRowSelected(row))
+            source.changeSelection(row, column, false, false)
 
           popupMenu.show(table, e.getX, e.getY)
         }
