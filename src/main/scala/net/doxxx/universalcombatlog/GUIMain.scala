@@ -7,7 +7,7 @@ import scala.actors.Actor._
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner}
 import java.io.{IOException, File}
 import java.text.SimpleDateFormat
-import javax.swing.UIManager
+import javax.swing.{JOptionPane, UIManager}
 import java.util
 import java.awt.FileDialog
 
@@ -233,7 +233,12 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
             logFileLastModified = 0L
             logFile = Some(f)
             parser = LogParser.detectFormat(f)
-            createFileLoaderActor()
+            parser match {
+              case Some(p) => createFileLoaderActor()
+              case _ => JOptionPane.showMessageDialog(self, "Could not determine log file format.",
+                "Open Log File", JOptionPane.ERROR_MESSAGE)
+            }
+
           }
           case None => // do nothing
         }
