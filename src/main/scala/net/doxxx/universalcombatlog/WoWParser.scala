@@ -184,27 +184,17 @@ final class WoWParser extends BaseLogParser {
           // CREATE
           // SUMMON
           // RESURRECT
-          case _ => {
-            return None
-          }
+          case _ => // use default field values
         }
       }
     }
 
-    if (eventType == EventType.Unrecognized) {
-      return None
-    }
-
     // actor & target
-    val actor: Option[Actor] = makeActor(actorID, actorName, actorFlags)
-    val target: Option[Actor] = makeActor(targetID, targetName, targetFlags)
-
-    if (!actor.isDefined || !target.isDefined) {
-      return None
-    }
+    val actor = makeActor(actorID, actorName, actorFlags)
+    val target = makeActor(targetID, targetName, targetFlags)
 
     // Create log event
-    Some(ActorEvent(time, eventType, actor.get, target.get, spell, spellID, amount, ""))
+    Some(ActorEvent(time, eventType, actor, target, spell, spellID, amount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {
@@ -227,14 +217,14 @@ final class WoWParser extends BaseLogParser {
     }
   }
 
-  private def makeActor(id: Long, name: String, flags: Long): Option[Actor] = {
+  private def makeActor(id: Long, name: String, flags: Long): Actor = {
     val rel = entityRelationship(flags)
     objectType(flags) match {
-      case TYPE_PLAYER => Some(getActor(PC(id, rel), NullActorID, Some(name)))
+      case TYPE_PLAYER => getActor(PC(id, rel), NullActorID, Some(name))
       // TODO: we don't have a way to associate pets with owners yet
-      case TYPE_PET => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
-      case TYPE_NPC => Some(getActor(NPC(id, rel), NullActorID, Some(name)))
-      case _ => None
+      case TYPE_PET => getActor(NPC(id, rel), NullActorID, Some(name))
+      case TYPE_NPC => getActor(NPC(id, rel), NullActorID, Some(name))
+      case _ => Nobody
     }
   }
 
