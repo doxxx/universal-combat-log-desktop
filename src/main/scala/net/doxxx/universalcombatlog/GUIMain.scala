@@ -3,12 +3,11 @@ package net.doxxx.universalcombatlog
 import scala.swing._
 import event._
 import java.util.prefs.Preferences
-import javax.swing.filechooser.FileNameExtensionFilter
 import scala.actors.Actor._
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner}
 import java.io.{IOException, File}
 import java.text.SimpleDateFormat
-import javax.swing.JFileChooser
+import javax.swing.UIManager
 import java.util
 import java.awt.FileDialog
 
@@ -18,6 +17,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   System.setProperty("apple.laf.useScreenMenuBar", "true")
   System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Universal Combat Log")
+  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
 
   case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
 
