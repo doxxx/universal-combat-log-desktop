@@ -7,9 +7,10 @@ import scala.actors.Actor._
 import java.awt.datatransfer.{Transferable, Clipboard, ClipboardOwner}
 import java.io.{IOException, File}
 import java.text.SimpleDateFormat
-import javax.swing.{JOptionPane, UIManager}
+import javax.swing.{KeyStroke, JOptionPane, UIManager}
 import java.util
-import java.awt.FileDialog
+import java.awt.{Toolkit, FileDialog}
+import java.awt.event.KeyEvent
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
@@ -175,12 +176,17 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       centerOnScreen()
     }
 
-    val MI_OpenLogFile = new MenuItem("Open Log File")
-    val MI_ExportUCL= new MenuItem("Export UCL File")
+    val MI_OpenLogFile = new MenuItem("Open...")
+    val MI_ExportUCL= new MenuItem("Export UCL File...")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
+
+    val shortcutKey = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
+    MI_OpenLogFile.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, shortcutKey))
+    MI_ExportUCL.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKey))
+    MI_NewSession.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, shortcutKey))
 
     MI_IncludeOverhealing.selected = EventProcessor.includeOverhealing
     MI_UseActorCombatTime.selected = EventProcessor.useActorCombatTime
