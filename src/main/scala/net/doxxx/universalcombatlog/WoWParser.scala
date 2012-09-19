@@ -65,7 +65,6 @@ final class WoWParser extends BaseLogParser {
     var eventType: EventType.Value = EventType.Unrecognized
     var spell: String = ""
     var spellID: Long = 0
-    var periodic: Boolean = false
     var amount: Int = 0
     var critical: Boolean = false
 
@@ -108,17 +107,23 @@ final class WoWParser extends BaseLogParser {
             spell = it.next()
             it.next() // spell school
           }
-          case "SPELL_PERIODIC" => {
-            spellID = it.next().toLong
-            spell = it.next()
-            it.next() // spell school
-            periodic = true
-          }
         }
 
         eventNameParts(1) match {
           case "DAMAGE" => {
-            eventType = if (periodic) EventType.DamageOverTime else EventType.DirectDamage
+            eventType = EventType.DirectDamage
+            amount = it.next().toInt
+            it.next().toInt // overkill
+            it.next() // school
+            it.next() // resisted
+            it.next() // blocked
+            it.next() // absorbed
+            critical = it.next() == "1"
+            //it.next() // 1 == glancing
+            //it.next() // 1 == crushing
+          }
+          case "PERIODIC_DAMAGE" => {
+            eventType = EventType.DamageOverTime
             amount = it.next().toInt
             it.next().toInt // overkill
             it.next() // school
