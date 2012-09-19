@@ -111,7 +111,6 @@ final class WoWParser extends BaseLogParser {
 
         eventNameParts(1) match {
           case "DAMAGE" => {
-            eventType = EventType.DirectDamage
             amount = it.next().toInt
             it.next().toInt // overkill
             it.next() // school
@@ -119,11 +118,11 @@ final class WoWParser extends BaseLogParser {
             it.next() // blocked
             it.next() // absorbed
             critical = it.next() == "1"
+            eventType = if (critical) EventType.CritDamage else EventType.DirectDamage
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
           case "PERIODIC_DAMAGE" => {
-            eventType = EventType.DamageOverTime
             amount = it.next().toInt
             it.next().toInt // overkill
             it.next() // school
@@ -131,6 +130,7 @@ final class WoWParser extends BaseLogParser {
             it.next() // blocked
             it.next() // absorbed
             critical = it.next() == "1"
+            eventType = if (critical) EventType.CritDamageOverTime else EventType.DamageOverTime
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
