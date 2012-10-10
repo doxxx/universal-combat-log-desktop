@@ -24,6 +24,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
+  val networkService = new NetworkService()
+  networkService.start()
+
   var logFile: Option[File] = None
   var logFileLastModified = 0L
 
@@ -290,6 +293,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case LogFileLoaded(fights, playersAndPets) => {
         fightList.update(fights)
         _playersAndPets = playersAndPets
+        networkService.fights = fights
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
