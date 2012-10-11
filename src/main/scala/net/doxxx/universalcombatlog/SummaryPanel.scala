@@ -12,9 +12,9 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   val MI_BreakdownOutgoingHealingBySpell = new MenuItem("By Spell")
   val MI_BreakdownOutgoingHealingByTarget = new MenuItem("By Target")
   val MI_BreakdownIncomingDamageBySpell = new MenuItem("By Spell")
-  val MI_BreakdownIncomingDamageByActor = new MenuItem("By Actor")
+  val MI_BreakdownIncomingDamageByActor = new MenuItem("By Entity")
   val MI_BreakdownIncomingHealingBySpell = new MenuItem("By Spell")
-  val MI_BreakdownIncomingHealingByActor = new MenuItem("By Actor")
+  val MI_BreakdownIncomingHealingByActor = new MenuItem("By Entity")
   val MI_DeathLog = new MenuItem("Death Log")
   val popupMenu = new PopupMenu("Breakdown") {
     contents += new Menu("Outgoing") {
@@ -109,13 +109,13 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     }
   }
 
-  def update(summary: Map[Actor, Summary]) {
+  def update(summary: Map[Entity, Summary]) {
     val oldActor = selectedActor
     summaryModel.update(summary)
     if (oldActor.isDefined) selectActor(oldActor.get)
   }
 
-  def selectedActor: Option[Actor] = {
+  def selectedActor: Option[Entity] = {
     val row = table.selection.rows.anchorIndex
     if (row >= 0) {
       Some(summaryModel.actors(table.viewToModelRow(row)))
@@ -125,7 +125,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     }
   }
 
-  def selectActor(actor: Actor) {
+  def selectActor(actor: Entity) {
     val i = summaryModel.actors.indexOf(actor)
     if (i >= 0) {
       table.selection.rows += table.modelToViewRow(i)
@@ -133,6 +133,6 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   }
 }
 
-case class SelectedActorChanged(actor: Actor) extends Event
-case class BreakdownRequested(actor: Actor, breakdownType: BreakdownType.Value) extends Event
-case class DeathLogRequested(actor: Actor) extends Event
+case class SelectedActorChanged(actor: Entity) extends Event
+case class BreakdownRequested(actor: Entity, breakdownType: BreakdownType.Value) extends Event
+case class DeathLogRequested(actor: Entity) extends Event

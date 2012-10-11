@@ -9,14 +9,14 @@ class BreakdownDialog(owner: Window) extends Dialog(owner) {
   var currentBreakdownType: BreakdownType.Value = BreakdownType.None
   var currentEvents: List[LogEvent] = Nil
 
-  def update(actor: Actor, breakdownType: BreakdownType.Value, events: List[LogEvent]) {
+  def update(actor: Entity, breakdownType: BreakdownType.Value, events: List[LogEvent]) {
     currentBreakdownType = breakdownType
     currentEvents = events
     title = "%s - %s".format(actor.name, BreakdownType.nameFor(breakdownType))
     panel.update(EventProcessor.breakdown(breakdownType, actor, events))
   }
 
-  def update(actor: Actor) {
+  def update(actor: Entity) {
     update(actor, currentBreakdownType, currentEvents)
   }
 }

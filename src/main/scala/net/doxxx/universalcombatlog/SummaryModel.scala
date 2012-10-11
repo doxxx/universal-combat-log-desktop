@@ -26,7 +26,7 @@ object SummaryColumns extends Enumeration {
 class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableModel {
   import SummaryColumns._
 
-  private var data: Map[Actor, Summary] = Map.empty
+  private var data: Map[Entity, Summary] = Map.empty
 
   def actors = data.keySet.toArray
   def names = actors.map(_.name)
@@ -70,7 +70,7 @@ class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableMod
 
   def getRowCount = data.size
 
-  def update(summary: Map[Actor, Summary]) {
+  def update(summary: Map[Entity, Summary]) {
     data = summary
     fireTableDataChanged()
   }

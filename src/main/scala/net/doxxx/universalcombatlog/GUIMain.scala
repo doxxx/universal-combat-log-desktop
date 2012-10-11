@@ -20,7 +20,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Universal Combat Log")
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
 
-  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
+  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Entity]) extends Event
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
@@ -148,7 +148,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
   val top = new MainFrame {
     title = "Universal Combat Log"
 
-    private var _playersAndPets: Set[Actor] = Set.empty
+    private var _playersAndPets: Set[Entity] = Set.empty
 
     val fightList = new FightList
     val summaryPanels = new SummaryPanels(prefs)
@@ -183,7 +183,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_ExportUCL= new MenuItem("Export UCL File...")
     val MI_NewSession = new MenuItem("New Session")
     val MI_IncludeOverhealing = new CheckMenuItem("Include Overhealing")
-    val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
+    val MI_UseActorCombatTime = new CheckMenuItem("Use Entity Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
 
     val shortcutKey = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()

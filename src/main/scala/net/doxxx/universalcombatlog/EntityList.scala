@@ -3,7 +3,7 @@ package net.doxxx.universalcombatlog
 import swing._
 import event._
 
-class ActorList extends BorderPanel {
+class EntityList extends BorderPanel {
   layoutManager.setHgap(5)
   layoutManager.setVgap(5)
 
@@ -15,7 +15,7 @@ class ActorList extends BorderPanel {
   }
   val header = new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
-      text = "Actor Filter"
+      text = "Entity Filter"
     }
     contents += Swing.HGlue
     contents += top5Button
@@ -45,18 +45,18 @@ class ActorList extends BorderPanel {
     }
     case ListSelectionChanged(`listView`, range, isChanging) => {
       if (!isChanging && !updating) {
-        publish(ActorFilterChanged(listView.selection.items.toSet))
+        publish(EntityFilterChanged(listView.selection.items.toSet))
       }
     }
   }
 
-  def update(actors: Seq[Actor]) {
+  def update(actors: Seq[Entity]) {
     updating = true
     val oldActors: Set[String] = listView.selection.items.toSet
     listView.listData = actors.map(_.name)
     selectActors(oldActors.toSet)
     updating = false
-    publish(ActorFilterChanged(listView.selection.items.toSet))
+    publish(EntityFilterChanged(listView.selection.items.toSet))
   }
 
   def selectActors(names: Set[String]) {
@@ -71,4 +71,4 @@ class ActorList extends BorderPanel {
   def selectedActors: Set[String] = listView.selection.items.toSet
 }
 
-case class ActorFilterChanged(actors: Set[String]) extends Event
+case class EntityFilterChanged(actors: Set[String]) extends Event

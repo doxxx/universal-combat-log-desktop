@@ -40,7 +40,7 @@ final class RiftParser extends BaseLogParser {
     }
   }
 
-  private def parseEntity(s: String): ActorID = {
+  private def parseEntity(s: String): EntityID = {
     val parts = s.split('#')
 
     // T=P (Player)
@@ -62,7 +62,7 @@ final class RiftParser extends BaseLogParser {
     t match {
       case 'P' => PC(id, r)
       case 'N' => NPC(id, r)
-      case 'X' => NullActorID
+      case 'X' => NullEntityID
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }
   }

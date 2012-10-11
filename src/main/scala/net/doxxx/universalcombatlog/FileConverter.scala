@@ -56,7 +56,7 @@ object FileConverter {
     for (id <- entityIndex.keys) {
       val entity = entityIndex(id)
       var kind: Char = 'X'
-      var owner: Option[Actor] = None
+      var owner: Option[Entity] = None
       var name = entity.name
       entity match {
         case p: Player => {

@@ -25,9 +25,9 @@ object EventProcessor {
     prefs.putBoolean("mergePetsIntoOwners", mergePetsIntoOwners)
   }
 
-  def summary(fight: Fight): Map[Actor, Summary] = {
-    val results = new mutable.HashMap[Actor, Summary] {
-      override def default(key: Actor) = Summary()
+  def summary(fight: Fight): Map[Entity, Summary] = {
+    val results = new mutable.HashMap[Entity, Summary] {
+      override def default(key: Entity) = Summary()
     }
     timeit("summary") {
       for (e <- fight.events) e match {
@@ -65,16 +65,16 @@ object EventProcessor {
     results.toMap
   }
 
-  def mergePetIntoOwner(actor: Actor): Actor = {
+  def mergePetIntoOwner(actor: Entity): Entity = {
     actor match {
       case p: PlayerPet => if (mergePetsIntoOwners) p.owner else p
-      case a: Actor => a
+      case a: Entity => a
     }
   }
 
-  def actorsSortedByActivity(events: List[LogEvent]): List[Actor] = {
-    val activity = new mutable.HashMap[Actor, Int] {
-      override def default(key: Actor) = 0
+  def actorsSortedByActivity(events: List[LogEvent]): List[Entity] = {
+    val activity = new mutable.HashMap[Entity, Int] {
+      override def default(key: Entity) = 0
     }
     for (e <- events) e match {
       case ae: ActorEvent => {
@@ -83,7 +83,7 @@ object EventProcessor {
       }
       case _ =>
     }
-    def cmp(a1:Pair[Actor,Int], a2:Pair[Actor,Int]) = {
+    def cmp(a1:Pair[Entity,Int], a2:Pair[Entity,Int]) = {
       a1._2 > a2._2
     }
     for ((k,v) <- activity.toList.sortWith(cmp)) yield k
@@ -138,7 +138,7 @@ object EventProcessor {
      !(ae.actor.isInstanceOf[Player] && ae.target.isInstanceOf[Player]))
   }
 
-  def deadActor(ae: ActorEvent): Option[Actor] = {
+  def deadActor(ae: ActorEvent): Option[Entity] = {
     ae.eventType match {
       case Died => Some(ae.actor)
       case Slain => Some(ae.target)
@@ -184,7 +184,7 @@ object EventProcessor {
       }
     }
 
-    def trackActor(a: Actor) {
+    def trackActor(a: Entity) {
       a match {
         case np: NonPlayer => npcs += np
         case p: Player => pcs += p
@@ -282,7 +282,7 @@ object EventProcessor {
     normalize(Nil, startTime - events.head.time, events.head, events).reverse
   }
 
-  def breakdown(breakdownType: BreakdownType.Value, player: Actor, events: List[LogEvent]): Map[String, Breakdown] = {
+  def breakdown(breakdownType: BreakdownType.Value, player: Entity, events: List[LogEvent]): Map[String, Breakdown] = {
     val filteredEvents =
       if (BreakdownType.OutgoingTypes.contains(breakdownType)) {
         filterByActors(events, Set(player))
@@ -384,7 +384,7 @@ object EventProcessor {
     results.toMap
   }
 
-  def filterByActors(events: List[LogEvent], actors: Set[Actor]) = {
+  def filterByActors(events: List[LogEvent], actors: Set[Entity]) = {
     if (actors.isEmpty)
       events
     else
@@ -394,14 +394,14 @@ object EventProcessor {
       }
   }
 
-  def filterByTarget(events: List[LogEvent], target: Actor): List[LogEvent] = {
+  def filterByTarget(events: List[LogEvent], target: Entity): List[LogEvent] = {
     events filter {
       case ae: ActorEvent => target == ae.target
       case _ => true
     }
   }
 
-  def actorDeaths(actor: Actor, events: List[LogEvent]): List[ActorEvent] = {
+  def actorDeaths(actor: Entity, events: List[LogEvent]): List[ActorEvent] = {
     val deaths = new mutable.ListBuffer[ActorEvent]
     for (event <- events) {
       event match {
@@ -442,7 +442,7 @@ object EventProcessor {
     }
   }
 
-  def chartHealthPriorToDeath(actor: Actor, events: List[LogEvent]): Array[Int] = {
+  def chartHealthPriorToDeath(actor: Entity, events: List[LogEvent]): Array[Int] = {
     val chart = new mutable.ArrayBuffer[Int]
     val rev = events.reverse
     var health: Int = 0
@@ -472,19 +472,19 @@ object EventProcessor {
     chart.reverse.toArray
   }
 
-  def dpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
+  def dpsSummary(data: Map[Entity, Summary]) = data.map {case (actor, summary) => actor -> summary.dpsOut}
 
-  def dpsSorted(data: Map[Actor, Summary]) = dpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
+  def dpsSorted(data: Map[Entity, Summary]) = dpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
 
-  def hpsSummary(data: Map[Actor, Summary]) = data.map {case (actor, summary) => actor -> summary.hpsOut}
+  def hpsSummary(data: Map[Entity, Summary]) = data.map {case (actor, summary) => actor -> summary.hpsOut}
 
-  def hpsSorted(data: Map[Actor, Summary]) = hpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
+  def hpsSorted(data: Map[Entity, Summary]) = hpsSummary(data).toList.sortBy {case (actor, value) => value}.reverse
 
-  def raidDPS(data: Map[Actor, Summary]) = dpsSummary(data).map {case (actor, value) => value}.sum
+  def raidDPS(data: Map[Entity, Summary]) = dpsSummary(data).map {case (actor, value) => value}.sum
 
-  def raidHPS(data: Map[Actor, Summary]) = hpsSummary(data).map {case (actor, value) => value}.sum
+  def raidHPS(data: Map[Entity, Summary]) = hpsSummary(data).map {case (actor, value) => value}.sum
 
-  def dpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
+  def dpsSummaryForClipboard(data: Map[Entity, Summary]): String = {
     val dps = dpsSorted(data).take(10).filter {case (actor, value) => value > 0}
     "DPS: Raid:%d - %s".format(
       raidDPS(data),
@@ -492,7 +492,7 @@ object EventProcessor {
     )
   }
 
-  def hpsSummaryForClipboard(data: Map[Actor, Summary]): String = {
+  def hpsSummaryForClipboard(data: Map[Entity, Summary]): String = {
     val hps = hpsSorted(data).take(10).filter {case (actor, value) => value > 0}
     "HPS: Raid:%d - %s".format(
       raidHPS(data),
@@ -500,7 +500,7 @@ object EventProcessor {
     )
   }
 
-  def filterSummaryByActors(summary: Map[Actor, Summary], actors: Set[String]): Map[Actor, Summary] = {
+  def filterSummaryByActors(summary: Map[Entity, Summary], actors: Set[String]): Map[Entity, Summary] = {
     if (actors.isEmpty)
       summary
     else
@@ -519,8 +519,8 @@ object EventProcessor {
     result.toMap
   }
 
-  def entityIndex(events: List[LogEvent]): Map[Long,Actor] = {
-    val result = new mutable.HashMap[Long,Actor]()
+  def entityIndex(events: List[LogEvent]): Map[Long,Entity] = {
+    val result = new mutable.HashMap[Long,Entity]()
     for (event <- events) {
       event match {
         case ae: ActorEvent => {

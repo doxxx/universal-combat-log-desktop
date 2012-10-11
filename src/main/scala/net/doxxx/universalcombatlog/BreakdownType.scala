@@ -26,9 +26,9 @@ object BreakdownType extends Enumeration {
       case OutgoingHealingBySpell => "Outgoing Healing By Spell"
       case OutgoingHealingByTarget => "Outgoing Healing By Target"
       case IncomingDamageBySpell => "Incoming Damage By Spell"
-      case IncomingDamageByActor => "Incoming Damage By Actor"
+      case IncomingDamageByActor => "Incoming Damage By Entity"
       case IncomingHealingBySpell => "Incoming Healing By Spell"
-      case IncomingHealingByActor => "Incoming Healing By Actor"
+      case IncomingHealingByActor => "Incoming Healing By Entity"
       case _ => throw new IllegalArgumentException(breakdownType.toString)
     }
   }

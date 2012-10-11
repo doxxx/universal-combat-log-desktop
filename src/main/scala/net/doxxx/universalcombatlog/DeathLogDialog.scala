@@ -4,7 +4,7 @@ import swing._
 import event.ListSelectionChanged
 
 class DeathLogDialog(owner: Window) extends Dialog(owner) {
-  var actor: Actor = Nobody
+  var actor: Entity = Nobody
   var events: List[LogEvent] = Nil
 
   val deathsList = new ListView[ListEntry] {
@@ -46,7 +46,7 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
     }
   }
 
-  def update(actor: Actor, events: List[LogEvent]) {
+  def update(actor: Entity, events: List[LogEvent]) {
     this.actor = actor
     this.events = events
     deathsList.listData = EventProcessor.actorDeaths(actor, events) map { e => ListEntry(e, e.time-events.head.time, e.text) }

@@ -9,7 +9,7 @@ case class CombatToggleEvent(override val time: Long, inCombat: Boolean) extends
 }
 
 case class ActorEvent(override val time: Long, eventType: EventType.Value,
-                      actor: Actor, target: Actor, spell: String, spellId: Long, amount: Int, text: String)
+                      actor: Entity, target: Entity, spell: String, spellId: Long, amount: Int, text: String)
                       extends LogEvent(time) {
   def copy(newTime: Long) = ActorEvent(newTime, eventType, actor, target, spell, spellId, amount, text)
 }

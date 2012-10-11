@@ -16,8 +16,8 @@ abstract class BaseLogParser extends LogParser {
   protected var threads: Set[String] = Set.empty
 
   private val actorsLock = new ReentrantReadWriteLock()
-  private val actors = new mutable.HashMap[ActorID, Actor] {
-    override def default(key: ActorID) = Nobody
+  private val actors = new mutable.HashMap[EntityID, Entity] {
+    override def default(key: EntityID) = Nobody
   }
 
   def reset() {
@@ -80,13 +80,13 @@ abstract class BaseLogParser extends LogParser {
 
   protected def parseLine(line: String): Option[LogEvent]
 
-  def playersAndPets: Set[Actor] = actors.filter {
-    case (id: ActorID, player: Player) => true
-    case (id: ActorID, playerPet: PlayerPet) => true
+  def playersAndPets: Set[Entity] = actors.filter {
+    case (id: EntityID, player: Player) => true
+    case (id: EntityID, playerPet: PlayerPet) => true
     case _ => false
   }.values.toSet
 
-  protected def getActor(actorID: ActorID, ownerID: ActorID, actorName: Option[String]): Actor = {
+  protected def getActor(actorID: EntityID, ownerID: EntityID, actorName: Option[String]): Entity = {
     actorsLock.readLock().lock()
     try {
       actors.get(actorID) match {
@@ -98,7 +98,7 @@ abstract class BaseLogParser extends LogParser {
             case None => // nothing
           }
           ownerID match {
-            case NullActorID => // nothing
+            case NullEntityID => // nothing
             case _ => {
               val owner = actors(ownerID)
               actor match {
@@ -120,8 +120,8 @@ abstract class BaseLogParser extends LogParser {
                 actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
               }
               case npc: NPC => {
-                val actor: Actor = ownerID match {
-                  case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
+                val actor: Entity = ownerID match {
+                  case NullEntityID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
                   case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
                 }
                 actors += actorID -> actor
@@ -142,10 +142,10 @@ abstract class BaseLogParser extends LogParser {
     }
   }
 
-  protected def getPlayer(id: ActorID): Player = {
-    getActor(id, NullActorID, None) match {
+  protected def getPlayer(id: EntityID): Player = {
+    getActor(id, NullEntityID, None) match {
       case p: Player => p
-      case a => throw new RuntimeException("Actor %s is not player".format(a))
+      case a => throw new RuntimeException("Entity %s is not player".format(a))
     }
   }
 }
