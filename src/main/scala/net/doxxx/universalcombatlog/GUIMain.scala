@@ -293,7 +293,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
       case LogFileLoaded(fights, playersAndPets) => {
         fightList.update(fights)
         _playersAndPets = playersAndPets
-        networkService.fights = fights
+        networkService.setTitleAndFights(logFile.get.getName, fights)
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
