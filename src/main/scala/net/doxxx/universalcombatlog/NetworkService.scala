@@ -2,8 +2,10 @@ package net.doxxx.universalcombatlog
 
 import java.net._
 import java.nio.charset.Charset
-import actors.Actor._
-import java.io.{InputStreamReader, BufferedReader, BufferedOutputStream, BufferedInputStream}
+import java.io._
+import akka.actor.{Actor, Supervisor}
+import akka.config.Supervision.{Permanent, Supervise, OneForOneStrategy, SupervisorConfig}
+import cc.spray.can._
 
 /**
  * Created 12-09-25 9:30 AM by gordon.
@@ -14,6 +16,10 @@ class NetworkService(port: Int = 5555) {
   var fights: List[Fight] = Nil
 
   private val utf8 = Charset.forName("UTF-8")
+  private val serverConfig = ServerConfig(
+    host = "0.0.0.0",
+    port = port
+  )
 
   def start() {
     listenForBroadcasts()
@@ -33,7 +39,7 @@ class NetworkService(port: Int = 5555) {
           message match {
             case "UCLDISCOVER" => {
               log("Received discovery datagram from %s:%d", inPacket.getAddress.getHostAddress, inPacket.getPort)
-              val outBuf = "ucl://%s:%d/".format(InetAddress.getLocalHost.getHostAddress, port).getBytes(utf8)
+              val outBuf = "http://%s:%d/".format(InetAddress.getLocalHost.getHostAddress, port).getBytes(utf8)
               val outPacket = new DatagramPacket(outBuf, outBuf.length, inPacket.getSocketAddress)
               socket.send(outPacket)
               log("Sent discovery reply to %s:%d", inPacket.getAddress.getHostAddress, inPacket.getPort)
@@ -51,41 +57,29 @@ class NetworkService(port: Int = 5555) {
   }
 
   def listenForClients() {
-    val socket = new ServerSocket(port)
-
-    new Thread(new Runnable {
-      def run() {
-        try {
-          while (true) {
-            val client = socket.accept()
-            log("Accepted connection from client: %s:%d", client.getInetAddress.getHostAddress, client.getPort)
-            actor {
-              try {
-                handleClient(client)
-              }
-              finally {
-                client.close()
-              }
-            }
-          }
-        }
-        finally {
-          socket.close()
-        }
-      }
-    }).start()
+    Supervisor(
+      SupervisorConfig(
+        OneForOneStrategy(List(classOf[Exception]), 3, 100),
+        List(
+          Supervise(Actor.actorOf(new ClientService()), Permanent),
+          Supervise(Actor.actorOf(new HttpServer(serverConfig)), Permanent)
+        )
+      )
+    )
 
     log("Listening for clients")
   }
 
-  private def handleClient(client: Socket) {
-    val out = new BufferedOutputStream(client.getOutputStream)
-
-    FileConverter.writeUniversalCombatLog(out, fights)
-
-    out.flush()
-    out.close()
-
-    log("Finished writing fights to client: %s:%d", client.getInetAddress.getHostAddress, client.getPort)
+  class ClientService extends Actor {
+    self.id = "spray-root-service"
+    protected def receive = {
+      case RequestContext(HttpRequest(HttpMethods.GET, "/", _, _, _), _, responder) => {
+        log("Received GET request for /")
+        val data = new ByteArrayOutputStream();
+        FileConverter.writeUniversalCombatLog(data, fights)
+        responder.complete(HttpResponse(body = data.toByteArray))
+        log("Sent fights in response")
+      }
+    }
   }
 }
