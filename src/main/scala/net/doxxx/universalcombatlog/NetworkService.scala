@@ -19,7 +19,7 @@ class NetworkService(port: Int = 5555) {
     host = "0.0.0.0",
     port = port
   )
-  private val baseURL = "http://%s:%d/".format(InetAddress.getLocalHost.getHostAddress, port)
+  private val baseURL = new URI("http://%s:%d/".format(InetAddress.getLocalHost.getHostAddress, port))
   log("Base URL: %s", baseURL)
 
   private var title: String = ""
@@ -48,7 +48,7 @@ class NetworkService(port: Int = 5555) {
           message match {
             case "UCLDISCOVER" => {
               log("Received discovery datagram from %s:%d", inPacket.getAddress.getHostAddress, inPacket.getPort)
-              val outBuf = baseURL.getBytes(utf8)
+              val outBuf = baseURL.toString.getBytes(utf8)
               val outPacket = new DatagramPacket(outBuf, outBuf.length, inPacket.getSocketAddress)
               socket.send(outPacket)
               log("Sent discovery reply to %s:%d", inPacket.getAddress.getHostAddress, inPacket.getPort)
@@ -82,10 +82,10 @@ class NetworkService(port: Int = 5555) {
   class ClientService extends Actor {
     self.id = "spray-root-service"
     protected def receive = {
-      case RequestContext(HttpRequest(HttpMethods.GET, "/logfiles", _, _, _), _, responder) => {
-        log("Received GET request for /logfiles")
+      case RequestContext(HttpRequest(HttpMethods.GET, uri @ "/logfiles", _, _, _), _, responder) => {
+        log("Received GET request for %s", uri)
         val data = List(
-          Map("title" -> title, "url" -> (baseURL + "logfiles/1"))
+          Map("title" -> title, "url" -> baseURL.resolve("logfiles/1").toString)
         ).toJson.prettyPrint
         log("Sending response:\n%s", data)
         responder.complete(HttpResponse(
@@ -93,8 +93,8 @@ class NetworkService(port: Int = 5555) {
           body = data.getBytes(utf8)
         ))
       }
-      case RequestContext(HttpRequest(HttpMethods.GET, "/logfiles/1", _, _, _), _, responder) => {
-        log("Received GET request for /logfiles/1")
+      case RequestContext(HttpRequest(HttpMethods.GET, uri @ "/logfiles/1", _, _, _), _, responder) => {
+        log("Received GET request for %s", uri)
         val data = new ByteArrayOutputStream()
         FileConverter.writeUniversalCombatLog(data, fights)
         responder.complete(HttpResponse(body = data.toByteArray))
