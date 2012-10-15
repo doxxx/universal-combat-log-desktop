@@ -1,4 +1,4 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.parser
 
 sealed abstract class EntityID {
   def id: Long

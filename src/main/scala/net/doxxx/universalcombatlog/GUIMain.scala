@@ -11,6 +11,7 @@ import javax.swing.{KeyStroke, JOptionPane, UIManager}
 import java.util
 import java.awt.{Toolkit, FileDialog}
 import java.awt.event.KeyEvent
+import parser._
 
 object GUIMain extends SimpleSwingApplication with ClipboardOwner {
 

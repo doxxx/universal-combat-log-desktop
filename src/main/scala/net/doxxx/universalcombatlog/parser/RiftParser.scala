@@ -1,9 +1,7 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.parser
 
 import util.matching.Regex
-import java.io._
 import java.lang.RuntimeException
-import scalax.io.Resource
 
 final class RiftParser extends BaseLogParser {
   protected def parseLine(line: String): Option[LogEvent] = {

@@ -1,5 +1,6 @@
 package net.doxxx.universalcombatlog
 
+import parser.Entity
 import swing._
 import event.{ButtonClicked, Event, TableRowsSelected}
 import net.doxxx.universalcombatlog.SummaryColumns._

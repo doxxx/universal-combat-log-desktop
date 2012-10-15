@@ -1,9 +1,8 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.parser
 
 import scalax.io.Codec
 import util.matching.Regex
 import java.util.{Date, Calendar}
-import scala.Some
 
 final class WoWParser extends BaseLogParser {
 
@@ -209,11 +208,12 @@ final class WoWParser extends BaseLogParser {
   }
 
   private def splitFields(s: String): Array[String] = {
-    (s.split('"') map { s =>
-      if (s.head == ',' || s.last == ',')
-        s.split(',').filter(_.length > 0)
-      else
-        Array(s)
+    (s.split('"') map {
+      s =>
+        if (s.head == ',' || s.last == ',')
+          s.split(',').filter(_.length > 0)
+        else
+          Array(s)
     }).flatten
   }
 

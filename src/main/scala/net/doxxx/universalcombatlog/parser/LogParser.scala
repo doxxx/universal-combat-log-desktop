@@ -1,4 +1,4 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.parser
 
 import java.io.File
 

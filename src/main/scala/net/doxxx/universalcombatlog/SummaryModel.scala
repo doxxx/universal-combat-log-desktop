@@ -3,6 +3,7 @@ package net.doxxx.universalcombatlog
 import collection.JavaConversions._
 import javax.swing.table.{TableRowSorter, AbstractTableModel}
 import javax.swing.{SortOrder, RowSorter}
+import parser.Entity
 
 object SummaryColumns extends Enumeration {
   type Column = Value

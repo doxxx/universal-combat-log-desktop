@@ -1,10 +1,11 @@
 package net.doxxx.universalcombatlog
 
-import EventType._
 import collection.immutable.List._
 import java.util.prefs.Preferences
 import collection.mutable
 import annotation.tailrec
+import parser._
+import parser.EventType._
 
 object EventProcessor {
   import Utils._

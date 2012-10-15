@@ -1,5 +1,6 @@
 package net.doxxx.universalcombatlog
 
+import parser.{Entity, LogEvent}
 import swing.{Window, Dialog}
 
 class BreakdownDialog(owner: Window) extends Dialog(owner) {

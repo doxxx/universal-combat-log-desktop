@@ -1,6 +1,7 @@
 package net.doxxx.universalcombatlog
 
 import java.io.{OutputStream, FileOutputStream, DataOutputStream, File}
+import parser._
 
 /**
  * Created 12-07-18 7:44 PM by gordon.

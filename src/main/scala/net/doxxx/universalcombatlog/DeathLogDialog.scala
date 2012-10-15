@@ -1,7 +1,9 @@
 package net.doxxx.universalcombatlog
 
+import parser._
 import swing._
 import event.ListSelectionChanged
+import scala.Some
 
 class DeathLogDialog(owner: Window) extends Dialog(owner) {
   var actor: Entity = Nobody

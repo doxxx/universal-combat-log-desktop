@@ -3,6 +3,7 @@ package net.doxxx.universalcombatlog
 import collection.immutable.TreeMap
 import net.doxxx.universalcombatlog.Utils._
 import java.io.File
+import parser._
 
 object InspectLog {
 

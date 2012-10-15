@@ -1,5 +1,6 @@
 package net.doxxx.universalcombatlog
 
+import parser.Entity
 import swing._
 import event.{SelectionChanged, ButtonClicked}
 import swing.TabbedPane.Page

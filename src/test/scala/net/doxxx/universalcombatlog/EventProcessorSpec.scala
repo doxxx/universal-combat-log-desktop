@@ -2,9 +2,10 @@ package net.doxxx.universalcombatlog
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
+import parser._
+import parser.EventType._
 
 class EventProcessorSpec extends WordSpec with ShouldMatchers {
-  import EventType._
 
   "An EventProcessor" when {
     val pc1 = Player(PC(1, 'C'), "pc1")

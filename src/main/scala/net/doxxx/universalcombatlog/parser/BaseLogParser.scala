@@ -1,10 +1,9 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.parser
 
 import java.io.File
 import collection.mutable
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import net.doxxx.universalcombatlog.Utils._
-import scala.Some
 import scalax.io.Resource
 
 abstract class BaseLogParser extends LogParser {
