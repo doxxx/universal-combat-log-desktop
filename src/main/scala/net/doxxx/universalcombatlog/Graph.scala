@@ -44,7 +44,7 @@ class Graph extends Component {
     g.drawString(maxVal.toString, lPad - maxValW - 5, tPad + 5)
     // TODO: draw more Y-axis values?
     drawPoints(g, lPad, tPad, lPad, h - bPad, maxVal / 1000)
-    drawPoints(g, lPad, h - bPad, w - rPad, h - bPad, data.size - 1)
+    drawPoints(g, lPad, h - bPad, w - rPad, h - bPad, data.length - 1)
 
     // TODO: draw horizontal grid in grey?
 

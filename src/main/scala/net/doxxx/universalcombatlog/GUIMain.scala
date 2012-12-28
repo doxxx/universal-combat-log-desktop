@@ -183,7 +183,7 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
     val MI_UseActorCombatTime = new CheckMenuItem("Use Actor Combat Time")
     val MI_MergePetsIntoOwners = new CheckMenuItem("Merge Pets Into Owners")
 
-    val shortcutKey = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
+    val shortcutKey = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
     MI_OpenLogFile.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, shortcutKey))
     MI_ExportUCL.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKey))
     MI_NewSession.peer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, shortcutKey))

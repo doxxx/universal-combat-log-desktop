@@ -116,7 +116,7 @@ object EventProcessor {
         case _ => // nothing
       }
     }
-    return nonPlayerDamage.toMap
+    nonPlayerDamage.toMap
   }
 
   def isValidAction(ae: ActorEvent): Boolean = {

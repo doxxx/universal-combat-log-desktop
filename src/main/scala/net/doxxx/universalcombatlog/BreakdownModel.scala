@@ -29,7 +29,7 @@ class BreakdownModel extends AbstractTableModel {
     value.asInstanceOf[AnyRef]
   }
 
-  def getColumnCount = ColumnNames.size
+  def getColumnCount = ColumnNames.length
 
   def getRowCount = data.size
 
