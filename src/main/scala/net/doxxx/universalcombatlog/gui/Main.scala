@@ -21,18 +21,20 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
   System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Universal Combat Log")
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
 
-  case class LogFileLoaded(fights: List[Fight], playersAndPets: Set[Actor]) extends Event
+  case class LogFileLoaded(logFile: LogFile) extends Event
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
-  var logFile: Option[File] = None
-  var logFileLastModified = 0L
+  var file: Option[File] = None
+  var fileLastModified = 0L
 
-  val logFileEventPublisher = new Publisher {}
+  val fileLoaderActorPublisher = new Publisher {}
 
   var loadingLogFile = false
 
   var parser: Option[LogParser] = None
+
+  var logFile: Option[LogFile] = None
 
   def chooseFile(title: String, mode: Int, default: Option[File] = None): Option[File] = {
     val dialog = new FileDialog(top.peer, title, mode)
@@ -48,8 +50,8 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
   }
 
   def rolloverCombatLogFile() {
-    if (logFile.isDefined) {
-      val f = logFile.get
+    if (file.isDefined) {
+      val f = file.get
       if (f.exists) {
         val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new util.Date())
         f.renameTo(new File(f.getParentFile, f.getName + '.' + date))
@@ -58,9 +60,9 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
   }
 
   def createFileLoaderActor() {
-    logFile match {
+    file match {
       case Some(f) => {
-        if (f.lastModified() <= logFileLastModified) return
+        if (f.lastModified() <= fileLastModified) return
 
         loadingLogFile = true
 
@@ -75,24 +77,21 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
               log("Loading events from %s", f.toString)
               try {
                 val logFile = p.parse(f).normalizeTimes()
-                top.progressBar.label = "Detecting fights..."
-                val fights = logFile.fights
-                logFileLastModified = f.lastModified()
-                val playersAndPets = p.playersAndPets
+                fileLastModified = f.lastModified()
                 Swing.onEDT {
-                  logFileEventPublisher.publish(LogFileLoaded(fights, playersAndPets))
+                  fileLoaderActorPublisher.publish(LogFileLoaded(logFile))
                 }
                 createFileWatchActor()
               }
               catch {
                 case e: IOException => log("Couldn't load combat log file: " + e.toString)
               }
-
-              Swing.onEDT {
-                top.progressBar.visible = false
+              finally {
+                loadingLogFile = false
+                Swing.onEDT {
+                  top.progressBar.visible = false
+                }
               }
-
-              loadingLogFile = false
             }
           }
           case None => {
@@ -109,7 +108,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
   }
 
   def createFileWatchActor() {
-    logFile match {
+    file match {
       case Some(f) => actor {
         val lastModified = f.lastModified
         try {
@@ -145,8 +144,6 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
 
   val top = new MainFrame {
     title = "Universal Combat Log"
-
-    private var _playersAndPets: Set[Actor] = Set.empty
 
     val fightList = new FightList
     val summaryPanels = new SummaryPanels(prefs)
@@ -212,7 +209,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
     listenTo(MI_IncludeOverhealing)
     listenTo(MI_UseActorCombatTime)
     listenTo(MI_MergePetsIntoOwners)
-    listenTo(logFileEventPublisher)
+    listenTo(fileLoaderActorPublisher)
     listenTo(fightList)
     listenTo(summaryPanels)
 
@@ -237,8 +234,8 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
       case ButtonClicked(MI_OpenLogFile) => {
         chooseFile("Open Log File", FileDialog.LOAD) match {
           case Some(f) => {
-            logFileLastModified = 0L
-            logFile = Some(f)
+            fileLastModified = 0L
+            file = Some(f)
             parser = LogParser.detectFormat(f)
             parser match {
               case Some(p) => createFileLoaderActor()
@@ -251,7 +248,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
         }
       }
       case ButtonClicked(MI_ExportUCL) => {
-        val default = logFile match {
+        val default = file match {
           case Some(f) => Some(new File(f.getParentFile, f.getName.substring(0, f.getName.indexOf(".txt")) + ".ucl"))
           case None => Some(new File("CombatLog.ucl"))
         }
@@ -288,13 +285,23 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
         EventProcessor.saveSettings(prefs)
         fightList.fireSelectedFightsChanged()
       }
-      case LogFileLoaded(fights, playersAndPets) => {
-        fightList.update(fights)
-        _playersAndPets = playersAndPets
+      case LogFileLoaded(f) => {
+        logFile = Some(f)
+        actor {
+          Swing.onEDT {
+            progressBar.visible = true
+            progressBar.label = "Loading fights..."
+          }
+          val fights = logFile.get.fights
+          Swing.onEDT {
+            fightList.update(fights)
+            progressBar.visible = false
+          }
+        }
       }
       case SelectedFightsChanged(fights) => {
         val combined = Fights(fights)
-        summaryPanels.update(combined, _playersAndPets)
+        summaryPanels.update(combined, logFile.get.playersAndPets)
       }
     }
   }
