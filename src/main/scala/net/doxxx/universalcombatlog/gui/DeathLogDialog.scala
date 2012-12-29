@@ -62,6 +62,6 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
   }
 
   case class ListEntry(event: CombatEvent, time: Long, text: String) {
-    override def toString = "%d> %s".format(time, text)
+    override def toString = "%.1f> %s".format(time / 1000.0, text)
   }
 }
