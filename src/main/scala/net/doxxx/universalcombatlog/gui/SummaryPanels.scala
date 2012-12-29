@@ -145,9 +145,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   def update(newFight: Fight, newPlayersAndPets: Set[Entity]) {
     fight = newFight
     playersAndPets = newPlayersAndPets
-    summary = EventProcessor.summary(fight).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(fight, playersAndPets)
     panels foreach { _.update(summary)}
     val oldTarget = targetDropdown.selectedActor
     targetDropdown.setItems(EventProcessor.actorsSortedByActivity(newFight.events))
@@ -188,16 +186,12 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
   private def applyTargetFilter(target: Entity) {
     val filtered = SingleFight(EventProcessor.filterByTarget(fight.events, target))
-    summary = EventProcessor.summary(filtered).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(filtered, playersAndPets)
     panels foreach { _.update(summary)}
   }
 
   private def resetTargetFilter() {
-    summary = EventProcessor.summary(fight).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(fight, playersAndPets)
     panels foreach { _.update(summary)}
   }
 

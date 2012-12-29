@@ -25,7 +25,7 @@ object EventProcessor {
     prefs.putBoolean("mergePetsIntoOwners", mergePetsIntoOwners)
   }
 
-  def summary(fight: Fight): Map[Entity, Summary] = {
+  def summary(fight: Fight, allowedEntities: Set[Entity]): Map[Entity, Summary] = {
     val results = new mutable.HashMap[Entity, Summary] {
       override def default(key: Entity) = Summary()
     }
@@ -49,20 +49,20 @@ object EventProcessor {
               results(target) = results(target).addHealingIn(overheal)
             }
           }
-          else if (ce.eventType == Died) {
-            results(actor) = results(actor).addDeath()
+          else if (ce.eventType == Died && !ce.actor.isInstanceOf[PlayerPet]) {
+            results(ce.actor) = results(ce.actor).addDeath()
           }
-          else if (ce.eventType == Slain) {
-            results(target) = results(target).addDeath()
+          else if (ce.eventType == Slain && !ce.target.isInstanceOf[PlayerPet]) {
+            results(ce.target) = results(ce.target).addDeath()
           }
         }
-        case _ =>
+        case _ => // nothing
       }
       for (actor <- results.keys) {
         results(actor) = results(actor).calculatePerSecond(fight.duration)
       }
     }
-    results.toMap
+    results.toMap.filter { case (entity, _) => allowedEntities.contains(entity) }
   }
 
   def mergePetIntoOwner(entity: Entity): Entity = {
