@@ -10,14 +10,14 @@ object FileConverter {
 
   def writeEvent(s: DataOutputStream, event: LogEvent) {
     event match {
-      case ae: ActorEvent => {
-        s.writeLong(ae.time)
-        s.writeByte(ae.eventType.id)
-        s.writeLong(ae.actor.id.id)
-        s.writeLong(ae.target.id.id)
-        s.writeLong(ae.spellId)
-        s.writeLong(ae.amount)
-        s.writeUTF(ae.text)
+      case ce: CombatEvent => {
+        s.writeLong(ce.time)
+        s.writeByte(ce.eventType.id)
+        s.writeLong(ce.actor.id.id)
+        s.writeLong(ce.target.id.id)
+        s.writeLong(ce.spellId)
+        s.writeLong(ce.amount)
+        s.writeUTF(ce.text)
       }
       case _ => // skip
     }

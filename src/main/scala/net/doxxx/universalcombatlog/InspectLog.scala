@@ -10,7 +10,7 @@ object InspectLog {
     var m = TreeMap[EventTypes.Value, String]()
     for (event <- events) {
       event match {
-        case ae: ActorEvent => m += ae.eventType -> ae.text
+        case ce: CombatEvent => m += ce.eventType -> ce.text
         case _ =>
       }
     }

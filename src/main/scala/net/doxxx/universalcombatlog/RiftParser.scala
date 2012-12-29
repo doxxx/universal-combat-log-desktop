@@ -26,10 +26,10 @@ final class RiftParser extends BaseLogParser {
     case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
   }
 
-  private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
+  private def parseActorEvent(time: String, data: String, text: String): Option[CombatEvent] = {
     data match {
       case RiftParser.DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
-        Some(ActorEvent(parseTime(time), EventTypes(eventType.toInt),
+        Some(CombatEvent(parseTime(time), EventTypes(eventType.toInt),
           getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
           getEntity(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
           spell, spellId.toLong, amount.toInt, text))

@@ -30,29 +30,29 @@ object EventProcessor {
       override def default(key: Entity) = Summary()
     }
     timeit("summary") {
-      for (e <- fight.events) e match {
-        case ae: ActorEvent => {
-          val actor = mergePetIntoOwner(ae.actor)
-          val target = mergePetIntoOwner(ae.target)
+      for (event <- fight.events) event match {
+        case ce: CombatEvent => {
+          val actor = mergePetIntoOwner(ce.actor)
+          val target = mergePetIntoOwner(ce.target)
 
-          if (DamageTypes.contains(ae.eventType)) {
-            results(actor) = results(actor).addDamageOut(ae.amount).updateTimes(ae.time)
-            results(target) = results(target).addDamageIn(ae.amount)
+          if (DamageTypes.contains(ce.eventType)) {
+            results(actor) = results(actor).addDamageOut(ce.amount).updateTimes(ce.time)
+            results(target) = results(target).addDamageIn(ce.amount)
           }
-          else if (HealTypes.contains(ae.eventType)) {
-            results(actor) = results(actor).addHealingOut(ae.amount).updateTimes(ae.time)
-            results(target) = results(target).addHealingIn(ae.amount)
-            val overheal = RiftParser.extractOverheal(ae.text)
+          else if (HealTypes.contains(ce.eventType)) {
+            results(actor) = results(actor).addHealingOut(ce.amount).updateTimes(ce.time)
+            results(target) = results(target).addHealingIn(ce.amount)
+            val overheal = RiftParser.extractOverheal(ce.text)
             results(target) = results(target).addOverhealing(overheal)
             if (includeOverhealing) {
               results(actor) = results(actor).addHealingOut(overheal)
               results(target) = results(target).addHealingIn(overheal)
             }
           }
-          else if (ae.eventType == Died) {
+          else if (ce.eventType == Died) {
             results(actor) = results(actor).addDeath()
           }
-          else if (ae.eventType == Slain) {
+          else if (ce.eventType == Slain) {
             results(target) = results(target).addDeath()
           }
         }
@@ -77,7 +77,7 @@ object EventProcessor {
       override def default(key: Entity) = 0
     }
     for (e <- events) e match {
-      case ae: ActorEvent => {
+      case ae: CombatEvent => {
         val actor = mergePetIntoOwner(ae.actor)
         activity(actor) = activity(actor) + 1
       }
@@ -105,10 +105,10 @@ object EventProcessor {
     val nonPlayerDamage = new mutable.HashMap[NonPlayer, Int]
     for (event <- events) {
       event match {
-        case ae: ActorEvent if (DamageTypes.contains(ae.eventType)) => {
-          ae.target match {
+        case ce: CombatEvent if (DamageTypes.contains(ce.eventType)) => {
+          ce.target match {
             case np: NonPlayer => {
-              nonPlayerDamage(np) = nonPlayerDamage.getOrElse(np, 0) + ae.amount
+              nonPlayerDamage(np) = nonPlayerDamage.getOrElse(np, 0) + ce.amount
             }
             case _ => // nothing
           }
@@ -119,29 +119,29 @@ object EventProcessor {
     nonPlayerDamage.toMap
   }
 
-  def isValidAction(ae: ActorEvent): Boolean = {
-    (ae.actor.grouped ||
-     ae.target.grouped ||
-     ae.actor.isInstanceOf[NonPlayer] ||
-     ae.target.isInstanceOf[NonPlayer]) &&
-    (ae.eventType == EventTypes.Slain ||
-     ae.eventType == EventTypes.Died ||
-     ae.eventType == EventTypes.PowerGain ||
-     !ae.spell.isEmpty)
+  def isValidAction(event: CombatEvent): Boolean = {
+    (event.actor.grouped ||
+     event.target.grouped ||
+     event.actor.isInstanceOf[NonPlayer] ||
+     event.target.isInstanceOf[NonPlayer]) &&
+    (event.eventType == EventTypes.Slain ||
+     event.eventType == EventTypes.Died ||
+     event.eventType == EventTypes.PowerGain ||
+     !event.spell.isEmpty)
   }
 
   val ignoredHostileSpells = Set("Sacrifice Life: Mana", "Critter Killer")
 
-  def isHostileAction(ae: ActorEvent): Boolean = {
-    (EventTypes.HostileTypes.contains(ae.eventType) &&
-     !ignoredHostileSpells.contains(ae.spell) &&
-     !(ae.actor.isInstanceOf[Player] && ae.target.isInstanceOf[Player]))
+  def isHostileAction(event: CombatEvent): Boolean = {
+    (EventTypes.HostileTypes.contains(event.eventType) &&
+     !ignoredHostileSpells.contains(event.spell) &&
+     !(event.actor.isInstanceOf[Player] && event.target.isInstanceOf[Player]))
   }
 
-  def deadEntity(ae: ActorEvent): Option[Entity] = {
-    ae.eventType match {
-      case Died => Some(ae.actor)
-      case Slain => Some(ae.target)
+  def deadEntity(event: CombatEvent): Option[Entity] = {
+    event.eventType match {
+      case Died => Some(event.actor)
+      case Slain => Some(event.target)
       case _ => None
     }
   }
@@ -153,7 +153,7 @@ object EventProcessor {
     val deadNPCs = new mutable.HashSet[NonPlayer]
     val pcs = new mutable.HashSet[Player]
     val deadPCs = new mutable.HashSet[Player]
-    val pendingDeaths = new mutable.Queue[ActorEvent]
+    val pendingDeaths = new mutable.Queue[CombatEvent]
 
     def processPendingDeaths(time: Long) {
       while (!pendingDeaths.isEmpty && pendingDeaths.front.time < time) {
@@ -203,45 +203,45 @@ object EventProcessor {
 
     for (event <- events) {
       event match {
-        case ae: ActorEvent if (isValidAction(ae)) => {
+        case ce: CombatEvent if (isValidAction(ce)) => {
           // process queued deaths
-          processPendingDeaths(ae.time)
+          processPendingDeaths(ce.time)
 
           // if all active NPCs have died, fight is finished
           if (!npcs.isEmpty && npcs == deadNPCs && !currentFight.isEmpty) {
             val f = SingleFight(currentFight.toList)
-            debuglog("%d: All active NPCs have died, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: All active NPCs have died, creating fight: %s", ce.time, f.toString)
             finishFight(f)
           }
           // if all active PCs have died, fight is finished
           else if (!pcs.isEmpty && pcs == deadPCs && !currentFight.isEmpty) {
             val f = SingleFight(currentFight.toList)
-            debuglog("%d: All active PCs have died, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: All active PCs have died, creating fight: %s", ce.time, f.toString)
             finishFight(f)
           }
           // if more than 5 seconds have passed since the last hostile fight event, fight is finished
-          else if (!currentFight.isEmpty && (ae.time - currentFight.last.time) >= 5000) {
+          else if (!currentFight.isEmpty && (ce.time - currentFight.last.time) >= 5000) {
             val f = SingleFight(currentFight.toList)
-            debuglog("%d: 5 second timeout, creating fight: %s", ae.time, f.toString)
+            debuglog("%d: 5 second timeout, creating fight: %s", ce.time, f.toString)
             finishFight(f)
           }
 
-          deadEntity(ae) match {
+          deadEntity(ce) match {
             case Some(a) => {
               // if it was a death event, queue it, since they occur before the actual killing blow
               //debuglog("%d: Queuing actor death: %s", ae.time, a.toString)
-              pendingDeaths.enqueue(ae)
+              pendingDeaths.enqueue(ce)
             }
             case None => {
               // if it was a hostile action or a fight is in progress, add it to the current fight
-              if (isHostileAction(ae) || !currentFight.isEmpty) {
+              if (isHostileAction(ce) || !currentFight.isEmpty) {
                 if (currentFight.isEmpty) {
-                  debuglog("%d: First hostile action: %s", ae.time, ae.toString)
+                  debuglog("%d: First hostile action: %s", ce.time, ce.toString)
                 }
                 // non-death event
-                currentFight += ae
-                trackEntity(ae.actor)
-                trackEntity(ae.target)
+                currentFight += ce
+                trackEntity(ce.actor)
+                trackEntity(ce.target)
               }
             }
           }
@@ -293,13 +293,13 @@ object EventProcessor {
 
     val healingDamageFilter =
       if (BreakdownType.DamageTypes.contains(breakdownType)) {
-        (ae: ActorEvent) => {
-          EventTypes.DamageTypes.contains(ae.eventType)
+        (event: CombatEvent) => {
+          EventTypes.DamageTypes.contains(event.eventType)
         }
       }
       else if (BreakdownType.HealingTypes.contains(breakdownType)) {
-        (ae: ActorEvent) => {
-          EventTypes.HealTypes.contains(ae.eventType)
+        (event: CombatEvent) => {
+          EventTypes.HealTypes.contains(event.eventType)
         }
       }
       else {
@@ -308,21 +308,21 @@ object EventProcessor {
 
     val extractKey =
       if (BreakdownType.BySpellTypes.contains(breakdownType)) {
-        (ae: ActorEvent) => {
-          ae.actor match {
-            case p: PlayerPet => "%s (%s)".format(ae.spell, p._name)
-            case _ => ae.spell
+        (event: CombatEvent) => {
+          event.actor match {
+            case p: PlayerPet => "%s (%s)".format(event.spell, p._name)
+            case _ => event.spell
           }
         }
       }
       else if (BreakdownType.ByTargetTypes.contains(breakdownType)) {
-        (ae: ActorEvent) => {
-          ae.target.name
+        (event: CombatEvent) => {
+          event.target.name
         }
       }
       else if (BreakdownType.ByActorTypes.contains(breakdownType)) {
-        (ae: ActorEvent) => {
-          ae.actor.name
+        (event: CombatEvent) => {
+          event.actor.name
         }
       }
       else throw new RuntimeException("Invalid breakdown type")
@@ -333,37 +333,37 @@ object EventProcessor {
     var totalDamage: Int = 0
     var totalHealing: Int = 0
 
-    for (e <- filteredEvents) e match {
-      case ae: ActorEvent if (healingDamageFilter(ae)) => {
-        val key = extractKey(ae)
-        if (DamageTypes.contains(ae.eventType)) {
-          if (ae.eventType == CritDamage) {
+    for (event <- filteredEvents) event match {
+      case ce: CombatEvent if (healingDamageFilter(ce)) => {
+        val key = extractKey(ce)
+        if (DamageTypes.contains(ce.eventType)) {
+          if (ce.eventType == CritDamage) {
             results(key) = results(key).addCrit()
-            results(key) = results(key).addAmount(ae.amount)
+            results(key) = results(key).addAmount(ce.amount)
           }
-          else if (MissTypes.contains(ae.eventType)) {
+          else if (MissTypes.contains(ce.eventType)) {
             results(key) = results(key).addMiss()
           }
           else {
-            results(key) = results(key).addAmount(ae.amount)
+            results(key) = results(key).addAmount(ce.amount)
             results(key) = results(key).addHit()
           }
-          results(key) = results(key).addDamageType(RiftParser.extractDamageType(ae.text))
-          totalDamage += ae.amount
+          results(key) = results(key).addDamageType(RiftParser.extractDamageType(ce.text))
+          totalDamage += ce.amount
         }
-        else if (HealTypes.contains(ae.eventType)) {
-          results(key) = results(key).addAmount(ae.amount)
+        else if (HealTypes.contains(ce.eventType)) {
+          results(key) = results(key).addAmount(ce.amount)
           if (includeOverhealing) {
-            val overheal = RiftParser.extractOverheal(ae.text)
+            val overheal = RiftParser.extractOverheal(ce.text)
             results(key) = results(key).addAmount(overheal)
           }
-          if (ae.eventType == CritHeal) {
+          if (ce.eventType == CritHeal) {
             results(key) = results(key).addCrit()
           }
           else {
             results(key) = results(key).addHit()
           }
-          totalHealing += ae.amount
+          totalHealing += ce.amount
         }
       }
       case _ =>
@@ -388,31 +388,31 @@ object EventProcessor {
       events
     else
       events filter {
-        case ae: ActorEvent => actors.contains(mergePetIntoOwner(ae.actor))
+        case event: CombatEvent => actors.contains(mergePetIntoOwner(event.actor))
         case _ => true
       }
   }
 
   def filterByTarget(events: List[LogEvent], target: Entity): List[LogEvent] = {
     events filter {
-      case ae: ActorEvent => target == ae.target
+      case event: CombatEvent => target == event.target
       case _ => true
     }
   }
 
-  def entityDeaths(entity: Entity, events: List[LogEvent]): List[ActorEvent] = {
-    val deaths = new mutable.ListBuffer[ActorEvent]
+  def entityDeaths(entity: Entity, events: List[LogEvent]): List[CombatEvent] = {
+    val deaths = new mutable.ListBuffer[CombatEvent]
     for (event <- events) {
       event match {
-        case ae: ActorEvent => {
-          if (ae.eventType == Died) {
-            if (ae.actor == entity) {
-              deaths += ae
+        case ce: CombatEvent => {
+          if (ce.eventType == Died) {
+            if (ce.actor == entity) {
+              deaths += ce
             }
           }
-          else if (ae.eventType == Slain) {
-            if (ae.target == entity) {
-              deaths += ae
+          else if (ce.eventType == Slain) {
+            if (ce.target == entity) {
+              deaths += ce
             }
           }
         }
@@ -422,17 +422,17 @@ object EventProcessor {
     deaths.toList
   }
 
-  def eventsUpToDeath(death: ActorEvent, events: List[LogEvent], eventTypes: Set[EventTypes.Value] = Set.empty): List[LogEvent] = {
+  def eventsUpToDeath(death: CombatEvent, events: List[LogEvent], eventTypes: Set[EventTypes.Value] = Set.empty): List[LogEvent] = {
     val entity = deadEntity(death).get
     val eventsBeforeDeath = events.takeWhile(_.time <= death.time+1000)
     val withinTimeframe = eventsBeforeDeath.dropWhile(_.time < death.time - 10000)
     withinTimeframe.filter {
-      case ae: ActorEvent => {
-        ae == death ||
-        (ae.actor == entity || ae.target == entity) &&
-        (eventTypes.isEmpty || eventTypes.contains(ae.eventType)) &&
-        ((EventTypes.HealTypes.contains(ae.eventType) && ae.actor != entity) ||
-         (EventTypes.DamageTypes.contains(ae.eventType) && ae.target == entity))
+      case event: CombatEvent => {
+        event == death ||
+        (event.actor == entity || event.target == entity) &&
+        (eventTypes.isEmpty || eventTypes.contains(event.eventType)) &&
+        ((EventTypes.HealTypes.contains(event.eventType) && event.actor != entity) ||
+         (EventTypes.DamageTypes.contains(event.eventType) && event.target == entity))
       }
       case _ => false
     }
@@ -440,24 +440,24 @@ object EventProcessor {
 
   def chartHealthPriorToDeath(entity: Entity, events: List[LogEvent]): Array[Int] = {
     val chart = new mutable.ArrayBuffer[Int]
-    val rev = events.reverse
+    val revEvents = events.reverse
     var health: Int = 0
-    var time = rev.head.time
+    var time = revEvents.head.time
     chart += 0
-    for (e <- rev) {
-      if (e.time < time) {
+    for (event <- revEvents) {
+      if (event.time < time) {
         chart += health
-        time = e.time
+        time = event.time
       }
-      e match {
-        case ae: ActorEvent => {
-          if (ae.target == entity) {
-            if (EventTypes.DamageTypes.contains(ae.eventType)) {
-              val overkill = RiftParser.extractOverkill(ae.text)
-              health += ae.amount - overkill
+      event match {
+        case ce: CombatEvent => {
+          if (ce.target == entity) {
+            if (EventTypes.DamageTypes.contains(ce.eventType)) {
+              val overkill = RiftParser.extractOverkill(ce.text)
+              health += ce.amount - overkill
             }
-            else if (EventTypes.HealTypes.contains(ae.eventType)) {
-              health -= ae.amount
+            else if (EventTypes.HealTypes.contains(ce.eventType)) {
+              health -= ce.amount
             }
           }
         }
@@ -507,8 +507,8 @@ object EventProcessor {
     val result = new mutable.HashMap[Long,String]()
     for (event <- events) {
       event match {
-        case ae: ActorEvent => {
-          result.update(ae.spellId, ae.spell)
+        case ce: CombatEvent => {
+          result.update(ce.spellId, ce.spell)
         }
         case _ => // nothing
       }
@@ -520,8 +520,8 @@ object EventProcessor {
     val result = new mutable.HashMap[Long,Entity]()
     for (event <- events) {
       event match {
-        case ae: ActorEvent => {
-          result.update(ae.actor.id.id, ae.actor)
+        case ce: CombatEvent => {
+          result.update(ce.actor.id.id, ce.actor)
         }
         case _ => // nothing
       }

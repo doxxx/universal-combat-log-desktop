@@ -39,7 +39,7 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
         val deathEvent = selectedItems(0).event
         val preDeathEvents = EventProcessor.eventsUpToDeath(deathEvent, events, EventTypes.DamageTypes ++ EventTypes.HealTypes)
         deathLog.text = preDeathEvents.map {
-          case ae: ActorEvent => Some("%d> %s".format(ae.time-events.head.time, ae.text))
+          case ce: CombatEvent => Some("%d> %s".format(ce.time-events.head.time, ce.text))
           case _ => None
         }.flatten.mkString("\n")
         healthGraph.data = EventProcessor.chartHealthPriorToDeath(entity, preDeathEvents)
@@ -55,7 +55,7 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
     pack()
   }
 
-  case class ListEntry(event: ActorEvent, time: Long, text: String) {
+  case class ListEntry(event: CombatEvent, time: Long, text: String) {
     override def toString = "%d> %s".format(time, text)
   }
 }

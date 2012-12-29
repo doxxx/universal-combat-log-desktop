@@ -194,7 +194,7 @@ final class WoWParser extends BaseLogParser {
     val target = makeActor(targetID, targetName, targetFlags)
 
     // Create log event
-    Some(ActorEvent(time, eventType, actor, target, spell, spellID, amount, ""))
+    Some(CombatEvent(time, eventType, actor, target, spell, spellID, amount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {
