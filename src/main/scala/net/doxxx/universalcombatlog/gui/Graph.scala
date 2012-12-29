@@ -24,7 +24,7 @@ class Graph extends Component {
     val w = size.width
     val h = size.height
 
-    val maxVal = (math.ceil(data.max.toDouble / 1000d) * 1000).toInt
+    val maxVal = if (data.length == 0) 0 else (math.ceil(data.max.toDouble / 1000d) * 1000).toInt
     val maxValW = g.getFontMetrics.stringWidth(maxVal.toString)
     val lPad = PAD + maxValW
     val rPad = PAD
@@ -40,6 +40,8 @@ class Graph extends Component {
     g.drawLine(lPad, tPad, lPad, h - bPad) // Y-axis
     g.drawLine(lPad, h - bPad, w - rPad, h - bPad) // X-axis
 
+    if (data.length == 0) return
+
     // paint scale on axes
     g.drawString(maxVal.toString, lPad - maxValW - 5, tPad + 5)
     // TODO: draw more Y-axis values?
@@ -47,8 +49,6 @@ class Graph extends Component {
     drawPoints(g, lPad, h - bPad, w - rPad, h - bPad, data.length - 1)
 
     // TODO: draw horizontal grid in grey?
-
-    if (data.length == 0) return
 
     // scale data to component size
     val xScale = (w - lPad - rPad).toDouble / (data.length.toDouble - 1)
