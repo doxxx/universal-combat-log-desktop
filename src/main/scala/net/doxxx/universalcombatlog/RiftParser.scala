@@ -29,7 +29,7 @@ final class RiftParser extends BaseLogParser {
   private def parseActorEvent(time: String, data: String, text: String): Option[ActorEvent] = {
     data match {
       case RiftParser.DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
-        Some(ActorEvent(parseTime(time), EventType(eventType.toInt),
+        Some(ActorEvent(parseTime(time), EventTypes(eventType.toInt),
           getActor(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
           getActor(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
           spell, spellId.toLong, amount.toInt, text))

@@ -36,7 +36,7 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
       val selectedItems = deathsList.selection.items
       if (!live && selectedItems.size > 0) {
         val deathEvent = selectedItems(0).event
-        val preDeathEvents = EventProcessor.eventsUpToDeath(deathEvent, events, EventType.DamageTypes ++ EventType.HealTypes)
+        val preDeathEvents = EventProcessor.eventsUpToDeath(deathEvent, events, EventTypes.DamageTypes ++ EventTypes.HealTypes)
         deathLog.text = preDeathEvents.map {
           case ae: ActorEvent => Some("%d> %s".format(ae.time-events.head.time, ae.text))
           case _ => None

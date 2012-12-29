@@ -1,6 +1,6 @@
 package net.doxxx.universalcombatlog
 
-import EventType._
+import EventTypes._
 import collection.immutable.List._
 import java.util.prefs.Preferences
 import collection.mutable
@@ -124,16 +124,16 @@ object EventProcessor {
      ae.target.grouped ||
      ae.actor.isInstanceOf[NonPlayer] ||
      ae.target.isInstanceOf[NonPlayer]) &&
-    (ae.eventType == EventType.Slain ||
-     ae.eventType == EventType.Died ||
-     ae.eventType == EventType.PowerGain ||
+    (ae.eventType == EventTypes.Slain ||
+     ae.eventType == EventTypes.Died ||
+     ae.eventType == EventTypes.PowerGain ||
      !ae.spell.isEmpty)
   }
 
   val ignoredHostileSpells = Set("Sacrifice Life: Mana", "Critter Killer")
 
   def isHostileAction(ae: ActorEvent): Boolean = {
-    (EventType.HostileTypes.contains(ae.eventType) &&
+    (EventTypes.HostileTypes.contains(ae.eventType) &&
      !ignoredHostileSpells.contains(ae.spell) &&
      !(ae.actor.isInstanceOf[Player] && ae.target.isInstanceOf[Player]))
   }
@@ -295,12 +295,12 @@ object EventProcessor {
     val healingDamageFilter =
       if (BreakdownType.DamageTypes.contains(breakdownType)) {
         (ae: ActorEvent) => {
-          EventType.DamageTypes.contains(ae.eventType)
+          EventTypes.DamageTypes.contains(ae.eventType)
         }
       }
       else if (BreakdownType.HealingTypes.contains(breakdownType)) {
         (ae: ActorEvent) => {
-          EventType.HealTypes.contains(ae.eventType)
+          EventTypes.HealTypes.contains(ae.eventType)
         }
       }
       else {
@@ -423,7 +423,7 @@ object EventProcessor {
     deaths.toList
   }
 
-  def eventsUpToDeath(death: ActorEvent, events: List[LogEvent], eventTypes: Set[EventType.Value] = Set.empty): List[LogEvent] = {
+  def eventsUpToDeath(death: ActorEvent, events: List[LogEvent], eventTypes: Set[EventTypes.Value] = Set.empty): List[LogEvent] = {
     val actor = death.eventType match {
       case Died => death.actor
       case Slain => death.target
@@ -435,8 +435,8 @@ object EventProcessor {
         ae == death ||
         (ae.actor == actor || ae.target == actor) &&
         (eventTypes == Nil || eventTypes.contains(ae.eventType)) &&
-        ((EventType.HealTypes.contains(ae.eventType) && ae.actor != actor) ||
-         (EventType.DamageTypes.contains(ae.eventType) && ae.target == actor))
+        ((EventTypes.HealTypes.contains(ae.eventType) && ae.actor != actor) ||
+         (EventTypes.DamageTypes.contains(ae.eventType) && ae.target == actor))
       }
       case _ => false
     }
@@ -456,11 +456,11 @@ object EventProcessor {
       e match {
         case ae: ActorEvent => {
           if (ae.target == actor) {
-            if (EventType.DamageTypes.contains(ae.eventType)) {
+            if (EventTypes.DamageTypes.contains(ae.eventType)) {
               val overkill = RiftParser.extractOverkill(ae.text)
               health += ae.amount - overkill
             }
-            else if (EventType.HealTypes.contains(ae.eventType)) {
+            else if (EventTypes.HealTypes.contains(ae.eventType)) {
               health -= ae.amount
             }
           }

@@ -7,7 +7,7 @@ import java.io.File
 object InspectLog {
 
   def mapEventTypes(events: List[LogEvent]) {
-    var m = TreeMap[EventType.Value, String]()
+    var m = TreeMap[EventTypes.Value, String]()
     for (event <- events) {
       event match {
         case ae: ActorEvent => m += ae.eventType -> ae.text

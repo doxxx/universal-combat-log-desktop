@@ -4,7 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
 
 class EventProcessorSpec extends WordSpec with ShouldMatchers {
-  import EventType._
+  import EventTypes._
 
   "An EventProcessor" when {
     val pc1 = Player(PC(1, 'C'), "pc1")

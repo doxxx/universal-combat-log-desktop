@@ -62,7 +62,7 @@ final class WoWParser extends BaseLogParser {
     val targetRaidFlags = parseHex(it.next().substring(2))
 
     // extended fields depending on event
-    var eventType: EventType.Value = EventType.Unrecognized
+    var eventType: EventTypes.Value = EventTypes.Unrecognized
     var spell: String = ""
     var spellID: Long = 0
     var periodic: Boolean = false
@@ -71,10 +71,10 @@ final class WoWParser extends BaseLogParser {
 
     eventName match {
       case "PARTY_KILL" => {
-        eventType = EventType.Slain
+        eventType = EventTypes.Slain
       }
       case "UNIT_DIED" => {
-        eventType = EventType.Died
+        eventType = EventTypes.Died
       }
       case "UNIT_DESTROYED" => {
         // totems
@@ -112,7 +112,7 @@ final class WoWParser extends BaseLogParser {
 
         eventNameParts(1) match {
           case "DAMAGE" => {
-            eventType = if (periodic) EventType.DamageOverTime else EventType.DirectDamage
+            eventType = if (periodic) EventTypes.DamageOverTime else EventTypes.DirectDamage
             amount = it.next().toInt
             it.next().toInt // overkill
             it.next() // school
@@ -124,7 +124,7 @@ final class WoWParser extends BaseLogParser {
             //it.next() // 1 == crushing
           }
           case "MISSED" => {
-            eventType = EventType.Miss
+            eventType = EventTypes.Miss
             //it.next() // missType
             //it.next() // isOffHand
             //it.next() // amountMissed
@@ -134,7 +134,7 @@ final class WoWParser extends BaseLogParser {
             it.next().toInt // overheal
             it.next().toInt // absorbed
             critical = it.next() == "1"
-            eventType = if (critical) EventType.CritHeal else EventType.Heal
+            eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
           }
           // ENERGIZE
           // DRAIN
@@ -149,10 +149,10 @@ final class WoWParser extends BaseLogParser {
             //it.next().toInt // amount
             auraType match {
               case "BUFF" => {
-                eventType = EventType.BuffGain
+                eventType = EventTypes.BuffGain
               }
               case "DEBUFF" => {
-                eventType = EventType.DebuffGain
+                eventType = EventTypes.DebuffGain
               }
             }
           }
@@ -161,10 +161,10 @@ final class WoWParser extends BaseLogParser {
             //it.next().toInt // amount
             auraType match {
               case "BUFF" => {
-                eventType = EventType.BuffFade
+                eventType = EventTypes.BuffFade
               }
               case "DEBUFF" => {
-                eventType = EventType.DebuffFade
+                eventType = EventTypes.DebuffFade
               }
             }
           }
@@ -174,7 +174,7 @@ final class WoWParser extends BaseLogParser {
           // AURA_BROKEN
           // AURA_BROKEN_SPELL
           case "CAST_START" => {
-            eventType = EventType.BeginCasting
+            eventType = EventTypes.BeginCasting
           }
           // CAST_SUCCESS
           // CAST_FAILED
