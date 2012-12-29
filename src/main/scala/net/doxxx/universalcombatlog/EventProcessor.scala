@@ -514,6 +514,7 @@ object EventProcessor {
         case ae: ActorEvent => {
           result.update(ae.spellId, ae.spell)
         }
+        case _ => // nothing
       }
     }
     result.toMap
@@ -526,6 +527,7 @@ object EventProcessor {
         case ae: ActorEvent => {
           result.update(ae.actor.id.id, ae.actor)
         }
+        case _ => // nothing
       }
     }
     result.toMap
