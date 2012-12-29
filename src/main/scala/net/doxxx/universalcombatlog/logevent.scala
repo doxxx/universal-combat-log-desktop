@@ -1,16 +1,17 @@
 package net.doxxx.universalcombatlog
 
-sealed abstract class LogEvent(val time: Long) {
+sealed abstract class LogEvent {
+  def time: Long
   def copy(newTime: Long): LogEvent
 }
 
-case class CombatToggleEvent(override val time: Long, inCombat: Boolean) extends LogEvent(time) {
+case class CombatToggleEvent(time: Long, inCombat: Boolean) extends LogEvent {
   def copy(newTime: Long) = CombatToggleEvent(newTime, inCombat)
 }
 
-case class ActorEvent(override val time: Long, eventType: EventType.Value,
+case class ActorEvent(time: Long, eventType: EventType.Value,
                       actor: Actor, target: Actor, spell: String, spellId: Long, amount: Int, text: String)
-                      extends LogEvent(time) {
+                      extends LogEvent {
   def copy(newTime: Long) = ActorEvent(newTime, eventType, actor, target, spell, spellId, amount, text)
 }
 
