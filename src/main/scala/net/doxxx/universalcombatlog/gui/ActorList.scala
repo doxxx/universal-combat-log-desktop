@@ -1,7 +1,8 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing._
 import event._
+import net.doxxx.universalcombatlog.Actor
 
 class ActorList extends BorderPanel {
   layoutManager.setHgap(5)

@@ -1,4 +1,4 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing.Component
 import java.awt._

@@ -1,4 +1,4 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import scala.swing._
 import event._
@@ -11,8 +11,9 @@ import javax.swing.{KeyStroke, JOptionPane, UIManager}
 import java.util
 import java.awt.{Toolkit, FileDialog}
 import java.awt.event.KeyEvent
+import net.doxxx.universalcombatlog._
 
-object GUIMain extends SimpleSwingApplication with ClipboardOwner {
+object Main extends SimpleSwingApplication with ClipboardOwner {
 
   import Utils._
 

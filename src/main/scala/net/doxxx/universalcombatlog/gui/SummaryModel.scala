@@ -1,8 +1,9 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import collection.JavaConversions._
 import javax.swing.table.{TableRowSorter, AbstractTableModel}
 import javax.swing.{SortOrder, RowSorter}
+import net.doxxx.universalcombatlog.{IntComparator, Summary, Actor}
 
 object SummaryColumns extends Enumeration {
   type Column = Value

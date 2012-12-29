@@ -1,10 +1,11 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing._
 import event.{ButtonClicked, Event, TableRowsSelected}
-import net.doxxx.universalcombatlog.SummaryColumns._
+import SummaryColumns._
 import java.awt.event.{MouseEvent, MouseAdapter}
 import javax.swing.JTable
+import net.doxxx.universalcombatlog.{Summary, Actor, BreakdownType}
 
 class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Column) extends ScrollPane {
   val MI_BreakdownOutgoingDamageBySpell = new MenuItem("By Spell")

@@ -3,7 +3,7 @@ import Keys._
 
 object UniversalCombatLogBuild extends Build {
   lazy val projectScalaVersion = "2.9.2"
-  lazy val guiMainClass = Some("net.doxxx.universalcombatlog.GUIMain")
+  lazy val guiMainClass = Some("net.doxxx.universalcombatlog.gui.Main")
 
   lazy val root = {
     Project("universal-combat-log", file("."),

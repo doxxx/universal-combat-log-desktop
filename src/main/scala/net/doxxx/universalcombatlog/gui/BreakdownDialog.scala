@@ -1,6 +1,7 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing.{Window, Dialog}
+import net.doxxx.universalcombatlog._
 
 class BreakdownDialog(owner: Window) extends Dialog(owner) {
   val panel = new BreakdownPanel

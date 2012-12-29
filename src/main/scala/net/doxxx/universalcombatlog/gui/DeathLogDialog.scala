@@ -1,7 +1,8 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing._
 import event.ListSelectionChanged
+import net.doxxx.universalcombatlog._
 
 class DeathLogDialog(owner: Window) extends Dialog(owner) {
   var actor: Actor = Nobody

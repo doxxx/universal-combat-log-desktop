@@ -1,12 +1,13 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import swing._
 import event.{SelectionChanged, ButtonClicked}
 import swing.TabbedPane.Page
-import net.doxxx.universalcombatlog.SummaryColumns._
+import SummaryColumns._
 import java.awt.datatransfer.StringSelection
 import java.util.prefs.Preferences
 import java.awt.{Rectangle, Toolkit}
+import net.doxxx.universalcombatlog._
 
 class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
@@ -44,7 +45,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   val copyHPSButton = new Button("Copy HPS") {
     enabled = false
   }
-  val breakdownDialog = new BreakdownDialog(GUIMain.top) {
+  val breakdownDialog = new BreakdownDialog(Main.top) {
     peer.setAlwaysOnTop(true)
     peer.setFocusableWindowState(false)
     if (prefs.getInt("breakdownDialogX", 0) > 0) {
@@ -56,7 +57,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
       centerOnScreen()
     }
   }
-  val deathLogDialog = new DeathLogDialog(GUIMain.top) {
+  val deathLogDialog = new DeathLogDialog(Main.top) {
     peer.setAlwaysOnTop(true)
     peer.setFocusableWindowState(false)
     if (prefs.getInt("deathLogDialogX", 0) > 0) {
@@ -112,12 +113,12 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
     case ButtonClicked(`copyDPSButton`) => {
       val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
       val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(summary))
-      clipboard.setContents(data, GUIMain)
+      clipboard.setContents(data, Main)
     }
     case ButtonClicked(`copyHPSButton`) => {
       val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
       val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(summary))
-      clipboard.setContents(data, GUIMain)
+      clipboard.setContents(data, Main)
     }
     case SelectionChanged(`targetDropdown`) => {
       targetDropdown.selectedActor match {

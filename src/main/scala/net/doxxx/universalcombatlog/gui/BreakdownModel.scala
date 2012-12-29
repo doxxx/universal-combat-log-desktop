@@ -1,6 +1,7 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
 import javax.swing.table.AbstractTableModel
+import net.doxxx.universalcombatlog.Breakdown
 
 class BreakdownModel extends AbstractTableModel {
   private val ColumnNames = Array("Name", "Amount", "Count", "Miss %", "Crit %", "Damage Type", "% Total")
