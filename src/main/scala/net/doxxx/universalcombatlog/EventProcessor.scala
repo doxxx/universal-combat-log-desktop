@@ -348,7 +348,7 @@ object EventProcessor {
             results(key) = results(key).addAmount(ce.amount)
             results(key) = results(key).addHit()
           }
-          results(key) = results(key).addDamageType(RiftParser.extractDamageType(ce.text))
+          results(key) = results(key).addDamageType(ce.spellSchool)
           totalDamage += ce.amount
         }
         else if (HealTypes.contains(ce.eventType)) {

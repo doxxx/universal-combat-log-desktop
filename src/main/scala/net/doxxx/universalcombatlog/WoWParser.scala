@@ -65,6 +65,7 @@ final class WoWParser extends BaseLogParser {
     var eventType: EventTypes.Value = EventTypes.Unrecognized
     var spell: String = ""
     var spellID: Long = 0
+    var spellSchool: String = ""
     var periodic: Boolean = false
     var amount: Int = 0
     var overAmount: Int = 0
@@ -92,21 +93,22 @@ final class WoWParser extends BaseLogParser {
           case "SWING" => {
             spell = "Auto Attack"
             spellID = -1
+            spellSchool = spellSchoolName(1) // physical
           }
           case "RANGE" => {
             spellID = it.next().toLong
             spell = it.next()
-            it.next() // spell school
+            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
           case "SPELL" => {
             spellID = it.next().toLong
             spell = it.next()
-            it.next() // spell school
+            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
           case "SPELL_PERIODIC" => {
             spellID = it.next().toLong
             spell = it.next()
-            it.next() // spell school
+            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
             periodic = true
           }
         }
@@ -199,7 +201,7 @@ final class WoWParser extends BaseLogParser {
     amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal
 
     // Create log event
-    Some(CombatEvent(time, eventType, actor, target, spell, spellID, amount, overAmount, ""))
+    Some(CombatEvent(time, eventType, actor, target, spell, spellID, spellSchool, amount, overAmount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {
@@ -262,4 +264,43 @@ final class WoWParser extends BaseLogParser {
   val AFFILIATION_OUTSIDER = 0x8
 
   private def affiliation(flags: Long): Long = flags & 0xF
+
+  val SPELL_SCHOOL_NAMES = Map[Long, String](
+    (1, "Physical"),
+    (2, "Holy"),
+    (4, "Fire"),
+    (8, "Nature"),
+    (16, "Frost"),
+    (32, "Shadow"),
+    (64, "Arcane"),
+    (3, "Holystrike"),
+    (5, "Flamestrike"),
+    (6, "Holyfire"),
+    (9, "Stormstrike"),
+    (10, "Holystorm"),
+    (12, "Firestorm"),
+    (17, "Froststrike"),
+    (18, "Holyfrost"),
+    (20, "Frostfire"),
+    (24, "Froststorm"),
+    (33, "Shadowstrike"),
+    (34, "Shadowlight"),
+    (36, "Shadowflame"),
+    (40, "Shadowstorm"),
+    (48, "Shadowfrost"),
+    (65, "Spellstrike"),
+    (66, "Divine"),
+    (68, "Spellfire"),
+    (72, "Spellstorm"),
+    (80, "Spellfrost"),
+    (96, "Spellshadow"),
+    (28, "Elemental"),
+    (124, "Chromatic"),
+    (126, "Magic"),
+    (127, "Chaos")
+  )
+
+  private def spellSchoolName(flags: Long): String = {
+    SPELL_SCHOOL_NAMES.getOrElse(flags, "")
+  }
 }

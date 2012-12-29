@@ -49,7 +49,7 @@ final class RiftParser extends BaseLogParser {
         Some(CombatEvent(parseTime(time), eventType,
           getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
           getEntity(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
-          spell, spellId.toLong, amount, overAmount, text))
+          spell, spellId.toLong, RiftParser.extractDamageType(text), amount, overAmount, text))
       case _ => {
         println("Unrecognized data string: " + data)
         None
