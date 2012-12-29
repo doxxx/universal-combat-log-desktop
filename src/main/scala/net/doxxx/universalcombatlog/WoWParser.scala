@@ -52,14 +52,14 @@ final class WoWParser extends BaseLogParser {
 
     // base fields
     val eventName = it.next()
-    val actorID = parseHex(it.next().substring(2))
-    val actorName = it.next()
-    val actorFlags = parseHex(it.next().substring(2))
-    val actorRaidFlags = parseHex(it.next().substring(2))
-    val targetID = parseHex(it.next().substring(2))
-    val targetName = it.next()
-    val targetFlags = parseHex(it.next().substring(2))
-    val targetRaidFlags = parseHex(it.next().substring(2))
+    var actorID = parseHex(it.next().substring(2))
+    var actorName = it.next()
+    var actorFlags = parseHex(it.next().substring(2))
+    var actorRaidFlags = parseHex(it.next().substring(2))
+    var targetID = parseHex(it.next().substring(2))
+    var targetName = it.next()
+    var targetFlags = parseHex(it.next().substring(2))
+    var targetRaidFlags = parseHex(it.next().substring(2))
 
     // extended fields depending on event
     var eventType: EventTypes.Value = EventTypes.Unrecognized
@@ -77,6 +77,14 @@ final class WoWParser extends BaseLogParser {
       }
       case "UNIT_DIED" => {
         eventType = EventTypes.Died
+        actorID = targetID
+        actorName = targetName
+        actorFlags = targetFlags
+        actorRaidFlags = targetRaidFlags
+        targetID = 0
+        targetFlags = 0
+        targetName = ""
+        targetRaidFlags = 0
       }
       case "UNIT_DESTROYED" => {
         // totems
