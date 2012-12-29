@@ -51,7 +51,13 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
     this.entity = entity
     this.events = events
     deathsList.listData = EventProcessor.entityDeaths(entity, events) map { e => ListEntry(e, e.time-events.head.time, e.text) }
-    deathsList.selectIndices(0)
+    if (deathsList.listData.isEmpty) {
+      deathLog.text = ""
+      healthGraph.data = Array.empty
+    }
+    else {
+      deathsList.selectIndices(0)
+    }
     pack()
   }
 
