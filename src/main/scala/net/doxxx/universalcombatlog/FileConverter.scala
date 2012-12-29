@@ -106,8 +106,8 @@ object FileConverter {
           }
           Utils.log("Parsing %s", arg)
           val file = new File((arg))
-          val events = parser.get.parse(file)
-          val fights = EventProcessor.splitFights(events).filter { f: Fight =>
+          val logFile = parser.get.parse(file)
+          val fights = EventProcessor.splitFights(logFile.events).filter { f: Fight =>
             f.duration > 5000 && !EventProcessor.sumNonPlayerDamage(f.events).isEmpty
           }
           val outFile = {
@@ -131,10 +131,10 @@ object FileConverter {
     def canLoad(f: File) = delegate.canLoad(f)
 
     def parse(f: File) = {
-      val events = delegate.parse(f)
-      val startTime = f.lastModified() - events.last.time
+      val logFile = delegate.parse(f)
+      val startTime = f.lastModified() - logFile.events.last.time
       Utils.log("Calculated startTime: %d", startTime)
-      EventProcessor.normalizeTimes(events, startTime)
+      new LogFile(EventProcessor.normalizeTimes(logFile.events, startTime), logFile.actors)
     }
 
     def playersAndPets = delegate.playersAndPets

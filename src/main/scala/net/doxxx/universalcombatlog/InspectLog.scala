@@ -22,10 +22,10 @@ object InspectLog {
   def main(args: Array[String]) {
     for (arg <- args) {
       while (true) {
-        val events = new WoWParser().parse(new File(arg))
-        log("%d events loaded.", events.length)
+        val logFile = new WoWParser().parse(new File(arg))
+        log("%d events loaded.", logFile.events.length)
         val fights = timeit("fight-split") {
-          EventProcessor.splitFights(events)
+          logFile.fights
         }
         log("%d fights found.", fights.length)
         log(fights.map(_.duration / 1000).mkString(" "))

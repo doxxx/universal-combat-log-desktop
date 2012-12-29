@@ -35,7 +35,7 @@ abstract class BaseLogParser extends LogParser {
     }
   }
 
-  def parse(file: File): List[LogEvent] = {
+  def parse(file: File): LogFile = {
     if (file.length() < lastFileSize) {
       log("File size smaller than last position; resetting")
       reset()
@@ -63,7 +63,7 @@ abstract class BaseLogParser extends LogParser {
 
     log("Total events parsed: %d", lastEvents.size)
 
-    lastEvents
+    new LogFile(lastEvents, actors.values.toSet)
   }
 
   private def parseLines(lines: Traversable[String]): List[LogEvent] = {

@@ -73,9 +73,9 @@ object GUIMain extends SimpleSwingApplication with ClipboardOwner {
             actor {
               log("Loading events from %s", f.toString)
               try {
-                val events = EventProcessor.normalizeTimes(p.parse(f))
+                val logFile = p.parse(f).normalizeTimes()
                 top.progressBar.label = "Detecting fights..."
-                val fights = EventProcessor.splitFights(events).filter(_.duration > 5000)
+                val fights = logFile.fights
                 logFileLastModified = f.lastModified()
                 val playersAndPets = p.playersAndPets
                 Swing.onEDT {

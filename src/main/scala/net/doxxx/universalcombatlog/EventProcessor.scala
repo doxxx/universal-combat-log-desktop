@@ -263,7 +263,7 @@ object EventProcessor {
   }
 
   private val dayTime = 24*60*60*1000
-  def normalizeTimes(events: List[LogEvent], startTime: Long = 0): List[LogEvent] = {
+  def normalizeTimes(events: List[LogEvent], startTime: Long): List[LogEvent] = {
     if (events.isEmpty) return events
     @tailrec
     def normalize(result: List[LogEvent], offset: Long, prev: LogEvent, events: List[LogEvent]): List[LogEvent] = {

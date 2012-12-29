@@ -82,7 +82,7 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
         ActorEvent(50, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
         CombatToggleEvent(100, inCombat = false)
       )
-      val normalized = EventProcessor.normalizeTimes(events)
+      val normalized = EventProcessor.normalizeTimes(events, 0)
       "start with time zero" in {
         normalized.head.time should equal (0)
       }
