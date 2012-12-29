@@ -42,7 +42,7 @@ object EventProcessor {
           else if (HealTypes.contains(ce.eventType)) {
             results(actor) = results(actor).addHealingOut(ce.amount).updateTimes(ce.time)
             results(target) = results(target).addHealingIn(ce.amount)
-            val overheal = RiftParser.extractOverheal(ce.text)
+            val overheal = ce.overAmount
             results(target) = results(target).addOverhealing(overheal)
             if (includeOverhealing) {
               results(actor) = results(actor).addHealingOut(overheal)
@@ -354,7 +354,7 @@ object EventProcessor {
         else if (HealTypes.contains(ce.eventType)) {
           results(key) = results(key).addAmount(ce.amount)
           if (includeOverhealing) {
-            val overheal = RiftParser.extractOverheal(ce.text)
+            val overheal = ce.overAmount
             results(key) = results(key).addAmount(overheal)
           }
           if (ce.eventType == CritHeal) {
@@ -453,8 +453,7 @@ object EventProcessor {
         case ce: CombatEvent => {
           if (ce.target == entity) {
             if (EventTypes.DamageTypes.contains(ce.eventType)) {
-              val overkill = RiftParser.extractOverkill(ce.text)
-              health += ce.amount - overkill
+              health += ce.amount
             }
             else if (EventTypes.HealTypes.contains(ce.eventType)) {
               health -= ce.amount

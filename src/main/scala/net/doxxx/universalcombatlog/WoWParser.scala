@@ -67,6 +67,7 @@ final class WoWParser extends BaseLogParser {
     var spellID: Long = 0
     var periodic: Boolean = false
     var amount: Int = 0
+    var overAmount: Int = 0
     var critical: Boolean = false
 
     eventName match {
@@ -114,7 +115,7 @@ final class WoWParser extends BaseLogParser {
           case "DAMAGE" => {
             eventType = if (periodic) EventTypes.DamageOverTime else EventTypes.DirectDamage
             amount = it.next().toInt
-            it.next().toInt // overkill
+            overAmount = it.next().toInt // overkill
             it.next() // school
             it.next() // resisted
             it.next() // blocked
@@ -131,7 +132,7 @@ final class WoWParser extends BaseLogParser {
           }
           case "HEAL" => {
             amount = it.next().toInt
-            it.next().toInt // overheal
+            overAmount = it.next().toInt // overheal
             it.next().toInt // absorbed
             critical = it.next() == "1"
             eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
@@ -193,8 +194,12 @@ final class WoWParser extends BaseLogParser {
     val actor = makeActor(actorID, actorName, actorFlags)
     val target = makeActor(targetID, targetName, targetFlags)
 
+    // fix amounts
+    overAmount = Math.max(0, overAmount) // overkill can be -1
+    amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal
+
     // Create log event
-    Some(CombatEvent(time, eventType, actor, target, spell, spellID, amount, ""))
+    Some(CombatEvent(time, eventType, actor, target, spell, spellID, amount, overAmount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {

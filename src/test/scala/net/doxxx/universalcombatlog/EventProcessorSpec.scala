@@ -17,12 +17,12 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
     "splitting fights" should {
       "end a fight after 5 seconds of inactivity" in {
         val fight1 = List(
-          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(1000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(2000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(1000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(2000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text")
         )
         val fight2 = List(
-          CombatEvent(7000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+          CombatEvent(7000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text")
         )
         val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
@@ -31,15 +31,15 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
 
       "end a fight after all NPCs have died" in {
         val fight1 = List(
-          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(1000, DirectDamage, pc2, npc2, "spell1", 1, 123, "text"),
-          CombatEvent(2000, DirectDamage, pc3, npc3, "spell1", 1, 123, "text"),
-          CombatEvent(3000, Died, npc1, Nobody, "", 0, 0, "text"),
-          CombatEvent(4000, Died, npc2, Nobody, "", 0, 0, "text"),
-          CombatEvent(5000, Died, npc3, Nobody, "", 0, 0, "text")
+          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(1000, DirectDamage, pc2, npc2, "spell1", 1, 123, 0, "text"),
+          CombatEvent(2000, DirectDamage, pc3, npc3, "spell1", 1, 123, 0, "text"),
+          CombatEvent(3000, Died, npc1, Nobody, "", 0, 0, 0, "text"),
+          CombatEvent(4000, Died, npc2, Nobody, "", 0, 0, 0, "text"),
+          CombatEvent(5000, Died, npc3, Nobody, "", 0, 0, 0, "text")
         )
         val fight2 = List(
-          CombatEvent(6000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+          CombatEvent(6000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text")
         )
         val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
@@ -48,15 +48,15 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
 
       "end a fight after all PCs have died" in {
         val fight1 = List(
-          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(1000, DirectDamage, pc2, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(2000, DirectDamage, pc3, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(3000, Died, pc1, Nobody, "", 0, 0, "text"),
-          CombatEvent(4000, Died, pc2, Nobody, "", 0, 0, "text"),
-          CombatEvent(5000, Died, pc3, Nobody, "", 0, 0, "text")
+          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(1000, DirectDamage, pc2, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(2000, DirectDamage, pc3, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(3000, Died, pc1, Nobody, "", 0, 0, 0, "text"),
+          CombatEvent(4000, Died, pc2, Nobody, "", 0, 0, 0, "text"),
+          CombatEvent(5000, Died, pc3, Nobody, "", 0, 0, 0, "text")
         )
         val fight2 = List(
-          CombatEvent(6000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+          CombatEvent(6000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text")
         )
         val events = fight1 ::: fight2
         val fights = EventProcessor.splitFights(events)
@@ -65,9 +65,9 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
 
       "collect remaining events as a fight" in {
         val fight1 = List(
-          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(1000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
-          CombatEvent(2000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text")
+          CombatEvent(0, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(1000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
+          CombatEvent(2000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text")
         )
         val events = fight1
         val fights = EventProcessor.splitFights(events)
@@ -78,8 +78,8 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
     "normalizing times" should {
       val events = List(
         CombatToggleEvent(86300000, inCombat = true),
-        CombatEvent(86350000, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, "text"),
-        CombatEvent(50000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+        CombatEvent(86350000, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, 0, "text"),
+        CombatEvent(50000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
         CombatToggleEvent(100000, inCombat = false)
       )
       val normalized = EventProcessor.normalizeTimes(events, 0)
@@ -90,8 +90,8 @@ class EventProcessorSpec extends WordSpec with ShouldMatchers {
       "handle midnight rollovers" in {
         normalized should equal (List(
           CombatToggleEvent(0, inCombat = true),
-          CombatEvent(50000, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, "text"),
-          CombatEvent(150000, DirectDamage, pc1, npc1, "spell1", 1, 123, "text"),
+          CombatEvent(50000, DirectDamage, pc3, npc3, "middleSpell2", 102, 123, 0, "text"),
+          CombatEvent(150000, DirectDamage, pc1, npc1, "spell1", 1, 123, 0, "text"),
           CombatToggleEvent(200000, inCombat = false)
         ))
       }

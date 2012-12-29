@@ -39,7 +39,7 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
         val deathEvent = selectedItems(0).event
         val preDeathEvents = EventProcessor.eventsUpToDeath(deathEvent, events, EventTypes.DamageTypes ++ EventTypes.HealTypes)
         deathLog.text = preDeathEvents.map {
-          case ce: CombatEvent => Some("%d> %s".format(ce.time-events.head.time, ce.text))
+          case ce: CombatEvent => Some("%.1f> %s".format((ce.time - events.head.time) / 1000.0, ce.text))
           case _ => None
         }.flatten.mkString("\n")
         healthGraph.data = EventProcessor.chartHealthPriorToDeath(entity, preDeathEvents)

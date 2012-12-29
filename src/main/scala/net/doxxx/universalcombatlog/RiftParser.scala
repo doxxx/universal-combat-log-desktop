@@ -1,9 +1,6 @@
 package net.doxxx.universalcombatlog
 
 import util.matching.Regex
-import java.io._
-import java.lang.RuntimeException
-import scalax.io.Resource
 
 final class RiftParser extends BaseLogParser {
   protected def parseLine(line: String): Option[LogEvent] = {
@@ -26,13 +23,33 @@ final class RiftParser extends BaseLogParser {
     case _ => throw new IllegalArgumentException("Unrecognized combat toggle: " + toggle)
   }
 
+  def parseOverAmount(eventType: EventTypes.Value, text: String): Int = {
+    if (EventTypes.DamageTypes.contains(eventType)) {
+      RiftParser.extractOverkill(text)
+    }
+    else if (EventTypes.HealTypes.contains(eventType)) {
+      RiftParser.extractOverheal(text)
+    }
+    else {
+      0
+    }
+  }
+
   private def parseActorEvent(time: String, data: String, text: String): Option[CombatEvent] = {
     data match {
-      case RiftParser.DataRE(eventType, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName, targetName, amount, spellId, spell) =>
-        Some(CombatEvent(parseTime(time), EventTypes(eventType.toInt),
+      case RiftParser.DataRE(eventTypeID, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName,
+      targetName, amountText, spellId, spell) =>
+        val eventType = EventTypes(eventTypeID.toInt)
+        val overAmount = parseOverAmount(eventType, text)
+        val amount =
+          if (EventTypes.DamageTypes.contains(eventType))
+            amountText.toInt - overAmount // damage amounts include overkill
+          else
+            amountText.toInt // heal amounts don't include overheal
+        Some(CombatEvent(parseTime(time), eventType,
           getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
           getEntity(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
-          spell, spellId.toLong, amount.toInt, text))
+          spell, spellId.toLong, amount, overAmount, text))
       case _ => {
         println("Unrecognized data string: " + data)
         None
