@@ -5,7 +5,7 @@ import event.ListSelectionChanged
 import net.doxxx.universalcombatlog._
 
 class DeathLogDialog(owner: Window) extends Dialog(owner) {
-  var actor: Actor = Nobody
+  var entity: Entity = Nobody
   var events: List[LogEvent] = Nil
 
   val deathsList = new ListView[ListEntry] {
@@ -42,15 +42,15 @@ class DeathLogDialog(owner: Window) extends Dialog(owner) {
           case ae: ActorEvent => Some("%d> %s".format(ae.time-events.head.time, ae.text))
           case _ => None
         }.flatten.mkString("\n")
-        healthGraph.data = EventProcessor.chartHealthPriorToDeath(actor, preDeathEvents)
+        healthGraph.data = EventProcessor.chartHealthPriorToDeath(entity, preDeathEvents)
       }
     }
   }
 
-  def update(actor: Actor, events: List[LogEvent]) {
-    this.actor = actor
+  def update(entity: Entity, events: List[LogEvent]) {
+    this.entity = entity
     this.events = events
-    deathsList.listData = EventProcessor.actorDeaths(actor, events) map { e => ListEntry(e, e.time-events.head.time, e.text) }
+    deathsList.listData = EventProcessor.entityDeaths(entity, events) map { e => ListEntry(e, e.time-events.head.time, e.text) }
     deathsList.selectIndices(0)
     pack()
   }

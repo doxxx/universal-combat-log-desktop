@@ -2,7 +2,7 @@ package net.doxxx.universalcombatlog.gui
 
 import swing._
 import event._
-import net.doxxx.universalcombatlog.Actor
+import net.doxxx.universalcombatlog.Entity
 
 class ActorList extends BorderPanel {
   layoutManager.setHgap(5)
@@ -16,7 +16,7 @@ class ActorList extends BorderPanel {
   }
   val header = new BoxPanel(Orientation.Horizontal) {
     contents += new Label {
-      text = "Actor Filter"
+      text = "Entity Filter"
     }
     contents += Swing.HGlue
     contents += top5Button
@@ -51,7 +51,7 @@ class ActorList extends BorderPanel {
     }
   }
 
-  def update(actors: Seq[Actor]) {
+  def update(actors: Seq[Entity]) {
     updating = true
     val oldActors: Set[String] = listView.selection.items.toSet
     listView.listData = actors.map(_.name)

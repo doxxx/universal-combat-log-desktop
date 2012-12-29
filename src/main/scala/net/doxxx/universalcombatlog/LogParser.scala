@@ -5,7 +5,7 @@ import java.io.File
 trait LogParser {
   def canLoad(f: File): Boolean
   def parse(file: File): LogFile
-  def playersAndPets: Set[Actor]
+  def playersAndPets: Set[Entity]
 }
 
 object LogParser {

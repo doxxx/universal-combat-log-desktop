@@ -10,7 +10,7 @@ case class CombatToggleEvent(time: Long, inCombat: Boolean) extends LogEvent {
 }
 
 case class ActorEvent(time: Long, eventType: EventTypes.Value,
-                      actor: Actor, target: Actor, spell: String, spellId: Long, amount: Int, text: String)
+                      actor: Entity, target: Entity, spell: String, spellId: Long, amount: Int, text: String)
                       extends LogEvent {
   def copy(newTime: Long) = ActorEvent(newTime, eventType, actor, target, spell, spellId, amount, text)
 }

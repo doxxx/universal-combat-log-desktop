@@ -5,7 +5,7 @@ import event.{ButtonClicked, Event, TableRowsSelected}
 import SummaryColumns._
 import java.awt.event.{MouseEvent, MouseAdapter}
 import javax.swing.JTable
-import net.doxxx.universalcombatlog.{Summary, Actor, BreakdownType}
+import net.doxxx.universalcombatlog.{Summary, Entity, BreakdownType}
 
 class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Column) extends ScrollPane {
   val MI_BreakdownOutgoingDamageBySpell = new MenuItem("By Spell")
@@ -110,13 +110,13 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     }
   }
 
-  def update(summary: Map[Actor, Summary]) {
+  def update(summary: Map[Entity, Summary]) {
     val oldActor = selectedActor
     summaryModel.update(summary)
     if (oldActor.isDefined) selectActor(oldActor.get)
   }
 
-  def selectedActor: Option[Actor] = {
+  def selectedActor: Option[Entity] = {
     val row = table.selection.rows.anchorIndex
     if (row >= 0) {
       Some(summaryModel.actors(table.viewToModelRow(row)))
@@ -126,7 +126,7 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
     }
   }
 
-  def selectActor(actor: Actor) {
+  def selectActor(actor: Entity) {
     val i = summaryModel.actors.indexOf(actor)
     if (i >= 0) {
       table.selection.rows += table.modelToViewRow(i)
@@ -134,6 +134,6 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   }
 }
 
-case class SelectedActorChanged(actor: Actor) extends Event
-case class BreakdownRequested(actor: Actor, breakdownType: BreakdownType.Value) extends Event
-case class DeathLogRequested(actor: Actor) extends Event
+case class SelectedActorChanged(actor: Entity) extends Event
+case class BreakdownRequested(actor: Entity, breakdownType: BreakdownType.Value) extends Event
+case class DeathLogRequested(actor: Entity) extends Event

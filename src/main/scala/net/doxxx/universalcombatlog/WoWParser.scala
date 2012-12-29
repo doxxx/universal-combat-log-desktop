@@ -217,13 +217,13 @@ final class WoWParser extends BaseLogParser {
     }
   }
 
-  private def makeActor(id: Long, name: String, flags: Long): Actor = {
+  private def makeActor(id: Long, name: String, flags: Long): Entity = {
     val rel = entityRelationship(flags)
     objectType(flags) match {
-      case TYPE_PLAYER => getActor(PC(id, rel), NullActorID, Some(name))
+      case TYPE_PLAYER => getEntity(PC(id, rel), NullEntityID, Some(name))
       // TODO: we don't have a way to associate pets with owners yet
-      case TYPE_PET => getActor(NPC(id, rel), NullActorID, Some(name))
-      case TYPE_NPC => getActor(NPC(id, rel), NullActorID, Some(name))
+      case TYPE_PET => getEntity(NPC(id, rel), NullEntityID, Some(name))
+      case TYPE_NPC => getEntity(NPC(id, rel), NullEntityID, Some(name))
       case _ => Nobody
     }
   }

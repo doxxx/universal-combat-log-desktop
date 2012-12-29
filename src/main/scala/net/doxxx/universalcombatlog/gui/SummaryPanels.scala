@@ -20,19 +20,19 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   )
 
   val targetDropdown = new ComboBox[String](Nil) {
-    implicit val order = new Ordering[Actor] {
-      def compare(x: Actor, y: Actor):Int = x.name.compareTo(y.name)
+    implicit val order = new Ordering[Entity] {
+      def compare(x: Entity, y: Entity):Int = x.name.compareTo(y.name)
     }
-    var actors: Seq[Actor] = Nil
-    def setItems(items: Seq[Actor]) {
+    var actors: Seq[Entity] = Nil
+    def setItems(items: Seq[Entity]) {
       actors = items.sorted
       val actorNames:List[String] = actors.map(_.name).toList
       peer.setModel(ComboBox.newConstantModel("**ALL**" :: actorNames))
     }
-    def selectedActor: Option[Actor] = {
+    def selectedActor: Option[Entity] = {
       actors.find(_.name == selection.item)
     }
-    def selectActor(actor: Option[Actor]) {
+    def selectActor(actor: Option[Entity]) {
       actor match {
         case None => selection.item = "**ALL**"
         case Some(a) => selection.item = a.name
@@ -95,8 +95,8 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   contents += tabs
 
   var fight: Fight = EmptyFight()
-  var playersAndPets: Set[Actor] = Set.empty
-  var summary: Map[Actor, Summary] = Map.empty
+  var playersAndPets: Set[Entity] = Set.empty
+  var summary: Map[Entity, Summary] = Map.empty
 
   deafTo(this) // otherwise publishing SelectedActorChanged causes StackOverflowError
   listenTo(copyDPSButton)
@@ -142,7 +142,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
   def current: SummaryPanel = panels(tabs.selection.page.index)
 
-  def update(newFight: Fight, newPlayersAndPets: Set[Actor]) {
+  def update(newFight: Fight, newPlayersAndPets: Set[Entity]) {
     fight = newFight
     playersAndPets = newPlayersAndPets
     summary = EventProcessor.summary(fight).filter {
@@ -186,7 +186,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
     prefs.putInt("breakdownDialogH", breakdownDialog.bounds.height)
   }
 
-  private def applyTargetFilter(target: Actor) {
+  private def applyTargetFilter(target: Entity) {
     val filtered = SingleFight(EventProcessor.filterByTarget(fight.events, target))
     summary = EventProcessor.summary(filtered).filter {
       case (actor, _) => playersAndPets.contains(actor)

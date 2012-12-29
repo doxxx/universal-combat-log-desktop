@@ -15,13 +15,13 @@ abstract class BaseLogParser extends LogParser {
 
   protected var threads: Set[String] = Set.empty
 
-  private val actorsLock = new ReentrantReadWriteLock()
-  private val actors = new mutable.HashMap[ActorID, Actor] {
-    override def default(key: ActorID) = Nobody
+  private val entitiesLock = new ReentrantReadWriteLock()
+  private val entities = new mutable.HashMap[EntityID, Entity] {
+    override def default(key: EntityID) = Nobody
   }
 
   def reset() {
-    actors.clear()
+    entities.clear()
     threads = Set.empty
     lastLineNum = 0
     lastFileSize = 0
@@ -63,7 +63,7 @@ abstract class BaseLogParser extends LogParser {
 
     log("Total events parsed: %d", lastEvents.size)
 
-    new LogFile(lastEvents, actors.values.toSet)
+    new LogFile(lastEvents, entities.values.toSet)
   }
 
   private def parseLines(lines: Traversable[String]): List[LogEvent] = {
@@ -80,72 +80,67 @@ abstract class BaseLogParser extends LogParser {
 
   protected def parseLine(line: String): Option[LogEvent]
 
-  def playersAndPets: Set[Actor] = actors.filter {
-    case (id: ActorID, player: Player) => true
-    case (id: ActorID, playerPet: PlayerPet) => true
+  def playersAndPets: Set[Entity] = entities.filter {
+    case (id: EntityID, player: Player) => true
+    case (id: EntityID, playerPet: PlayerPet) => true
     case _ => false
   }.values.toSet
 
-  protected def getActor(actorID: ActorID, ownerID: ActorID, actorName: Option[String]): Actor = {
-    actorsLock.readLock().lock()
+  protected def getEntity(id: EntityID, ownerID: EntityID, name: Option[String]): Entity = {
+    entitiesLock.readLock().lock()
     try {
-      actors.get(actorID) match {
-        case Some(actor) => {
-          actorName match {
-            case Some(name) => {
-              actor.name = name
-            }
-            case None => // nothing
-          }
+      entities.get(id) match {
+        case Some(entity) => {
+          entity.name = name.getOrElse(entity.name)
           ownerID match {
-            case NullActorID => // nothing
+            case NullEntityID => // nothing
             case _ => {
-              val owner = actors(ownerID)
-              actor match {
+              val owner = entities(ownerID)
+              entity match {
                 case p: PlayerPet =>
                   if (p.owner.id != owner.id)
                     println("%s has changed ownership: %s -> %s".format(p, p.owner, owner))
-                case _ => println("%s cannot be owned by %s".format(actor, owner))
+                case _ => println("%s cannot be owned by %s".format(entity, owner))
               }
             }
           }
-          actor
+          entity
         }
         case None => {
-          actorsLock.readLock().unlock()
-          actorsLock.writeLock().lock()
+          entitiesLock.readLock().unlock()
+          entitiesLock.writeLock().lock()
           try {
-            actorID match {
+            id match {
               case pc: PC => {
-                actors += actorID -> Player(pc, actorName.getOrElse("$dummy$"))
+                entities += id -> Player(pc, name.getOrElse("$dummy$"))
               }
               case npc: NPC => {
-                val actor: Actor = ownerID match {
-                  case NullActorID => NonPlayer(npc, actorName.getOrElse("$dummy$"))
-                  case _ => PlayerPet(npc, actorName.getOrElse("$dummy$"), getPlayer(ownerID))
+                val entity: Entity = ownerID match {
+                  case NullEntityID => NonPlayer(npc, name.getOrElse("$dummy$"))
+                  case _ => PlayerPet(npc, name.getOrElse("$dummy$"), getPlayer(ownerID))
                 }
-                actors += actorID -> actor
+                entities += id -> entity
               }
               case _ => // nothing
             }
           }
           finally {
-            actorsLock.readLock().lock()
-            actorsLock.writeLock().unlock()
+            entitiesLock.readLock().lock()
+            entitiesLock.writeLock().unlock()
           }
-          actors(actorID)
+          entities(id)
         }
       }
     }
     finally {
-      actorsLock.readLock().unlock()
+      entitiesLock.readLock().unlock()
     }
   }
 
-  protected def getPlayer(id: ActorID): Player = {
-    getActor(id, NullActorID, None) match {
+  protected def getPlayer(id: EntityID): Player = {
+    getEntity(id, NullEntityID, None) match {
       case p: Player => p
-      case a => throw new RuntimeException("Actor %s is not player".format(a))
+      case a => throw new RuntimeException("Entity %s is not player".format(a))
     }
   }
 }

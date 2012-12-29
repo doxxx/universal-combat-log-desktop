@@ -56,7 +56,7 @@ object FileConverter {
     for (id <- entityIndex.keys) {
       val entity = entityIndex(id)
       var kind: Char = 'X'
-      var owner: Option[Actor] = None
+      var owner: Option[Entity] = None
       var name = entity.name
       entity match {
         case p: Player => {
@@ -134,7 +134,7 @@ object FileConverter {
       val logFile = delegate.parse(f)
       val startTime = f.lastModified() - logFile.events.last.time
       Utils.log("Calculated startTime: %d", startTime)
-      new LogFile(EventProcessor.normalizeTimes(logFile.events, startTime), logFile.actors)
+      new LogFile(EventProcessor.normalizeTimes(logFile.events, startTime), logFile.entities)
     }
 
     def playersAndPets = delegate.playersAndPets
