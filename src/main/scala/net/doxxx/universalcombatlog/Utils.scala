@@ -13,8 +13,8 @@ object Utils {
   }
 
   def log(msg: String, args: Any*) {
-    val a = formattedDate :: args.toList
-    printf("[%s] %s: " + msg + "\n", Thread.currentThread().getName :: a: _*)
+    val formattedMsg = msg.format(args: _*)
+    printf("%s [%s] %s\n", formattedDate, Thread.currentThread.getName, formattedMsg)
   }
 
   def debuglog(msg: String, args: Any*) {
