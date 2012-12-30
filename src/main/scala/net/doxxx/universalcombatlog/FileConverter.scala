@@ -1,6 +1,6 @@
 package net.doxxx.universalcombatlog
 
-import java.io.{FileOutputStream, DataOutputStream, File}
+import java.io.{OutputStream, FileOutputStream, DataOutputStream, File}
 
 /**
  * Created 12-07-18 7:44 PM by gordon.
@@ -83,14 +83,18 @@ object FileConverter {
     }
   }
 
-  def writeUniversalCombatLog(file: File, fights: List[Fight]) {
-    val s: DataOutputStream = new DataOutputStream(new FileOutputStream(file))
+  def writeUniversalCombatLog(stream: OutputStream, fights: scala.List[Fight]) {
+    val s: DataOutputStream = new DataOutputStream(stream)
     s.writeBytes("UCL1")
     val allEvents = fights.map(_.events).flatten
     writeEntityIndex(s, allEvents)
     writeSpellIndex(s, allEvents)
     writeFights(s, fights)
     s.close()
+  }
+
+  def writeUniversalCombatLog(file: File, fights: List[Fight]) {
+    writeUniversalCombatLog(new FileOutputStream(file), fights)
   }
 
   def main(args: Array[String]) {

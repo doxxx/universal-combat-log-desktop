@@ -30,7 +30,9 @@ object EventTypes extends Enumeration {
   val PowerGain = Value(27)
   val CritHeal = Value(28)
 
-  val DamageTypes = Set(DirectDamage, DamageOverTime, EnvDamage, CritDamage)
+  val CritDamageOverTime = Value(1001)
+
+  val DamageTypes = Set(DirectDamage, DamageOverTime, EnvDamage, CritDamage, CritDamageOverTime)
   val HealTypes = Set(Heal, CritHeal)
   val MissTypes = Set(Miss, Dodge, Parry, Resist)
   val HostileTypes = Set(DirectDamage, DamageOverTime, DebuffGain, Miss, Dodge, Parry, Resist, CritDamage)

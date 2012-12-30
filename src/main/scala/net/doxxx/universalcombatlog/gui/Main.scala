@@ -25,8 +25,12 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
 
   val prefs = Preferences.userNodeForPackage(getClass)
 
+  val networkService = new NetworkService()
+  networkService.start()
+  
   var file: Option[File] = None
   var fileLastModified = 0L
+
 
   val fileLoaderActorPublisher = new Publisher {}
 
@@ -293,6 +297,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
             progressBar.label = "Loading fights..."
           }
           val fights = logFile.get.fights
+          networkService.fights = fights
           Swing.onEDT {
             fightList.update(fights)
             progressBar.visible = false

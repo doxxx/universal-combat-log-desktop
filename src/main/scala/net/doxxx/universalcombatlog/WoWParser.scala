@@ -55,11 +55,11 @@ final class WoWParser extends BaseLogParser {
     var actorID = parseHex(it.next().substring(2))
     var actorName = it.next()
     var actorFlags = parseHex(it.next().substring(2))
-    var actorRaidFlags = parseHex(it.next().substring(2))
+    it.next() // actorRaidFlags = parseHex(it.next().substring(2))
     var targetID = parseHex(it.next().substring(2))
     var targetName = it.next()
     var targetFlags = parseHex(it.next().substring(2))
-    var targetRaidFlags = parseHex(it.next().substring(2))
+    it.next() // targetRaidFlags = parseHex(it.next().substring(2))
 
     // extended fields depending on event
     var eventType: EventTypes.Value = EventTypes.Unrecognized
@@ -82,11 +82,9 @@ final class WoWParser extends BaseLogParser {
         actorID = targetID
         actorName = targetName
         actorFlags = targetFlags
-        actorRaidFlags = targetRaidFlags
         targetID = 0
-        targetFlags = 0
         targetName = ""
-        targetRaidFlags = 0
+        targetFlags = 0
       }
       case "UNIT_DESTROYED" => {
         // totems
@@ -119,7 +117,6 @@ final class WoWParser extends BaseLogParser {
 
         eventNameParts(1) match {
           case "DAMAGE" => {
-            eventType = EventTypes.DirectDamage
             amount = it.next().toInt
             overAmount = it.next().toInt // overkill
             it.next() // school
@@ -127,11 +124,11 @@ final class WoWParser extends BaseLogParser {
             blockedAmount = it.next().toInt // blocked
             absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
+            eventType = if (critical) EventTypes.CritDamage else EventTypes.DirectDamage
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
           case "PERIODIC_DAMAGE" => {
-            eventType = EventTypes.DamageOverTime
             amount = it.next().toInt
             overAmount = it.next().toInt // overkill
             it.next() // school
@@ -139,6 +136,7 @@ final class WoWParser extends BaseLogParser {
             blockedAmount = it.next().toInt // blocked
             absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
+            eventType = if (critical) EventTypes.CritDamageOverTime else EventTypes.DamageOverTime
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
