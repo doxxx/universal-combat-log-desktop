@@ -23,7 +23,7 @@ object EventTypes extends Enumeration {
   val Resist = Value(19)
   val Unknown20 = Value(20)
   val Unknown21 = Value(21)
-  val Unknown22 = Value(22)
+  val Redirect = Value(22)
   val CritDamage = Value(23)
   val FavorGain = Value(24)
   val Immune = Value(26)
