@@ -66,9 +66,11 @@ final class WoWParser extends BaseLogParser {
     var spell: String = ""
     var spellID: Long = 0
     var spellSchool: String = ""
-    var periodic: Boolean = false
     var amount: Int = 0
     var overAmount: Int = 0
+    var resistedAmount: Int = 0
+    var blockedAmount: Int = 0
+    var absorbedAmount: Int = 0
     var critical: Boolean = false
 
     eventName match {
@@ -113,23 +115,29 @@ final class WoWParser extends BaseLogParser {
             spell = it.next()
             spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
-          case "SPELL_PERIODIC" => {
-            spellID = it.next().toLong
-            spell = it.next()
-            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
-            periodic = true
-          }
         }
 
         eventNameParts(1) match {
           case "DAMAGE" => {
-            eventType = if (periodic) EventTypes.DamageOverTime else EventTypes.DirectDamage
+            eventType = EventTypes.DirectDamage
             amount = it.next().toInt
             overAmount = it.next().toInt // overkill
             it.next() // school
-            it.next() // resisted
-            it.next() // blocked
-            it.next() // absorbed
+            resistedAmount = it.next().toInt // resisted
+            blockedAmount = it.next().toInt // blocked
+            absorbedAmount = it.next().toInt // absorbed
+            critical = it.next() == "1"
+            //it.next() // 1 == glancing
+            //it.next() // 1 == crushing
+          }
+          case "PERIODIC_DAMAGE" => {
+            eventType = EventTypes.DamageOverTime
+            amount = it.next().toInt
+            overAmount = it.next().toInt // overkill
+            it.next() // school
+            resistedAmount = it.next().toInt // resisted
+            blockedAmount = it.next().toInt // blocked
+            absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
@@ -143,7 +151,14 @@ final class WoWParser extends BaseLogParser {
           case "HEAL" => {
             amount = it.next().toInt
             overAmount = it.next().toInt // overheal
-            it.next().toInt // absorbed
+            absorbedAmount = it.next().toInt // absorbed
+            critical = it.next() == "1"
+            eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
+          }
+          case "PERIODIC_HEAL" => {
+            amount = it.next().toInt
+            overAmount = it.next().toInt // overheal
+            absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
             eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
           }
@@ -206,7 +221,10 @@ final class WoWParser extends BaseLogParser {
 
     // fix amounts
     overAmount = math.max(0, overAmount) // overkill can be -1
-    amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal
+    amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal/resist/block/absorb
+    amount -= resistedAmount
+    amount -= blockedAmount
+    amount -= absorbedAmount
 
     // Create log event
     Some(CombatEvent(time, eventType, actor, target, spell, spellID, spellSchool, amount, overAmount, ""))
