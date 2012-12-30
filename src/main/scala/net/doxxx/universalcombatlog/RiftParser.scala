@@ -38,18 +38,19 @@ final class RiftParser extends BaseLogParser {
   private def parseActorEvent(time: String, data: String, text: String): Option[CombatEvent] = {
     data match {
       case RiftParser.DataRE(eventTypeID, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName,
-      targetName, amountText, spellId, spell) =>
+      targetName, amountText, spellId, spell) => {
         val eventType = EventTypes(eventTypeID.toInt)
+        val actor = getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName))
+        val target = getEntity(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName))
         val overAmount = parseOverAmount(eventType, text)
         val amount =
           if (EventTypes.DamageTypes.contains(eventType))
             amountText.toInt - overAmount // damage amounts include overkill
           else
             amountText.toInt // heal amounts don't include overheal
-        Some(CombatEvent(parseTime(time), eventType,
-          getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName)),
-          getEntity(parseEntity(targetInfo), parseEntity(targetOwnerInfo), Some(targetName)),
-          spell, spellId.toLong, RiftParser.extractDamageType(text), amount, overAmount, text))
+        Some(CombatEvent(parseTime(time), eventType, actor, target, spell, spellId.toLong,
+          RiftParser.extractDamageType(text), amount, overAmount, text))
+      }
       case _ => {
         println("Unrecognized data string: " + data)
         None
