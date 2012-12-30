@@ -205,7 +205,7 @@ final class WoWParser extends BaseLogParser {
     val target = makeActor(targetID, targetName, targetFlags)
 
     // fix amounts
-    overAmount = Math.max(0, overAmount) // overkill can be -1
+    overAmount = math.max(0, overAmount) // overkill can be -1
     amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal
 
     // Create log event
