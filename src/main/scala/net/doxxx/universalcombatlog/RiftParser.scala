@@ -13,6 +13,7 @@ final class RiftParser extends BaseLogParser {
   private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
   private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
   private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
+  private val BlockedRE = new Regex("([0-9]+) blocked", "amount")
   private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
 
   protected def parseLine(line: String): Option[LogEvent] = {
@@ -113,6 +114,13 @@ final class RiftParser extends BaseLogParser {
 
   private def extractAbsorbed(text: String): Int = {
     AbsorbedRE.findFirstMatchIn(text) match {
+      case Some(m) => m.group("amount").toInt
+      case None => 0
+    }
+  }
+
+  private def extractBlocked(text: String): Int = {
+    BlockedRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("amount").toInt
       case None => 0
     }
