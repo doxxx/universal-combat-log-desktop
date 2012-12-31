@@ -3,11 +3,23 @@ package net.doxxx.universalcombatlog
 import util.matching.Regex
 
 final class RiftParser extends BaseLogParser {
+  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
+  private val DataRE =
+    new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
+      "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
+      "amount", "spellId", "spell")
+  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
+
+  private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
+  private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
+  private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
+  private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
+
   protected def parseLine(line: String): Option[LogEvent] = {
     threads += Thread.currentThread().getName
     line match {
-      case RiftParser.CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
-      case RiftParser.LineRE(time, data, text) => parseActorEvent(time, data, text)
+      case CombatToggleRE(time, toggle) => Some(CombatToggleEvent(parseTime(time), parseCombatToggle(toggle)))
+      case LineRE(time, data, text) => parseActorEvent(time, data, text)
       case _ => None
     }
   }
@@ -25,10 +37,10 @@ final class RiftParser extends BaseLogParser {
 
   def parseOverAmount(eventType: EventTypes.Value, text: String): Int = {
     if (EventTypes.DamageTypes.contains(eventType)) {
-      RiftParser.extractOverkill(text)
+      extractOverkill(text)
     }
     else if (EventTypes.HealTypes.contains(eventType)) {
-      RiftParser.extractOverheal(text)
+      extractOverheal(text)
     }
     else {
       0
@@ -37,7 +49,7 @@ final class RiftParser extends BaseLogParser {
 
   private def parseActorEvent(time: String, data: String, text: String): Option[CombatEvent] = {
     data match {
-      case RiftParser.DataRE(eventTypeID, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName,
+      case DataRE(eventTypeID, actorInfo, targetInfo, actorOwnerInfo, targetOwnerInfo, actorName,
       targetName, amountText, spellId, spell) => {
         val eventType = EventTypes(eventTypeID.toInt)
         val actor = getEntity(parseEntity(actorInfo), parseEntity(actorOwnerInfo), Some(actorName))
@@ -49,7 +61,7 @@ final class RiftParser extends BaseLogParser {
           else
             amountText.toInt // heal amounts don't include overheal
         Some(CombatEvent(parseTime(time), eventType, actor, target, spell, spellId.toLong,
-          RiftParser.extractDamageType(text), amount, overAmount, text))
+          extractDamageType(text), amount, overAmount, text))
       }
       case _ => {
         println("Unrecognized data string: " + data)
@@ -84,43 +96,29 @@ final class RiftParser extends BaseLogParser {
       case _ => throw new RuntimeException("Unrecognized entity type: " + s)
     }
   }
-}
 
-object RiftParser {
-  private val CombatToggleRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]) Combat (Begin|End)", "time", "toggle")
-  private val DataRE =
-    new Regex("([0-9]+) , (T=.+) , (T=.+) , (T=.+) , (T=.+) , (.*?) , (.*?) , (-?[0-9]*) , ([0-9]*) , (.*?)",
-      "actorInfo", "targetInfo", "actorOwnerInfo", "targetOwnerInfo", "eventType", "actorName", "targetName",
-      "amount", "spellId", "spell")
-  private val LineRE = new Regex("([0-9][0-9]:[0-9][0-9]:[0-9][0-9]): \\( (.+?) \\) (.+)", "time", "data", "text")
-
-  private val OverhealRE = new Regex("([0-9]+) overheal", "amount")
-  private val OverkillRE = new Regex("([0-9]+) overkill", "amount")
-  private val AbsorbedRE = new Regex("([0-9]+) absorbed", "amount")
-  private val DamageTypeRE = new Regex("[0-9]+ (.+) damage", "type")
-
-  def extractOverheal(text: String): Int = {
+  private def extractOverheal(text: String): Int = {
     OverhealRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("amount").toInt
       case None => 0
     }
   }
 
-  def extractOverkill(text: String): Int = {
+  private def extractOverkill(text: String): Int = {
     OverkillRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("amount").toInt
       case None => 0
     }
   }
 
-  def extractAbsorbed(text: String): Int = {
+  private def extractAbsorbed(text: String): Int = {
     AbsorbedRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("amount").toInt
       case None => 0
     }
   }
 
-  def extractDamageType(text: String): String = {
+  private def extractDamageType(text: String): String = {
     DamageTypeRE.findFirstMatchIn(text) match {
       case Some(m) => m.group("type")
       case None => ""
