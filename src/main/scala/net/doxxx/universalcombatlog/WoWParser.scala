@@ -63,7 +63,7 @@ final class WoWParser extends BaseLogParser {
 
     // extended fields depending on event
     var eventType: EventTypes.Value = EventTypes.Unrecognized
-    var spell: String = ""
+    var spellName: String = ""
     var spellID: Long = 0
     var spellSchool: String = ""
     var amount: Int = 0
@@ -99,18 +99,18 @@ final class WoWParser extends BaseLogParser {
 
         eventNameParts(0) match {
           case "SWING" => {
-            spell = "Auto Attack"
+            spellName = "Auto Attack"
             spellID = -1
             spellSchool = spellSchoolName(1) // physical
           }
           case "RANGE" => {
             spellID = it.next().toLong
-            spell = it.next()
+            spellName = it.next()
             spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
           case "SPELL" => {
             spellID = it.next().toLong
-            spell = it.next()
+            spellName = it.next()
             spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
         }
@@ -224,8 +224,11 @@ final class WoWParser extends BaseLogParser {
     amount -= blockedAmount
     amount -= absorbedAmount
 
+    // spell
+    val spell = getSpell(spellID, spellName)
+
     // Create log event
-    Some(CombatEvent(time, eventType, actor, target, spell, spellID, spellSchool, amount, overAmount, ""))
+    Some(CombatEvent(time, eventType, actor, target, spell, spellSchool, amount, overAmount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {

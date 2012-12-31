@@ -127,14 +127,14 @@ object EventProcessor {
     (event.eventType == EventTypes.Slain ||
      event.eventType == EventTypes.Died ||
      event.eventType == EventTypes.PowerGain ||
-     !event.spell.isEmpty)
+     event.spell != NullSpell)
   }
 
   val ignoredHostileSpells = Set("Sacrifice Life: Mana", "Critter Killer")
 
   def isHostileAction(event: CombatEvent): Boolean = {
     (EventTypes.HostileTypes.contains(event.eventType) &&
-     !ignoredHostileSpells.contains(event.spell) &&
+     !ignoredHostileSpells.contains(event.spell.name) &&
      !(event.actor.isInstanceOf[Player] && event.target.isInstanceOf[Player]))
   }
 
@@ -310,8 +310,8 @@ object EventProcessor {
       if (BreakdownType.BySpellTypes.contains(breakdownType)) {
         (event: CombatEvent) => {
           event.actor match {
-            case p: PlayerPet => "%s (%s)".format(event.spell, p._name)
-            case _ => event.spell
+            case p: PlayerPet => "%s (%s)".format(event.spell.name, p._name)
+            case _ => event.spell.name
           }
         }
       }
@@ -502,12 +502,12 @@ object EventProcessor {
       summary filter { case (entity, sum) => entities.contains(entity.name) }
   }
 
-  def spellIndex(events: List[LogEvent]): Map[Long,String] = {
-    val result = new mutable.HashMap[Long,String]()
+  def spellIndex(events: List[LogEvent]): Map[Long,Spell] = {
+    val result = new mutable.HashMap[Long,Spell]()
     for (event <- events) {
       event match {
         case ce: CombatEvent => {
-          result.update(ce.spellId, ce.spell)
+          result.update(ce.spell.id, ce.spell)
         }
         case _ => // nothing
       }

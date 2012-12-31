@@ -15,7 +15,7 @@ object FileConverter {
         s.writeByte(ce.eventType.id)
         s.writeLong(ce.actor.id.id)
         s.writeLong(ce.target.id.id)
-        s.writeLong(ce.spellId)
+        s.writeLong(ce.spell.id)
         s.writeLong(ce.amount)
         s.writeUTF(ce.text)
       }
@@ -44,8 +44,9 @@ object FileConverter {
     val spellIndex = EventProcessor.spellIndex(events)
     s.writeInt(spellIndex.size)
     for (id <- spellIndex.keys) {
+      val spell = spellIndex(id)
       s.writeLong(id)
-      s.writeUTF(spellIndex(id))
+      s.writeUTF(spell.name)
     }
   }
 
@@ -138,7 +139,7 @@ object FileConverter {
       val logFile = delegate.parse(f)
       val startTime = f.lastModified() - logFile.events.last.time
       Utils.log("Calculated startTime: %d", startTime)
-      new LogFile(EventProcessor.normalizeTimes(logFile.events, startTime), logFile.entities)
+      new LogFile(EventProcessor.normalizeTimes(logFile.events, startTime), logFile.entities, logFile.spells)
     }
 
     def playersAndPets = delegate.playersAndPets

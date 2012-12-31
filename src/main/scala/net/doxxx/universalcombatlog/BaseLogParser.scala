@@ -19,6 +19,10 @@ abstract class BaseLogParser extends LogParser {
   private val entities = new mutable.HashMap[EntityID, Entity] {
     override def default(key: EntityID) = Nobody
   }
+  private val spellsLock = new ReentrantReadWriteLock()
+  private val spells = new mutable.HashMap[Long, Spell] {
+    override def default(key: Long) = NullSpell
+  }
 
   def reset() {
     entities.clear()
@@ -63,7 +67,7 @@ abstract class BaseLogParser extends LogParser {
 
     log("Total events parsed: %d", lastEvents.size)
 
-    new LogFile(lastEvents, entities.values.toSet)
+    new LogFile(lastEvents, entities.values.toSet, spells.values.toSet)
   }
 
   private def parseLines(lines: Traversable[String]): List[LogEvent] = {
@@ -141,6 +145,36 @@ abstract class BaseLogParser extends LogParser {
     getEntity(id, NullEntityID, None) match {
       case p: Player => p
       case a => throw new RuntimeException("Entity %s is not player".format(a))
+    }
+  }
+
+  protected def getSpell(id: Long, name: String): Spell = {
+    spellsLock.readLock.lock()
+    try {
+      spells.get(id) match {
+        case Some(spell) => {
+          if (spell.name != name) {
+            log("Mismatched name for spell ID 0x%016X: old name=%s, new name=%s", id, spell.name, name)
+          }
+          spell
+        }
+        case None => {
+          spellsLock.readLock.unlock()
+          spellsLock.writeLock.lock()
+          try {
+            val spell = Spell(id, name)
+            spells.update(id, spell)
+            spell
+          }
+          finally {
+            spellsLock.writeLock.unlock()
+            spellsLock.readLock.lock()
+          }
+        }
+      }
+    }
+    finally {
+      spellsLock.readLock.unlock()
     }
   }
 }
