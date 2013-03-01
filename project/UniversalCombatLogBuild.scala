@@ -20,7 +20,7 @@ object UniversalCombatLogBuild extends Build {
           "org.scalatest" %% "scalatest" % "1.9.1" % "test",
           "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2",
           "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
-          "com.typesafe.akka" % "akka-actor" % "2.0.5",
+          "com.typesafe.akka" %% "akka-actor" % "2.1.1",
           "org.slf4j" % "slf4j-simple" % "1.7.2",
           "io.spray" % "spray-can" % "1.1-M7",
           "io.spray" %% "spray-json" % "1.2.3"
