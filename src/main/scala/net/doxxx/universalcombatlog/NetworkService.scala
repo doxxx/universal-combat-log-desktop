@@ -3,8 +3,8 @@ package net.doxxx.universalcombatlog
 import akka.actor.{Actor, Supervisor}
 import akka.config.Supervision.{Permanent, Supervise, OneForOneStrategy, SupervisorConfig}
 import cc.spray.can._
-import cc.spray.json.DefaultJsonProtocol._
-import cc.spray.json._
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 import java.io._
 import java.net._
 import java.nio.charset.Charset
@@ -70,7 +70,7 @@ class NetworkService(port: Int = 5555) {
       SupervisorConfig(
         OneForOneStrategy(List(classOf[Exception]), 3, 100),
         List(
-          Supervise(Actor.actorOf(new ClientService()), Permanent),
+          Supervise(Actor.actorOf[ClientService], Permanent),
           Supervise(Actor.actorOf(new HttpServer(serverConfig)), Permanent)
         )
       )
