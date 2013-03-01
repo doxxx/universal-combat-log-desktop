@@ -1,6 +1,6 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import swing._
+import scala.swing._
 
 class StatusBar extends BoxPanel(Orientation.Horizontal) {
   val message = new Label

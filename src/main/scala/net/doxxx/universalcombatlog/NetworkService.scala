@@ -1,14 +1,14 @@
 package net.doxxx.universalcombatlog
 
-import java.net._
-import java.nio.charset.Charset
-import java.io._
 import akka.actor.{Actor, Supervisor}
 import akka.config.Supervision.{Permanent, Supervise, OneForOneStrategy, SupervisorConfig}
 import cc.spray.can._
+import cc.spray.json.DefaultJsonProtocol._
 import cc.spray.json._
-import DefaultJsonProtocol._
-import Utils._
+import java.io._
+import java.net._
+import java.nio.charset.Charset
+import net.doxxx.universalcombatlog.Utils._
 
 /**
  * Created 12-09-25 9:30 AM by gordon.

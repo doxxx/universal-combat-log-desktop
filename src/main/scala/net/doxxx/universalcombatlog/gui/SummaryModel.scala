@@ -1,9 +1,10 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import collection.JavaConversions._
 import javax.swing.table.{TableRowSorter, AbstractTableModel}
 import javax.swing.{SortOrder, RowSorter}
-import parser.Entity
+import net.doxxx.universalcombatlog._
+import net.doxxx.universalcombatlog.parser._
+import scala.collection.JavaConversions._
 
 object SummaryColumns extends Enumeration {
   type Column = Value
@@ -25,6 +26,7 @@ object SummaryColumns extends Enumeration {
 }
 
 class SummaryModel(columns: Seq[SummaryColumns.Column]) extends AbstractTableModel {
+
   import SummaryColumns._
 
   private var data: Map[Entity, Summary] = Map.empty

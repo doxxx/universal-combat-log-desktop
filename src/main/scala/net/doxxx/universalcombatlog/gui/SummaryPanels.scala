@@ -1,13 +1,14 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import parser.Entity
-import swing._
-import event.{SelectionChanged, ButtonClicked}
-import swing.TabbedPane.Page
-import net.doxxx.universalcombatlog.SummaryColumns._
+import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.util.prefs.Preferences
-import java.awt.{Rectangle, Toolkit}
+import net.doxxx.universalcombatlog._
+import net.doxxx.universalcombatlog.gui.SummaryColumns._
+import net.doxxx.universalcombatlog.parser.Entity
+import scala.swing._
+import scala.swing.event.{SelectionChanged, ButtonClicked}
+import swing.TabbedPane.Page
 
 class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
@@ -45,7 +46,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   val copyHPSButton = new Button("Copy HPS") {
     enabled = false
   }
-  val breakdownDialog = new BreakdownDialog(GUIMain.top) {
+  val breakdownDialog = new BreakdownDialog(Main.top) {
     peer.setAlwaysOnTop(true)
     peer.setFocusableWindowState(false)
     if (prefs.getInt("breakdownDialogX", 0) > 0) {
@@ -57,7 +58,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
       centerOnScreen()
     }
   }
-  val deathLogDialog = new DeathLogDialog(GUIMain.top) {
+  val deathLogDialog = new DeathLogDialog(Main.top) {
     peer.setAlwaysOnTop(true)
     peer.setFocusableWindowState(false)
     if (prefs.getInt("deathLogDialogX", 0) > 0) {
@@ -113,12 +114,12 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
     case ButtonClicked(`copyDPSButton`) => {
       val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
       val data = new StringSelection(EventProcessor.dpsSummaryForClipboard(summary))
-      clipboard.setContents(data, GUIMain)
+      clipboard.setContents(data, Main)
     }
     case ButtonClicked(`copyHPSButton`) => {
       val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
       val data = new StringSelection(EventProcessor.hpsSummaryForClipboard(summary))
-      clipboard.setContents(data, GUIMain)
+      clipboard.setContents(data, Main)
     }
     case SelectionChanged(`targetDropdown`) => {
       targetDropdown.selectedActor match {
@@ -145,9 +146,7 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
   def update(newFight: Fight, newPlayersAndPets: Set[Entity]) {
     fight = newFight
     playersAndPets = newPlayersAndPets
-    summary = EventProcessor.summary(fight).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(fight, playersAndPets)
     panels foreach { _.update(summary)}
     val oldTarget = targetDropdown.selectedActor
     targetDropdown.setItems(EventProcessor.actorsSortedByActivity(newFight.events))
@@ -188,16 +187,12 @@ class SummaryPanels(prefs: Preferences) extends BoxPanel(Orientation.Vertical) {
 
   private def applyTargetFilter(target: Entity) {
     val filtered = SingleFight(EventProcessor.filterByTarget(fight.events, target))
-    summary = EventProcessor.summary(filtered).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(filtered, playersAndPets)
     panels foreach { _.update(summary)}
   }
 
   private def resetTargetFilter() {
-    summary = EventProcessor.summary(fight).filter {
-      case (actor, _) => playersAndPets.contains(actor)
-    }
+    summary = EventProcessor.summary(fight, playersAndPets)
     panels foreach { _.update(summary)}
   }
 

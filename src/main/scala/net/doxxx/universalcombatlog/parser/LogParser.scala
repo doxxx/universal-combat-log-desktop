@@ -1,10 +1,11 @@
 package net.doxxx.universalcombatlog.parser
 
 import java.io.File
+import net.doxxx.universalcombatlog.LogFile
 
 trait LogParser {
   def canLoad(f: File): Boolean
-  def parse(file: File): List[LogEvent]
+  def parse(file: File): LogFile
   def playersAndPets: Set[Entity]
 }
 

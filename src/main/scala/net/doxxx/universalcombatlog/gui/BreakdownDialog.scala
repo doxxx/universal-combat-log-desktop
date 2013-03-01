@@ -1,7 +1,8 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import parser.{Entity, LogEvent}
-import swing.{Window, Dialog}
+import net.doxxx.universalcombatlog._
+import net.doxxx.universalcombatlog.parser.{Entity, LogEvent}
+import scala.swing.{Window, Dialog}
 
 class BreakdownDialog(owner: Window) extends Dialog(owner) {
   val panel = new BreakdownPanel

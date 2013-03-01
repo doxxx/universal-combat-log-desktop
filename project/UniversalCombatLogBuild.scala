@@ -2,7 +2,8 @@ import sbt._
 import Keys._
 
 object UniversalCombatLogBuild extends Build {
-  lazy val guiMainClass = Some("net.doxxx.universalcombatlog.GUIMain")
+  lazy val projectScalaVersion = "2.9.2"
+  lazy val guiMainClass = Some("net.doxxx.universalcombatlog.gui.Main")
 
   lazy val root = {
     Project("universal-combat-log", file("."),
@@ -11,11 +12,11 @@ object UniversalCombatLogBuild extends Build {
         name := "UniversalCombatLog",
         normalizedName := "universal-combat-log",
         version := "1.0",
-        scalaVersion := "2.9.1",
+        scalaVersion := projectScalaVersion,
         resolvers += "spray" at "http://repo.spray.cc/",
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
         libraryDependencies := Seq(
-          "org.scala-lang" % "scala-swing" % "2.9.1",
+          "org.scala-lang" % "scala-swing" % projectScalaVersion,
           "org.scalatest" %% "scalatest" % "1.7.2" % "test",
           "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.1-seq",
           "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.1-seq",

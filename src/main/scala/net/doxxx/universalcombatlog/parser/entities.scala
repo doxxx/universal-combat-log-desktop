@@ -1,5 +1,7 @@
 package net.doxxx.universalcombatlog.parser
 
+import net.doxxx.universalcombatlog.Utils
+
 sealed abstract class EntityID {
   def id: Long
   def rel: Char
@@ -31,7 +33,7 @@ case class PlayerPet(override val id: EntityID, var _name: String, owner: Player
 
   override def name_=(newName: String) {
     if (_name != newName) {
-      println("Entity %s has changed name: %s -> %s".format(id, _name, newName))
+      Utils.log("Player pet %s has changed name: %s -> %s".format(id, _name, newName))
       _name = newName
     }
   }

@@ -1,6 +1,6 @@
 package net.doxxx.universalcombatlog.parser
 
-object EventType extends Enumeration {
+object EventTypes extends Enumeration {
   val Unrecognized = Value(0)
   val BeginCasting = Value(1)
   val Interrupted = Value(2)

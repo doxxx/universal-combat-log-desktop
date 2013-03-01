@@ -1,10 +1,10 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import parser.Entity
-import swing._
-import event._
+import net.doxxx.universalcombatlog.parser.Entity
+import scala.swing._
+import scala.swing.event._
 
-class EntityList extends BorderPanel {
+class ActorList extends BorderPanel {
   layoutManager.setHgap(5)
   layoutManager.setVgap(5)
 
@@ -46,7 +46,7 @@ class EntityList extends BorderPanel {
     }
     case ListSelectionChanged(`listView`, range, isChanging) => {
       if (!isChanging && !updating) {
-        publish(EntityFilterChanged(listView.selection.items.toSet))
+        publish(ActorFilterChanged(listView.selection.items.toSet))
       }
     }
   }
@@ -57,7 +57,7 @@ class EntityList extends BorderPanel {
     listView.listData = actors.map(_.name)
     selectActors(oldActors.toSet)
     updating = false
-    publish(EntityFilterChanged(listView.selection.items.toSet))
+    publish(ActorFilterChanged(listView.selection.items.toSet))
   }
 
   def selectActors(names: Set[String]) {
@@ -72,4 +72,4 @@ class EntityList extends BorderPanel {
   def selectedActors: Set[String] = listView.selection.items.toSet
 }
 
-case class EntityFilterChanged(actors: Set[String]) extends Event
+case class ActorFilterChanged(actors: Set[String]) extends Event

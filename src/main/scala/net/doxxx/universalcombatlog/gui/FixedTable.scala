@@ -1,6 +1,7 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import swing.Table
+import scala.swing.Table
+
 /**
 * Fixex Table sorting by mapping row index from view to model correctly.
 */

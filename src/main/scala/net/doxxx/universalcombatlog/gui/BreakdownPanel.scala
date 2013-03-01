@@ -1,9 +1,10 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import collection.JavaConversions._
-import swing.ScrollPane
 import javax.swing.table.TableRowSorter
 import javax.swing.{SortOrder, RowSorter}
+import net.doxxx.universalcombatlog.{Breakdown, IntComparator}
+import scala.collection.JavaConversions._
+import swing.ScrollPane
 
 class BreakdownPanel extends ScrollPane {
   val spellBreakdownModel = new BreakdownModel

@@ -1,17 +1,17 @@
 package net.doxxx.universalcombatlog
 
-import collection.immutable.TreeMap
-import net.doxxx.universalcombatlog.Utils._
 import java.io.File
-import parser._
+import net.doxxx.universalcombatlog.Utils._
+import net.doxxx.universalcombatlog.parser._
+import scala.collection.immutable.TreeMap
 
 object InspectLog {
 
   def mapEventTypes(events: List[LogEvent]) {
-    var m = TreeMap[EventType.Value, String]()
+    var m = TreeMap[EventTypes.Value, String]()
     for (event <- events) {
       event match {
-        case ae: ActorEvent => m += ae.eventType -> ae.text
+        case ce: CombatEvent => m += ce.eventType -> ce.text
         case _ =>
       }
     }
@@ -23,10 +23,10 @@ object InspectLog {
   def main(args: Array[String]) {
     for (arg <- args) {
       while (true) {
-        val events = new WoWParser().parse(new File(arg))
-        log("%d events loaded.", events.length)
+        val logFile = new WoWParser().parse(new File(arg))
+        log("%d events loaded.", logFile.events.length)
         val fights = timeit("fight-split") {
-          EventProcessor.splitFights(events)
+          logFile.fights
         }
         log("%d fights found.", fights.length)
         log(fights.map(_.duration / 1000).mkString(" "))

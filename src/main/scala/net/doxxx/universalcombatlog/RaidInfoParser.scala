@@ -1,7 +1,7 @@
 package net.doxxx.universalcombatlog
 
-import xml.XML
 import java.io.Reader
+import scala.xml.XML
 
 
 /**

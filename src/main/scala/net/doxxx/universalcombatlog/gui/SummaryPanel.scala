@@ -1,11 +1,12 @@
-package net.doxxx.universalcombatlog
+package net.doxxx.universalcombatlog.gui
 
-import parser.Entity
-import swing._
-import event.{ButtonClicked, Event, TableRowsSelected}
-import net.doxxx.universalcombatlog.SummaryColumns._
 import java.awt.event.{MouseEvent, MouseAdapter}
 import javax.swing.JTable
+import net.doxxx.universalcombatlog.gui.SummaryColumns._
+import net.doxxx.universalcombatlog.parser.Entity
+import net.doxxx.universalcombatlog.{Summary, BreakdownType}
+import scala.swing._
+import scala.swing.event.{ButtonClicked, Event, TableRowsSelected}
 
 class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Column) extends ScrollPane {
   val MI_BreakdownOutgoingDamageBySpell = new MenuItem("By Spell")
@@ -13,9 +14,9 @@ class SummaryPanel(val title: String, columns: Seq[Column], defaultColumn: Colum
   val MI_BreakdownOutgoingHealingBySpell = new MenuItem("By Spell")
   val MI_BreakdownOutgoingHealingByTarget = new MenuItem("By Target")
   val MI_BreakdownIncomingDamageBySpell = new MenuItem("By Spell")
-  val MI_BreakdownIncomingDamageByActor = new MenuItem("By Entity")
+  val MI_BreakdownIncomingDamageByActor = new MenuItem("By Actor")
   val MI_BreakdownIncomingHealingBySpell = new MenuItem("By Spell")
-  val MI_BreakdownIncomingHealingByActor = new MenuItem("By Entity")
+  val MI_BreakdownIncomingHealingByActor = new MenuItem("By Actor")
   val MI_DeathLog = new MenuItem("Death Log")
   val popupMenu = new PopupMenu("Breakdown") {
     contents += new Menu("Outgoing") {

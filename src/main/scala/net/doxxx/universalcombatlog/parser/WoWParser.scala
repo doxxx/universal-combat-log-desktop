@@ -1,8 +1,8 @@
 package net.doxxx.universalcombatlog.parser
 
-import scalax.io.Codec
-import util.matching.Regex
 import java.util.{Date, Calendar}
+import scala.util.matching.Regex
+import scalax.io.Codec
 
 final class WoWParser extends BaseLogParser {
 
@@ -61,18 +61,23 @@ final class WoWParser extends BaseLogParser {
     it.next() // targetRaidFlags = parseHex(it.next().substring(2))
 
     // extended fields depending on event
-    var eventType: EventType.Value = EventType.Unrecognized
-    var spell: String = ""
+    var eventType: EventTypes.Value = EventTypes.Unrecognized
+    var spellName: String = ""
     var spellID: Long = 0
+    var spellSchool: String = ""
     var amount: Int = 0
+    var overAmount: Int = 0
+    var resistedAmount: Int = 0
+    var blockedAmount: Int = 0
+    var absorbedAmount: Int = 0
     var critical: Boolean = false
 
     eventName match {
       case "PARTY_KILL" => {
-        eventType = EventType.Slain
+        eventType = EventTypes.Slain
       }
       case "UNIT_DIED" => {
-        eventType = EventType.Died
+        eventType = EventTypes.Died
         actorID = targetID
         actorName = targetName
         actorFlags = targetFlags
@@ -93,58 +98,66 @@ final class WoWParser extends BaseLogParser {
 
         eventNameParts(0) match {
           case "SWING" => {
-            spell = "Auto Attack"
+            spellName = "Auto Attack"
             spellID = -1
+            spellSchool = spellSchoolName(1) // physical
           }
           case "RANGE" => {
             spellID = it.next().toLong
-            spell = it.next()
-            it.next() // spell school
+            spellName = it.next()
+            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
           case "SPELL" => {
             spellID = it.next().toLong
-            spell = it.next()
-            it.next() // spell school
+            spellName = it.next()
+            spellSchool = spellSchoolName(parseHex(it.next().substring(2))) // spell school
           }
         }
 
         eventNameParts(1) match {
           case "DAMAGE" => {
             amount = it.next().toInt
-            it.next().toInt // overkill
+            overAmount = it.next().toInt // overkill
             it.next() // school
-            it.next() // resisted
-            it.next() // blocked
-            it.next() // absorbed
+            resistedAmount = it.next().toInt // resisted
+            blockedAmount = it.next().toInt // blocked
+            absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
-            eventType = if (critical) EventType.CritDamage else EventType.DirectDamage
+            eventType = if (critical) EventTypes.CritDamage else EventTypes.DirectDamage
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
           case "PERIODIC_DAMAGE" => {
             amount = it.next().toInt
-            it.next().toInt // overkill
+            overAmount = it.next().toInt // overkill
             it.next() // school
-            it.next() // resisted
-            it.next() // blocked
-            it.next() // absorbed
+            resistedAmount = it.next().toInt // resisted
+            blockedAmount = it.next().toInt // blocked
+            absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
-            eventType = if (critical) EventType.CritDamageOverTime else EventType.DamageOverTime
+            eventType = if (critical) EventTypes.CritDamageOverTime else EventTypes.DamageOverTime
             //it.next() // 1 == glancing
             //it.next() // 1 == crushing
           }
           case "MISSED" => {
-            eventType = EventType.Miss
+            eventType = EventTypes.Miss
             //it.next() // missType
             //it.next() // isOffHand
             //it.next() // amountMissed
           }
           case "HEAL" => {
             amount = it.next().toInt
-            it.next().toInt // overheal
-            it.next().toInt // absorbed
+            overAmount = it.next().toInt // overheal
+            absorbedAmount = it.next().toInt // absorbed
             critical = it.next() == "1"
-            eventType = if (critical) EventType.CritHeal else EventType.Heal
+            eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
+          }
+          case "PERIODIC_HEAL" => {
+            amount = it.next().toInt
+            overAmount = it.next().toInt // overheal
+            absorbedAmount = it.next().toInt // absorbed
+            critical = it.next() == "1"
+            eventType = if (critical) EventTypes.CritHeal else EventTypes.Heal
           }
           // ENERGIZE
           // DRAIN
@@ -159,10 +172,10 @@ final class WoWParser extends BaseLogParser {
             //it.next().toInt // amount
             auraType match {
               case "BUFF" => {
-                eventType = EventType.BuffGain
+                eventType = EventTypes.BuffGain
               }
               case "DEBUFF" => {
-                eventType = EventType.DebuffGain
+                eventType = EventTypes.DebuffGain
               }
             }
           }
@@ -171,10 +184,10 @@ final class WoWParser extends BaseLogParser {
             //it.next().toInt // amount
             auraType match {
               case "BUFF" => {
-                eventType = EventType.BuffFade
+                eventType = EventTypes.BuffFade
               }
               case "DEBUFF" => {
-                eventType = EventType.DebuffFade
+                eventType = EventTypes.DebuffFade
               }
             }
           }
@@ -184,7 +197,7 @@ final class WoWParser extends BaseLogParser {
           // AURA_BROKEN
           // AURA_BROKEN_SPELL
           case "CAST_START" => {
-            eventType = EventType.BeginCasting
+            eventType = EventTypes.BeginCasting
           }
           // CAST_SUCCESS
           // CAST_FAILED
@@ -203,8 +216,18 @@ final class WoWParser extends BaseLogParser {
     val actor = makeActor(actorID, actorName, actorFlags)
     val target = makeActor(targetID, targetName, targetFlags)
 
+    // fix amounts
+    overAmount = math.max(0, overAmount) // overkill can be -1
+    amount -= overAmount // both damage and healing amounts must be adjusted for overkill/overheal/resist/block/absorb
+    amount -= resistedAmount
+    amount -= blockedAmount
+    amount -= absorbedAmount
+
+    // spell
+    val spell = getSpell(spellID, spellName)
+
     // Create log event
-    Some(ActorEvent(time, eventType, actor, target, spell, spellID, amount, ""))
+    Some(CombatEvent(time, eventType, actor, target, spell, spellSchool, amount, overAmount, ""))
   }
 
   private def splitFields(s: String): Array[String] = {
@@ -231,10 +254,10 @@ final class WoWParser extends BaseLogParser {
   private def makeActor(id: Long, name: String, flags: Long): Entity = {
     val rel = entityRelationship(flags)
     objectType(flags) match {
-      case TYPE_PLAYER => getActor(PC(id, rel), NullEntityID, Some(name))
+      case TYPE_PLAYER => getEntity(PC(id, rel), NullEntityID, Some(name))
       // TODO: we don't have a way to associate pets with owners yet
-      case TYPE_PET => getActor(NPC(id, rel), NullEntityID, Some(name))
-      case TYPE_NPC => getActor(NPC(id, rel), NullEntityID, Some(name))
+      case TYPE_PET => getEntity(NPC(id, rel), NullEntityID, Some(name))
+      case TYPE_NPC => getEntity(NPC(id, rel), NullEntityID, Some(name))
       case _ => Nobody
     }
   }
@@ -268,4 +291,43 @@ final class WoWParser extends BaseLogParser {
   val AFFILIATION_OUTSIDER = 0x8
 
   private def affiliation(flags: Long): Long = flags & 0xF
+
+  val SPELL_SCHOOL_NAMES = Map[Long, String](
+    (1, "Physical"),
+    (2, "Holy"),
+    (4, "Fire"),
+    (8, "Nature"),
+    (16, "Frost"),
+    (32, "Shadow"),
+    (64, "Arcane"),
+    (3, "Holystrike"),
+    (5, "Flamestrike"),
+    (6, "Holyfire"),
+    (9, "Stormstrike"),
+    (10, "Holystorm"),
+    (12, "Firestorm"),
+    (17, "Froststrike"),
+    (18, "Holyfrost"),
+    (20, "Frostfire"),
+    (24, "Froststorm"),
+    (33, "Shadowstrike"),
+    (34, "Shadowlight"),
+    (36, "Shadowflame"),
+    (40, "Shadowstorm"),
+    (48, "Shadowfrost"),
+    (65, "Spellstrike"),
+    (66, "Divine"),
+    (68, "Spellfire"),
+    (72, "Spellstorm"),
+    (80, "Spellfrost"),
+    (96, "Spellshadow"),
+    (28, "Elemental"),
+    (124, "Chromatic"),
+    (126, "Magic"),
+    (127, "Chaos")
+  )
+
+  private def spellSchoolName(flags: Long): String = {
+    SPELL_SCHOOL_NAMES.getOrElse(flags, "")
+  }
 }
