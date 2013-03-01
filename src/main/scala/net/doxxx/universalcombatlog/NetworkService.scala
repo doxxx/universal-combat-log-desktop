@@ -67,7 +67,7 @@ class NetworkService(port: Int = 5555) {
   }
 
   def listenForClients() {
-    val clientService = system.actorOf(Props[ClientService], "client-service")
+    val clientService = system.actorOf(Props(new ClientService), "client-service")
     val httpServer = system.actorOf((Props(new HttpServer(ioBridge, SingletonHandler(clientService), ServerSettings()))), "http-server")
 
     httpServer ! HttpServer.Bind("0.0.0.0", port)
