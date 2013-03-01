@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 object UniversalCombatLogBuild extends Build {
-  lazy val projectScalaVersion = "2.9.2"
+  lazy val projectScalaVersion = "2.10.0"
   lazy val guiMainClass = Some("net.doxxx.universalcombatlog.gui.Main")
 
   lazy val root = {
@@ -18,11 +18,11 @@ object UniversalCombatLogBuild extends Build {
         libraryDependencies := Seq(
           "org.scala-lang" % "scala-swing" % projectScalaVersion,
           "org.scalatest" %% "scalatest" % "1.9.1" % "test",
-          "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.1-seq",
-          "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.1-seq",
-          "se.scalablesolutions.akka" % "akka-actor" % "1.3.1",
+          "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2",
+          "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
+          "com.typesafe.akka" % "akka-actor" % "2.0.5",
           "org.slf4j" % "slf4j-simple" % "1.7.2",
-          "cc.spray" % "spray-can" % "0.9.3",
+          "io.spray" % "spray-can" % "1.1-M7",
           "io.spray" %% "spray-json" % "1.2.3"
         ),
         mainClass in(Compile, packageBin) := guiMainClass,

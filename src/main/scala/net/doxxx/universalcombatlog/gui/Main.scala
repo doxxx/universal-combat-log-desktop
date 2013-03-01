@@ -10,9 +10,10 @@ import java.util.prefs.Preferences
 import javax.swing.{KeyStroke, JOptionPane, UIManager}
 import net.doxxx.universalcombatlog._
 import net.doxxx.universalcombatlog.parser._
-import scala.actors.Actor._
 import scala.swing._
 import scala.swing.event._
+import scala.concurrent.future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends SimpleSwingApplication with ClipboardOwner {
 
@@ -64,7 +65,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
     }
   }
 
-  def createFileLoaderActor() {
+  def loadLogFile() {
     file match {
       case Some(f) => {
         if (f.lastModified() <= fileLastModified) return
@@ -78,7 +79,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
 
         parser match {
           case Some(p) => {
-            actor {
+            future {
               log("Loading events from %s", f.toString)
               try {
                 val logFile = p.parse(f).normalizeTimes()
@@ -86,7 +87,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
                 Swing.onEDT {
                   fileLoaderActorPublisher.publish(LogFileLoaded(logFile))
                 }
-                createFileWatchActor()
+                watchLogFile()
               }
               catch {
                 case e: IOException => log("Couldn't load combat log file: " + e.toString)
@@ -112,17 +113,17 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
     }
   }
 
-  def createFileWatchActor() {
+  def watchLogFile() {
     file match {
-      case Some(f) => actor {
+      case Some(f) => future {
         val lastModified = f.lastModified
         try {
           Thread.sleep(5000)
           val modified = f.lastModified
           if (modified > lastModified) {
-            createFileLoaderActor()
+            loadLogFile()
           }
-          createFileWatchActor()
+          watchLogFile()
         }
         catch {
           case e: InterruptedException => // nothing
@@ -138,7 +139,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
       top.progressBar.label = "Exporting UCL file..."
     }
 
-    actor {
+    future {
       FileConverter.writeUniversalCombatLog(file, fights)
 
       Swing.onEDT {
@@ -221,7 +222,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
     reactions += {
       case WindowActivated(_) => {
         if (!loadingLogFile) {
-          createFileLoaderActor()
+          loadLogFile()
         }
         summaryPanels.raiseDialogs()
       }
@@ -243,7 +244,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
             file = Some(f)
             parser = LogParser.detectFormat(f)
             parser match {
-              case Some(p) => createFileLoaderActor()
+              case Some(p) => loadLogFile()
               case _ => JOptionPane.showMessageDialog(self, "Could not determine log file format.",
                 "Open Log File", JOptionPane.ERROR_MESSAGE)
             }
@@ -292,7 +293,7 @@ object Main extends SimpleSwingApplication with ClipboardOwner {
       }
       case LogFileLoaded(f) => {
         logFile = Some(f)
-        actor {
+        future {
           Swing.onEDT {
             progressBar.visible = true
             progressBar.label = "Loading fights..."

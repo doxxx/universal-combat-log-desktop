@@ -1,24 +1,25 @@
 package net.doxxx.universalcombatlog
 
-import akka.actor.{Actor, Supervisor}
-import akka.config.Supervision.{Permanent, Supervise, OneForOneStrategy, SupervisorConfig}
-import cc.spray.can._
+import akka.actor._
+import spray.can.server._
+import spray.http._
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 import java.io._
 import java.net._
 import java.nio.charset.Charset
 import net.doxxx.universalcombatlog.Utils._
+import spray.io.{SingletonHandler, IOExtension}
 
 /**
  * Created 12-09-25 9:30 AM by gordon.
  */
 class NetworkService(port: Int = 5555) {
+  private val system = ActorSystem("NetworkService")
+  val ioBridge = IOExtension(system).ioBridge()
+
   private val utf8 = Charset.forName("UTF-8")
-  private val serverConfig = ServerConfig(
-    host = "0.0.0.0",
-    port = port
-  )
+
   private val baseURL = new URI("http://%s:%d/".format(InetAddress.getLocalHost.getHostAddress, port))
   log("Base URL: %s", baseURL)
 
@@ -66,42 +67,37 @@ class NetworkService(port: Int = 5555) {
   }
 
   def listenForClients() {
-    Supervisor(
-      SupervisorConfig(
-        OneForOneStrategy(List(classOf[Exception]), 3, 100),
-        List(
-          Supervise(Actor.actorOf[ClientService], Permanent),
-          Supervise(Actor.actorOf(new HttpServer(serverConfig)), Permanent)
-        )
-      )
-    )
+    val clientService = system.actorOf(Props[ClientService], "client-service")
+    val httpServer = system.actorOf((Props(new HttpServer(ioBridge, SingletonHandler(clientService), ServerSettings()))), "http-server")
+
+    httpServer ! HttpServer.Bind("0.0.0.0", port)
 
     log("Listening for clients")
   }
 
   class ClientService extends Actor {
-    self.id = "spray-root-service"
-    protected def receive = {
-      case RequestContext(HttpRequest(HttpMethods.GET, uri @ "/logfiles", _, _, _), _, responder) => {
+    def receive = {
+      case HttpRequest(HttpMethods.GET, uri @ "/logfiles", _, _, _) => {
         log("Received GET request for %s", uri)
         val data = List(
           Map("title" -> title, "url" -> baseURL.resolve("logfiles/1").toString)
         ).toJson.prettyPrint
         log("Sending response:\n%s", data)
-        responder.complete(HttpResponse(
-          headers = List(HttpHeader("Content-Type", "application/json")),
-          body = data.getBytes(utf8)
-        ))
+        sender ! HttpResponse(
+          entity = HttpBody(ContentType.`application/json`, data.getBytes(utf8))
+        )
       }
-      case RequestContext(HttpRequest(HttpMethods.GET, uri @ "/logfiles/1", _, _, _), _, responder) => {
+      case HttpRequest(HttpMethods.GET, uri @ "/logfiles/1", _, _, _) => {
         log("Received GET request for %s", uri)
         val data = new ByteArrayOutputStream()
         FileConverter.writeUniversalCombatLog(data, fights)
-        responder.complete(HttpResponse(body = data.toByteArray))
+        sender ! HttpResponse(
+          entity = HttpBody(ContentType.`application/octet-stream`, data.toByteArray)
+        )
         log("Sent fights in response")
       }
-      case RequestContext(HttpRequest(_, _, _, _, _), _, responder) => {
-        responder.complete(HttpResponse(status=404))
+      case HttpRequest(_, _, _, _, _) => {
+        sender ! HttpResponse(StatusCodes.NotFound)
       }
     }
   }
