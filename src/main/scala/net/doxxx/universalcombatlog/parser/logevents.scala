@@ -1,6 +1,6 @@
 package net.doxxx.universalcombatlog.parser
 
-import net.doxxx.universalcombatlog.Spell
+import net.doxxx.universalcombatlog.spells.Spell
 
 sealed abstract class LogEvent {
   def time: Long

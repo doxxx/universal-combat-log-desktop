@@ -4,8 +4,9 @@ import collection.mutable
 import java.io.File
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import net.doxxx.universalcombatlog.Utils._
-import net.doxxx.universalcombatlog.{LogFile, NullSpell, Spell}
+import net.doxxx.universalcombatlog.LogFile
 import scalax.io.Resource
+import net.doxxx.universalcombatlog.spells._
 
 abstract class BaseLogParser extends LogParser {
 
@@ -20,9 +21,7 @@ abstract class BaseLogParser extends LogParser {
     override def default(key: EntityID) = Nobody
   }
   private val spellsLock = new ReentrantReadWriteLock()
-  private val spells = new mutable.HashMap[Long, Spell] {
-    override def default(key: Long) = NullSpell
-  }
+  private val spells = new mutable.HashMap[Long, Spell]
 
   def reset() {
     entities.clear()

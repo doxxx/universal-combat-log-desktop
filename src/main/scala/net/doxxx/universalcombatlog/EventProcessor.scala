@@ -6,6 +6,7 @@ import net.doxxx.universalcombatlog.parser._
 import scala.annotation.tailrec
 import scala.collection.immutable.List._
 import scala.collection.mutable
+import net.doxxx.universalcombatlog.spells._
 
 object EventProcessor {
 
