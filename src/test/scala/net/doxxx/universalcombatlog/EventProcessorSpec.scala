@@ -4,6 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
 import parser._
 import parser.EventTypes._
+import spells._
 
 class EventProcessorSpec extends WordSpec with ShouldMatchers {
   "An EventProcessor" when {
